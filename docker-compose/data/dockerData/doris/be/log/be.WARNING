@@ -1,0 +1,355 @@
+RuntimeLogger W20260128 06:54:33.467799   760 timezone_utils.cpp:99] Meet illegal tzdata file: zone1970.tab. skipped
+RuntimeLogger W20260128 06:54:33.479612   760 timezone_utils.cpp:99] Meet illegal tzdata file: leap-seconds.list. skipped
+RuntimeLogger W20260128 06:54:33.481338   760 timezone_utils.cpp:99] Meet illegal tzdata file: tzdata.zi. skipped
+RuntimeLogger W20260128 06:54:33.482877   760 timezone_utils.cpp:99] Meet illegal tzdata file: iso3166.tab. skipped
+RuntimeLogger W20260128 06:54:33.498978   760 timezone_utils.cpp:99] Meet illegal tzdata file: zone.tab. skipped
+RuntimeLogger W20260128 06:54:33.502162   760 timezone_utils.cpp:99] Meet illegal tzdata file: leapseconds. skipped
+RuntimeLogger W20260128 06:54:33.504814   760 timezone_utils.cpp:99] Meet illegal tzdata file: zonenow.tab. skipped
+RuntimeLogger E20260128 06:54:33.517439   760 variable.cpp:179] Already exposed `doris_cache_data_page_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.518018   760 variable.cpp:179] Already exposed `doris_cache_data_page_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.519595   760 variable.cpp:179] Already exposed `doris_cache_index_page_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.519907   760 variable.cpp:179] Already exposed `doris_cache_index_page_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.520395   760 variable.cpp:179] Already exposed `doris_cache_pkindex_page_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.520802   760 variable.cpp:179] Already exposed `doris_cache_pkindex_page_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.521202   760 variable.cpp:179] Already exposed `doris_cache_point_query_row_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.521510   760 variable.cpp:179] Already exposed `doris_cache_point_query_row_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.522513   760 variable.cpp:179] Already exposed `doris_cache_segment_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.522835   760 variable.cpp:179] Already exposed `doris_cache_segment_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.523185   760 variable.cpp:179] Already exposed `doris_cache_schema_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.523492   760 variable.cpp:179] Already exposed `doris_cache_schema_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.523844   760 variable.cpp:179] Already exposed `doris_cache_common_obj_lrucache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.524147   760 variable.cpp:179] Already exposed `doris_cache_common_obj_lrucache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.524492   760 variable.cpp:179] Already exposed `doris_cache_point_query_lookup_connection_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.524797   760 variable.cpp:179] Already exposed `doris_cache_point_query_lookup_connection_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.525086   760 variable.cpp:179] Already exposed `doris_cache_inverted_index_searcher_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.525251   760 variable.cpp:179] Already exposed `doris_cache_inverted_index_searcher_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.525620   760 variable.cpp:179] Already exposed `doris_cache_inverted_index_query_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.526356   760 variable.cpp:179] Already exposed `doris_cache_inverted_index_query_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.526726   760 variable.cpp:179] Already exposed `doris_cache_query_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.526955   760 variable.cpp:179] Already exposed `doris_cache_query_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.527336   760 variable.cpp:179] Already exposed `doris_cache_mow_delete_bitmap_agg_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.527540   760 variable.cpp:179] Already exposed `doris_cache_mow_delete_bitmap_agg_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.665565   760 variable.cpp:179] Already exposed `doris_cache_load_state_channel_cache_' whose value is `0'
+RuntimeLogger E20260128 06:54:33.666023   760 variable.cpp:179] Already exposed `doris_cache_load_state_channel_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.679255   760 variable.cpp:179] Already exposed `doris_cache_tablet_schema_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.679508   760 variable.cpp:179] Already exposed `doris_cache_tablet_schema_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.679715   760 variable.cpp:179] Already exposed `doris_cache_tablet_column_object_pool' whose value is `0'
+RuntimeLogger E20260128 06:54:33.679889   760 variable.cpp:179] Already exposed `doris_cache_tablet_column_object_pool_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.688393   760 variable.cpp:179] Already exposed `doris_cache_mow_tablet_version_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.688613   760 variable.cpp:179] Already exposed `doris_cache_mow_tablet_version_cache_persecond' whose value is `0'
+RuntimeLogger E20260128 06:54:33.689003   760 variable.cpp:179] Already exposed `doris_cache_create_tablet_rridx_cache' whose value is `0'
+RuntimeLogger E20260128 06:54:33.689503   760 variable.cpp:179] Already exposed `doris_cache_create_tablet_rridx_cache_persecond' whose value is `0'
+RuntimeLogger W20260128 06:54:38.101354  1072 olap_server.cpp:781] Have not get FE Master heartbeat yet
+RuntimeLogger W20260128 06:54:48.667408  1419 fragment_mgr.cpp:917] Query f91ebd3c080c4938-9262f289500514f5 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:12.620575  1421 fragment_mgr.cpp:917] Query bef077b918aa4f78-a404ef3723a45039 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:12.735356  1423 fragment_mgr.cpp:917] Query b6f05af390f34502-827324632f0a7b3a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:12.837810  1425 fragment_mgr.cpp:917] Query 16bfd966986145e2-98ab2932604615c8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:12.948227  1427 fragment_mgr.cpp:917] Query 256de06e97374143-a23177fae91ff045 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.048887  1430 fragment_mgr.cpp:917] Query da05dd9ea3344ea0-89f8c37dbc662cab does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.146759  1431 fragment_mgr.cpp:917] Query 632d7e241884510-87d31c62f203f0ba does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.253866  1433 fragment_mgr.cpp:917] Query 7273f31b4d58436a-99ced41343f6d93e does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.368657  1435 fragment_mgr.cpp:917] Query 99cdfb7ff19d4a40-997bc8bf47cd0410 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.499681  1437 fragment_mgr.cpp:917] Query a7fbc7d2723b4e94-a7cc816ffd82a15c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.593564  1439 fragment_mgr.cpp:917] Query 173b434a74be423a-ae0d5a3e1acddc81 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.685285  1441 fragment_mgr.cpp:917] Query e22d4aa2228842d0-b1c25c2a90671a07 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.776357  1443 fragment_mgr.cpp:917] Query 10fbcfc59a1a45b9-b1817ec660eabd8c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.866818  1445 fragment_mgr.cpp:917] Query e2a00952a4c3405b-84c6312a141bdde8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:13.978029  1447 fragment_mgr.cpp:917] Query 734358c401de496d-a22c921567734f03 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.070665  1449 fragment_mgr.cpp:917] Query edd9ccf4e0224048-ae91fec8c2210e70 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.160454  1451 fragment_mgr.cpp:917] Query f9759af878254ce1-9edc8de122530d60 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.259207  1453 fragment_mgr.cpp:917] Query 1f5ff39c63b54252-99bf83c71e507947 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.351877  1455 fragment_mgr.cpp:917] Query 55c48036db8d406d-bd081badcd69cce9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.444679  1457 fragment_mgr.cpp:917] Query babd90bb401f429e-8066004870bbfc51 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.542897  1459 fragment_mgr.cpp:917] Query 77d8411b7a624398-b486aa529808c635 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.636381  1461 fragment_mgr.cpp:917] Query 4895889c8ac54c07-a668f23ef50b7d68 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.727053  1463 fragment_mgr.cpp:917] Query ec351c69f2a34a06-a9be22d4c94cfc5f does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.816915  1465 fragment_mgr.cpp:917] Query a81450adda084a49-be9fdc5df19d11e2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.907325  1467 fragment_mgr.cpp:917] Query 7a9b0e46d73942a9-b8f4e7cd3761eba1 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:14.999022  1469 fragment_mgr.cpp:917] Query 4c8d851324264e1b-86a09b30205e0b55 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.092244  1471 fragment_mgr.cpp:917] Query d6723ef810374a86-92400d9cdd730c56 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.185807  1473 fragment_mgr.cpp:917] Query ed995e6cf6bd4e15-b15765b1921c28e2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.287012  1475 fragment_mgr.cpp:917] Query f353d8fd2b2345b1-9ce0ac2d339c27d7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.375715  1477 fragment_mgr.cpp:917] Query be0e73bb9eab485c-9b918fa1cf39fcbe does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.464259  1479 fragment_mgr.cpp:917] Query f03ce26683484810-be44a4338067e703 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.556288  1481 fragment_mgr.cpp:917] Query f5db21a9e07f4ea2-be4b12e992597384 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.647029  1483 fragment_mgr.cpp:917] Query 876bbb1a715843d7-ba49c8a8e5db3281 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.731940  1485 fragment_mgr.cpp:917] Query 347d464b9f5847d6-92021594a11f9848 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.817230  1487 fragment_mgr.cpp:917] Query 606917f2d3504a66-9e5371625ea986cf does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:15.918103  1489 fragment_mgr.cpp:917] Query 164887ef7264753-a72c32c5fd46dfe4 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.010082  1491 fragment_mgr.cpp:917] Query 196761a99cd74d9d-85e825dda4ed6151 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.107937  1493 fragment_mgr.cpp:917] Query 3754da0d5eff48bc-915101281f08c1a8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.207806  1495 fragment_mgr.cpp:917] Query 847e54fbe53c43ad-9aea91b2a4b9f2d8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.312414  1497 fragment_mgr.cpp:917] Query 29e0f2330e5a44e2-903f958672dff706 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.402717  1499 fragment_mgr.cpp:917] Query f522cf4e66af44b8-91badb5cfef0aed1 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.540093  1501 fragment_mgr.cpp:917] Query 8e9f86fd2b3404a-bcec44aab4922e41 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.639443  1503 fragment_mgr.cpp:917] Query 3693c5152ad84c34-9dca0b74a0cd90c7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.739282  1505 fragment_mgr.cpp:917] Query d6539aa8e1974df9-885d3edfd3f6ae16 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:16.848100  1507 fragment_mgr.cpp:917] Query 570ab4d803a7460d-b810e767380cd1b7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.034520  1511 fragment_mgr.cpp:917] Query d548da00234d4ba9-b2508f04232c5ba5 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.126125  1513 fragment_mgr.cpp:917] Query b86144348a4e46eb-8ac62769cfd4e540 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.216436  1515 fragment_mgr.cpp:917] Query 5d6331fabcc0459f-b17a4cfeb984ad16 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.301249  1517 fragment_mgr.cpp:917] Query b5a1c643c6d64965-90d2d2bc799fc7ff does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.385517  1519 fragment_mgr.cpp:917] Query 4fe5d744df9041da-99a6acd483703eba does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.468963  1521 fragment_mgr.cpp:917] Query 7a72e00a1eee47a9-af42bec5ead867db does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.563997  1523 fragment_mgr.cpp:917] Query 69979dea859e4b9b-a9ccd54a8a21f67b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.647055  1525 fragment_mgr.cpp:917] Query d4a7dacc31b420d-a5d2536bb768d48c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.741925  1527 fragment_mgr.cpp:917] Query ecf459d38a8641eb-a527ba3cc62bae27 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:17.860172  1529 fragment_mgr.cpp:917] Query 875ec3c577164130-b3696638aba21840 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.086624  1533 fragment_mgr.cpp:917] Query c7117b69db8c4e09-a20e9b35e8756428 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.187220  1535 fragment_mgr.cpp:917] Query bc4b52e333644d1a-ad35eb561488a57b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.291507  1537 fragment_mgr.cpp:917] Query 1ce2ab2bf558438c-a98977c4f94decf1 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.390811  1539 fragment_mgr.cpp:917] Query ca26ea55a36245ce-963e02468bd7b5ef does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.501763  1541 fragment_mgr.cpp:917] Query 2071ba60c8794ce9-96af0e6d9726bd23 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.604720  1543 fragment_mgr.cpp:917] Query 16b4b4bd1cdb4aa8-8a102e8d1bc281eb does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.701880  1545 fragment_mgr.cpp:917] Query 14747ce866a44b84-9559b7c94a7c5d4b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.800316  1419 fragment_mgr.cpp:917] Query 991840ea88684689-a7c53088f5192196 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.893922  1421 fragment_mgr.cpp:917] Query 60f0434480a34d92-adcf1edc9f25b9e7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:18.998154  1423 fragment_mgr.cpp:917] Query 259ab6ede7f24534-b128f3553172318e does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.094449  1425 fragment_mgr.cpp:917] Query adf704b46d984ff4-a968f359fc322394 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.196521  1427 fragment_mgr.cpp:917] Query e724e82eeb824826-b91fb656e43ec7c4 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.296224  1430 fragment_mgr.cpp:917] Query 2fb83cd3d1a4477-b9995129e0f80693 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.400853  1431 fragment_mgr.cpp:917] Query 6233517ad2ca4c80-84911616b70b6efc does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.503295  1433 fragment_mgr.cpp:917] Query a82dae6b1d884bb9-965c1dfe7c5ef888 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.598443  1435 fragment_mgr.cpp:917] Query 58357d2dc0514eff-8797de4b1f038d58 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.699724  1437 fragment_mgr.cpp:917] Query 91bce526f55e4094-ad9d2474e87dc280 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.800603  1439 fragment_mgr.cpp:917] Query 42c3c9ac992f4352-bfe37a48b3644850 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.894835  1441 fragment_mgr.cpp:917] Query 52ba957b86a44b6c-bcc56f1760d22a29 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:19.988443  1443 fragment_mgr.cpp:917] Query 6f7daf7ddbd45af-85311bae8a45f920 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.084106  1445 fragment_mgr.cpp:917] Query 4f887726514a4fe9-a2891a015702f74c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.184234  1447 fragment_mgr.cpp:917] Query a87699a3adab4add-94531359e5ca26af does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.278117  1449 fragment_mgr.cpp:917] Query 1ea9255139524c69-b9d35b813032b3cc does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.371273  1451 fragment_mgr.cpp:917] Query 642d82263ff24b78-96644bcd1c1a781c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.466531  1453 fragment_mgr.cpp:917] Query 3c26d941d5564a09-98daabfbcb07f095 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.557271  1455 fragment_mgr.cpp:917] Query 7aec3759b1a44e69-9ee5afae82cf6ff7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.641119  1457 fragment_mgr.cpp:917] Query 14c8e89d21a64db0-b4d0a3528948b358 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:55:20.723631  1459 fragment_mgr.cpp:917] Query 513a388aef824c30-9d07343aba99389e does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:18.993871  1466 fragment_mgr.cpp:917] Query 1344e06631604570-b0996d59d91bdde7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:18.996780  1469 fragment_mgr.cpp:917] Query 14ee2fe7caf04022-bec6e5a7e6375ff9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:18.997020  1470 fragment_mgr.cpp:917] Query c5ca141dd1254cf3-893acbb69189de4a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.000610  1471 fragment_mgr.cpp:917] Query cad331e235444d5c-883117e48bb47b64 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.001233  1473 fragment_mgr.cpp:917] Query 77007f775c964a3d-a143a5abf6011472 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.001204  1472 fragment_mgr.cpp:917] Query 8d02bbb7fc4c40c5-9fb96c8203d5a3d2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.005084  1474 fragment_mgr.cpp:917] Query 45b70aef57764f72-933592bf20e1a284 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.005565  1475 fragment_mgr.cpp:917] Query c84b47c8a54649f1-9cf0d57344fd57fe does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.011127  1479 fragment_mgr.cpp:917] Query 20f4faf782694e59-a0ce7be1c1b667f0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.014386  1480 fragment_mgr.cpp:917] Query eb0a6ff64e1845a9-a4eb86b34a695cea does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.014824  1481 fragment_mgr.cpp:917] Query f60efd1147b547b7-ab537ec4bb9de071 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.026440  1484 fragment_mgr.cpp:917] Query 43c3beda560d462e-82f36dc2033eab62 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.028983  1485 fragment_mgr.cpp:917] Query 4dc2d4e326fd402e-9621a08a6d7cbea5 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.033819  1489 fragment_mgr.cpp:917] Query dfc14420d9c341a5-af0f9ed7181112e7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.037001  1491 fragment_mgr.cpp:917] Query 55cb39c3de9f4f96-bc619c689812dee2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.039230  1492 fragment_mgr.cpp:917] Query 3b15ed0a5750481a-a7353e89255cae85 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.045683  1496 fragment_mgr.cpp:917] Query 3b64e006198e47fb-b1171d05c666c0a7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.047333  1497 fragment_mgr.cpp:917] Query 9520a6d754864ed4-ad1f44cac9c859df does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.048795  1500 fragment_mgr.cpp:917] Query 70ccc5e5ba8f446e-957a4f74b2c94cac does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.051412  1502 fragment_mgr.cpp:917] Query e22662fb56184037-a2a17074a4e45e12 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.053360  1503 fragment_mgr.cpp:917] Query f8768238f1a245e3-91420663f1052c59 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.054226  1504 fragment_mgr.cpp:917] Query a9fe5a422b1d41a3-b780634e4f96a37a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.058058  1505 fragment_mgr.cpp:917] Query f2e28ee768d34d27-b1b4a7c0ff72d372 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:19.202292  1508 fragment_mgr.cpp:917] Query 827118a54f104af4-adcffbe3b8bc0b99 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:44.945751  1515 fragment_mgr.cpp:917] Query 14f613c68ed14e65-8c891a5fd923678d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:44.947361  1518 fragment_mgr.cpp:917] Query e73f18da1a7645e1-8f0bed9ed2f76d24 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:45.036299  1523 fragment_mgr.cpp:917] Query eb224f72058c4b55-8736d9a8f4f5f07a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:45.066023  1528 fragment_mgr.cpp:917] Query 4a75cfdf8f2148ac-af521bed6cdf6fa9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:45.200572  1532 fragment_mgr.cpp:917] Query 27e20c0273cb4afa-802f7fd7e9ab8162 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:45.264572  1535 fragment_mgr.cpp:917] Query 524b66e7346341a5-859d7c4bf799f263 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:45.512449  1537 fragment_mgr.cpp:917] Query 7ac76ab9600f4878-98353b778b166064 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:56:45.707044  1542 fragment_mgr.cpp:917] Query b2bde673c5b34731-bf602d9303de1c70 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.623690  1420 fragment_mgr.cpp:917] Query f8bf56f3ada74eb9-b0a5d08c8431ea9d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.691661  1423 fragment_mgr.cpp:917] Query 49ff6d5ba4b4b85-92836828382458f9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.806504  1425 fragment_mgr.cpp:917] Query a100bd0ad9474d4f-b47a2c73b3a2c247 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.878548  1437 fragment_mgr.cpp:917] Query f3bf7b0bc5ce4294-aec3a48558503bb9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.879199  1438 fragment_mgr.cpp:917] Query ac4c0ffea4944fa2-a46dfefba89431b8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.882688  1440 fragment_mgr.cpp:917] Query 416dbbb5db841e4-9f3fa9c2e8dcc49d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.883210  1441 fragment_mgr.cpp:917] Query 7ca15c518d5e4689-befa87a96cf75f05 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.883563  1443 fragment_mgr.cpp:917] Query ff7ea24ee9e64684-a7b8f679fb69af92 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.883953  1442 fragment_mgr.cpp:917] Query bc033c5dc6544725-9b7266f50b063de2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.884255  1444 fragment_mgr.cpp:917] Query c1b6e028269c4c38-8d5a0b3511e2bdbf does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.884815  1445 fragment_mgr.cpp:917] Query 6bc704b17b5f4eb0-afd1dd551867470f does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.886379  1446 fragment_mgr.cpp:917] Query c114a10c8792441f-bf7d9e9fc59c86a9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.890084  1447 fragment_mgr.cpp:917] Query 5c3463d25e10464c-824d1c8e1add960d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.908537  1451 fragment_mgr.cpp:917] Query d164133825194f4c-b87c5003f56d4d29 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.909725  1452 fragment_mgr.cpp:917] Query 5857aceffbfb455c-a55924de66bbf77b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.911151  1453 fragment_mgr.cpp:917] Query 73b3d259d0ff4b2a-b0e615067f6053d2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:17.912010  1454 fragment_mgr.cpp:917] Query b4aa3f3351954879-988ac18a904100fe does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.000176  1456 fragment_mgr.cpp:917] Query 7df0d367f3e941a6-85cabe2245ca6180 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.067750  1459 fragment_mgr.cpp:917] Query f58700043f8f4902-94ce398da089d7f0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.159296  1463 fragment_mgr.cpp:917] Query 1c0a88c54e044d1d-ab0a001aca1a703a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.226379  1464 fragment_mgr.cpp:917] Query 11856441fbeb4c46-8722ec397866affc does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.322572  1466 fragment_mgr.cpp:917] Query d7dcb87bb6314215-962519043a13a6b3 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.468605  1471 fragment_mgr.cpp:917] Query b91d81bdb5d448f2-bab59ccca457859b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.528479  1474 fragment_mgr.cpp:917] Query e081fe5dbd6c48df-892da256926ec0b4 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.619858  1476 fragment_mgr.cpp:917] Query fe6bb987be274a55-8258a32cec0ae8a7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.774928  1481 fragment_mgr.cpp:917] Query c2bcb7d17f114c72-9a7eea282d44ef2a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.919045  1486 fragment_mgr.cpp:917] Query c8d4a1604324805-abda385db07d9a5d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:18.981631  1488 fragment_mgr.cpp:917] Query 508a5a51c6814e30-8c7190836597fb39 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.075721  1491 fragment_mgr.cpp:917] Query 1b6d830907942d9-a158577e2883038a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.148732  1494 fragment_mgr.cpp:917] Query 6263989c3b54444e-88eca15d04328da0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.238202  1495 fragment_mgr.cpp:917] Query 47f42d817e80428d-be107d09cdc99301 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.411912  1501 fragment_mgr.cpp:917] Query f134e0de344648fa-a14ceecd19eec828 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.496348  1504 fragment_mgr.cpp:917] Query 454a03faa4034c78-b75e47ff011db972 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.591560  1506 fragment_mgr.cpp:917] Query 122f77781277431d-b6b25f4530f0f37c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.743868  1511 fragment_mgr.cpp:917] Query bdeea67005e34bba-abfdc026ac9ed24a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.809806  1514 fragment_mgr.cpp:917] Query b742712142bb4ce2-94012a8f077ed746 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:19.914654  1517 fragment_mgr.cpp:917] Query f6fcb7645a9341ff-9b7bf1d9309a77a8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:20.101138  1521 fragment_mgr.cpp:917] Query be2278d7ee94652-9f9407feb66d9c74 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:20.370748  1526 fragment_mgr.cpp:917] Query e68c991a4e754a32-a59e6f2fde656cf0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:20.621738  1531 fragment_mgr.cpp:917] Query 66d5fe06b021410a-8e58dae068bdabec does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:20.869769  1536 fragment_mgr.cpp:917] Query 899b148e1d1e4d7f-a3c6379525e37728 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:21.382808  1418 fragment_mgr.cpp:917] Query 4d0fa723623c422d-b9d7198834445766 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:21.626781  1423 fragment_mgr.cpp:917] Query e4c4a9cbda3849b9-b721c3895ec529fb does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:21.869508  1429 fragment_mgr.cpp:917] Query 71959d07c6124f4f-8949b84bdc41e750 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:22.095451  1434 fragment_mgr.cpp:917] Query 32ce6f6df22a4552-a414dd6de68f2531 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:22.358428  1438 fragment_mgr.cpp:917] Query aabdec22b4d64eba-a42c352d28c81109 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:22.630769  1442 fragment_mgr.cpp:917] Query 199e76c4aa0846be-b135cb55487c1280 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:22.898103  1448 fragment_mgr.cpp:917] Query b52858134aeb44ae-824182ca925dc807 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:23.117233  1453 fragment_mgr.cpp:917] Query 4b1400f60bd048ff-ba1031c5fd82532d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:23.341629  1458 fragment_mgr.cpp:917] Query 9dbc7e8266cc4238-85a4299f5276ce5d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:23.408317  1463 fragment_mgr.cpp:917] Query c3c9e6be4ee849ad-a80d0368d053129f does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:23.497201  1460 fragment_mgr.cpp:917] Query c952fee028164c4c-89725b4a757100ed does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:23.656880  1467 fragment_mgr.cpp:917] Query cd79ea1cc27d4c96-b95e69edf3699259 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:23.808585  1472 fragment_mgr.cpp:917] Query 9f1c2ecfb42b4c19-b10057341afdb9e0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:24.141340  1483 fragment_mgr.cpp:917] Query 99c4d4ba7e8c4ae6-95c82aeb84dde2be does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:24.470788  1493 fragment_mgr.cpp:917] Query 723d7542663e4a0a-a5d8c6572ae16736 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:24.622900  1496 fragment_mgr.cpp:917] Query f537f18cc8d34947-8a19ae3727f3fd09 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:24.777276  1503 fragment_mgr.cpp:917] Query 49ed253dc2b34b22-a9e0d79892e8a827 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:24.933233  1508 fragment_mgr.cpp:917] Query 49eac3d27ad74c34-84d776f96b4c417f does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:25.084668  1513 fragment_mgr.cpp:917] Query 900bb1daa6f94732-b1755d0d87201d47 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:25.239888  1518 fragment_mgr.cpp:917] Query 281afbe33c8849eb-9d91172453558ac4 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:25.395488  1523 fragment_mgr.cpp:917] Query 9ac00a03e7fa412b-98584c0799981f6f does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:25.552107  1528 fragment_mgr.cpp:917] Query 3c088a19ea914ef7-b6abdc5d1b3cc1c0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:25.714773  1533 fragment_mgr.cpp:917] Query 6a37eadd03a342b4-a3a36be27d94cf80 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:25.885551  1538 fragment_mgr.cpp:917] Query f580733581f34051-ae21e180cbe56a78 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:26.051036  1418 fragment_mgr.cpp:917] Query 345fe0367df8483a-9957d4cef0b29d1d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:26.216591  1423 fragment_mgr.cpp:917] Query 6f71e51c4d7241c1-9670b7e113e35e2c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:26.294108  1427 fragment_mgr.cpp:917] Query a0d16dc9857d46ab-bc3fa46ac2ade24a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:26.396415  1429 fragment_mgr.cpp:917] Query 24d9fa759c904bcc-aa599326d0ea8773 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:26.544981  1434 fragment_mgr.cpp:917] Query 431999a236d246ae-8e3db743a29ad2c0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:26.713565  1438 fragment_mgr.cpp:917] Query 391ad8ea95f44be7-b4b4442d1d53ff63 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:26.878890  1442 fragment_mgr.cpp:917] Query 8d98895e465e4588-ac9535b5aa0a15f7 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:27.201570  1453 fragment_mgr.cpp:917] Query 5816d13bfc1941f5-a46b20f331ef2aea does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:27.346431  1458 fragment_mgr.cpp:917] Query b8f84467ca3542ef-a89409434ec025c5 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:27.497875  1460 fragment_mgr.cpp:917] Query faa5c3f2a7dc4085-9bf1c307070249d4 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:27.639633  1467 fragment_mgr.cpp:917] Query b496995720ae4ab6-894c4025264e75d3 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:27.779738  1472 fragment_mgr.cpp:917] Query 867c499483e5430c-822679f974601f6a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:28.051067  1483 fragment_mgr.cpp:917] Query ea0a5cfa60d4197-92316e1cdbc33528 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:28.343304  1493 fragment_mgr.cpp:917] Query 6b38aa2a5ed94b85-938b2c55d03fbcba does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:28.491375  1496 fragment_mgr.cpp:917] Query bfbd3bc2df7943d9-9bd3c7ce636b97a4 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:28.627497  1503 fragment_mgr.cpp:917] Query aa85368c541d4005-982d6556eabbe68b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:29.411244  1523 fragment_mgr.cpp:917] Query 6312516550464a0c-bc68a0daabb659f8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:30.040825  1538 fragment_mgr.cpp:917] Query ccc703b5f7854f63-aac5a40d4a3c1d76 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:30.940002  1432 fragment_mgr.cpp:917] Query 3a498f2ee6f14172-905f404e3a5d7a27 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:31.170784  1436 fragment_mgr.cpp:917] Query 459aa8e715f460a-921d6d5dcec3c883 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:31.834972  1445 fragment_mgr.cpp:917] Query cc6aa71ec8954538-ba30ee6925eff231 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:32.078593  1450 fragment_mgr.cpp:917] Query 2e42813bdc98425a-b66df81ecea3e7e5 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:32.611709  1465 fragment_mgr.cpp:917] Query 48f94cbc6a5844c3-82b5c123743e04ba does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:32.759034  1470 fragment_mgr.cpp:917] Query e9854f5ba4414a3a-bd90ae0c13846763 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:32.923466  1475 fragment_mgr.cpp:917] Query 4bf282bb299941f7-817de8f6a1ba059b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:33.061141  1480 fragment_mgr.cpp:917] Query 69f432bc7301494e-bb501b497641993d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:33.236090  1485 fragment_mgr.cpp:917] Query c707b6e945864b34-a2458a5975191d70 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:33.385146  1490 fragment_mgr.cpp:917] Query 1075ec247d654e2e-be5153253754a354 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:33.544844  1499 fragment_mgr.cpp:917] Query 2ec78f5335d646b4-915dfe3564a6c1cc does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:33.714310  1500 fragment_mgr.cpp:917] Query 596f92798349483a-9ee07c77db0a4e56 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:33.877103  1505 fragment_mgr.cpp:917] Query c4e34f7b423d480c-8b45d2efa5795571 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:34.240306  1516 fragment_mgr.cpp:917] Query 122fbbc81d414f20-9baaff822416fac3 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:34.428766  1520 fragment_mgr.cpp:917] Query f077b8a4a6a045b8-bb6dd04a5a673774 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:34.577664  1525 fragment_mgr.cpp:917] Query 3c18c1830ff0463b-aaa49a30020a12db does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:35.536929  1422 fragment_mgr.cpp:917] Query c3ef4447c57742a8-a32437062ab1b849 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:35.863269  1426 fragment_mgr.cpp:917] Query dee58c88b65c44cc-9d593f590922f07d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:36.122699  1437 fragment_mgr.cpp:917] Query c56f4661b89a406d-8b89f0cbabadc2ca does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:36.363607  1443 fragment_mgr.cpp:917] Query 110e7831eaf74067-a84aaafd8cb825b6 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:36.567359  1447 fragment_mgr.cpp:917] Query ae2293f71f3448db-a59186f1d00a62df does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:36.824052  1452 fragment_mgr.cpp:917] Query 3fc985dcb9e44429-bcfc34b087817e93 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:37.091504  1457 fragment_mgr.cpp:917] Query 52d1bd9c819e4d86-a50f1bb1b6c23c9b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:37.609907  1468 fragment_mgr.cpp:917] Query 7cad478d9abb4e42-83ba72601eb383ab does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:38.973706  1498 fragment_mgr.cpp:917] Query 54f9b9224ec4bed-b03750bc76d24c28 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:39.189780  1502 fragment_mgr.cpp:917] Query e75e09cfbd984236-92959889896a107b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:39.668274  1512 fragment_mgr.cpp:917] Query 9a9341cd5bd648e2-a298618e9b18ebe6 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:39.819283  1515 fragment_mgr.cpp:917] Query a14d297fa9694c6d-a2b6b01da988847a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:40.598850  1540 fragment_mgr.cpp:917] Query 31313ae1fb7c4e55-9b5ac2afb1f8f6d0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:40.792003  1545 fragment_mgr.cpp:917] Query 14a5106cbc564008-954c2af3842d6ab0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:41.761521  1437 fragment_mgr.cpp:917] Query 3719b485ecd14ce6-93767d47c6a41465 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:44.180668  1487 fragment_mgr.cpp:917] Query 152a0bc2d334667-b01cf6d62949976c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:44.412060  1492 fragment_mgr.cpp:917] Query 19fa6cca925841e7-ba6ac86f8f372424 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:44.889540  1502 fragment_mgr.cpp:917] Query 3e7b89cb6ca34221-87e29fd48989b915 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:45.353746  1512 fragment_mgr.cpp:917] Query 2f72435d28554035-91b26f98f3c5b808 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:45.583328  1515 fragment_mgr.cpp:917] Query 3b02112489e240c3-8f4e89a2c6a376e6 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:46.304773  1532 fragment_mgr.cpp:917] Query cc47db5d4d21480a-a88295819e255905 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:57:47.364288  1545 fragment_mgr.cpp:917] Query bf9ec686ce494933-8bbbe03cdb633baa does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.361572  1420 fragment_mgr.cpp:917] Query 413b7767366b4d26-9316865f1bc67416 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.566555  1423 fragment_mgr.cpp:917] Query b144463295f4419d-a5ac8e774e2939ac does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.589803  1427 fragment_mgr.cpp:917] Query 8149dbcd5ef4420a-ac38b0206a8b6f1f does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.660203  1430 fragment_mgr.cpp:917] Query 89b2e8143ee54194-966cb29c44be5952 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.776000  1435 fragment_mgr.cpp:917] Query 19268ed9bc0c4cbc-8361ab4e11f707e2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.831205  1437 fragment_mgr.cpp:917] Query 772e7fdbb7be42ff-b1427a2d310a7e67 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.851454  1440 fragment_mgr.cpp:917] Query fdafde1d7404782-8b5bcddcfe632bde does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.903900  1442 fragment_mgr.cpp:917] Query 813d9e3020424562-b27a7a28e0058a29 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.919749  1446 fragment_mgr.cpp:917] Query 10a798d6c8314cec-80105c092f761455 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.965693  1449 fragment_mgr.cpp:917] Query 84c0934bd56b4a08-8e7fe53cc5834b6d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:26.983310  1452 fragment_mgr.cpp:917] Query 76f5262628f8437f-a734d99f52dacc7b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.037295  1455 fragment_mgr.cpp:917] Query 7b0e17067f35476b-905720b91843b18c does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.159776  1461 fragment_mgr.cpp:917] Query 2d086a22450c4fde-a2c6c9298964a593 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.215047  1460 fragment_mgr.cpp:917] Query 8f53c8eb2e6e44b1-bc2773ffb464c0cc does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.234819  1466 fragment_mgr.cpp:917] Query e352546c87b84aaf-a7551412e4b2d5bf does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.287513  1469 fragment_mgr.cpp:917] Query 93c78f47f4e04bff-83ccbd8178a3e739 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.305900  1473 fragment_mgr.cpp:917] Query a8e546609b0347c7-83a5367e29722759 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.364123  1475 fragment_mgr.cpp:917] Query 8bf240533b1740af-a0b539a5a134fae0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.381255  1478 fragment_mgr.cpp:917] Query 85e6db9813f245ca-98c4a537ab61d7ba does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.432785  1481 fragment_mgr.cpp:917] Query e46081d0f9f94ccc-8aa9c0fd0280f98d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.450623  1484 fragment_mgr.cpp:917] Query e12f1df41958410d-968528bf4c9ae204 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.495687  1487 fragment_mgr.cpp:917] Query 578b917abe1b4952-81c172da8868c501 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.511281  1490 fragment_mgr.cpp:917] Query a851e5c5372c4b50-bcef374c666dbe29 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.559271  1493 fragment_mgr.cpp:917] Query 7c14aa22aa814333-a22259c77c6c28f8 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.575071  1495 fragment_mgr.cpp:917] Query 290bea76f5bb40bc-a8a1477efd6b9e18 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.619109  1497 fragment_mgr.cpp:917] Query 2c054f3b75a54b6c-8d15d716788ef8e9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.639739  1502 fragment_mgr.cpp:917] Query efb6a0cf64b148ac-a398b6c0b1ef3f6a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.679924  1505 fragment_mgr.cpp:917] Query 26a8927d1e124e79-a9dd55e812e53fa3 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.695066  1508 fragment_mgr.cpp:917] Query 27cc0c518a1b4a90-9f724b783b9ad2cf does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.740027  1511 fragment_mgr.cpp:917] Query 6d1f1cece2de4ce2-bcf35a88b6d9b097 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.759315  1514 fragment_mgr.cpp:917] Query 3b11e520d8b944be-841c2a99c33bf7f2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.796932  1515 fragment_mgr.cpp:917] Query 11a7655732f540fc-86bc63de6f9a6cf0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.813264  1520 fragment_mgr.cpp:917] Query 3728c170aa434d7d-99a72e278420589a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.858374  1523 fragment_mgr.cpp:917] Query ecd09bcf153b49ae-9d9f55088e2c81d3 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.873838  1526 fragment_mgr.cpp:917] Query 8bc4f6d4448a4584-a804d2b844ac7e7e does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.904289  1529 fragment_mgr.cpp:917] Query aad0552aaa0b4207-b4f810b227da0fad does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.916273  1532 fragment_mgr.cpp:917] Query 9ce269cdf0544609-bf04c50009609f73 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.952781  1535 fragment_mgr.cpp:917] Query 1121906718e14ad6-8f999810b4001c1e does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:27.966848  1538 fragment_mgr.cpp:917] Query a25fd868d62e43b6-ad1f8e3fe6629cf5 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.005637  1541 fragment_mgr.cpp:917] Query 988aa9c6020f416a-9a4ac62638456c66 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.023972  1544 fragment_mgr.cpp:917] Query f7a19a1926204b4d-9822079e9ba1e1db does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.061767  1419 fragment_mgr.cpp:917] Query d719551e3ef648b9-b9fec941fd610b48 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.077286  1422 fragment_mgr.cpp:917] Query 33e73bd871c44516-a3558780d990c543 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.116102  1425 fragment_mgr.cpp:917] Query cddd9538a9354b27-b5a1f5b0234aa1e3 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.129549  1429 fragment_mgr.cpp:917] Query d0c3f104a8e84553-b41c0b1dde40c35d does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.171327  1431 fragment_mgr.cpp:917] Query 1d5c5ca58d4d4a95-bfd0e88d7edefbd0 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.185854  1435 fragment_mgr.cpp:917] Query 79013c0099de4adb-96c1bd2094787b82 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.228662  1437 fragment_mgr.cpp:917] Query 1ec1beab480d472e-bdcfa27da2c08e92 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.243041  1440 fragment_mgr.cpp:917] Query c2b44246e10444ec-a76516fe406cf4ed does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.276418  1442 fragment_mgr.cpp:917] Query d0946d575d1c4be5-a89e7d0c0882fa6e does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.289856  1446 fragment_mgr.cpp:917] Query 2f280871d7754006-92de4f830b10995a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.324493  1449 fragment_mgr.cpp:917] Query 86830e2652ae43db-92d59fa2201d1f4a does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.339437  1452 fragment_mgr.cpp:917] Query 35fabade59644c2f-bf6c55b03659312b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.374931  1455 fragment_mgr.cpp:917] Query 19be4bb37a7f494d-b31fc374496db4db does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.615598  1461 fragment_mgr.cpp:917] Query c3ffc38e30d040fb-84dff50c607d1261 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.644016  1460 fragment_mgr.cpp:917] Query 12bda3e14d5d45ad-a76ef60ae5f75138 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.657270  1466 fragment_mgr.cpp:917] Query 7972b503026b4b15-8967acd747bc5de2 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.687330  1469 fragment_mgr.cpp:917] Query 70041a5ab276453f-b39609a2be981538 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.700560  1473 fragment_mgr.cpp:917] Query 3bae1d61b7bc4fa5-a932c5da1c9e1b26 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.731159  1475 fragment_mgr.cpp:917] Query 1fce991e5b87491e-874ae932961abdf9 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.744987  1478 fragment_mgr.cpp:917] Query c86be6e487f24ef5-a1a7905efc0a42b4 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.778627  1481 fragment_mgr.cpp:917] Query 2c785db6ae30487a-ba1abdac03569d08 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.790841  1484 fragment_mgr.cpp:917] Query 786b87df543f4344-868281d42e5679d5 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.821974  1487 fragment_mgr.cpp:917] Query a6f578692104420f-a0d2139933efc43e does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.834020  1490 fragment_mgr.cpp:917] Query 8d28fbb113c3447a-a86c4cb360d3b59b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.859685  1493 fragment_mgr.cpp:917] Query f613106f3507474c-a1d744ed173a824b does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.871943  1495 fragment_mgr.cpp:917] Query 8b207b1595cf4ebc-be1f8656029f1f57 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.897900  1497 fragment_mgr.cpp:917] Query 3716799122ae4fb8-a8a2208f6d4cd0c6 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.911969  1502 fragment_mgr.cpp:917] Query c96d3891ea7a4f37-ac0a66c14dcc010f does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.938728  1505 fragment_mgr.cpp:917] Query 785c2c769d6e4d55-bea1f855adaba3c1 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.950503  1508 fragment_mgr.cpp:917] Query 66401d8821a54430-93b7cb6e9684c421 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:28.976681  1511 fragment_mgr.cpp:917] Query 2f631019283d4ddf-9d2c9759ab5bdd91 does not exists, failed to cancel it
+RuntimeLogger W20260128 06:58:29.070302  1513 fragment_mgr.cpp:917] Query e6914fdc09a64efd-b3d6fb625e2387c5 does not exists, failed to cancel it
+RuntimeLogger W20260128 07:02:40.251694  1517 fragment_mgr.cpp:917] Query e6e2a78d2ee34db9-b16908b9b556fa94 does not exists, failed to cancel it
+RuntimeLogger W20260128 07:04:20.647761  1521 fragment_mgr.cpp:917] Query 647d690488834225-981d9cd712404f0f does not exists, failed to cancel it
+RuntimeLogger W20260128 07:04:31.264110  1525 fragment_mgr.cpp:917] Query d63e474bfb1e49c2-be2b95d5b8b59654 does not exists, failed to cancel it
+RuntimeLogger W20260128 07:04:31.289606  1529 fragment_mgr.cpp:917] Query 85ac4fd171154a6d-abf627467972a816 does not exists, failed to cancel it

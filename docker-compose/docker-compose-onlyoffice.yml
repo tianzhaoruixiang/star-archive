@@ -1,0 +1,26 @@
+services:
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: onlyoffice-documentserver
+    ports:
+      - "8081:80"  # OnlyOffice 服务端口
+    volumes:
+      - ./onlyoffice/data:/var/www/onlyoffice/Data
+      - ./onlyoffice/logs:/var/log/onlyoffice
+    environment:
+      - JWT_ENABLED=false  # 开发环境可以关闭 JWT，生产环境建议开启
+      - JWT_SECRET=your-secret-key-here
+      - DB_TYPE=sqlite  # 使用 SQLite，也可以配置 MySQL/PostgreSQL
+    restart: unless-stopped
+    networks:
+      - onlyoffice-network
+    # 资源限制（可选，根据需要调整）
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+networks:
+  onlyoffice-network:
+    driver: bridge

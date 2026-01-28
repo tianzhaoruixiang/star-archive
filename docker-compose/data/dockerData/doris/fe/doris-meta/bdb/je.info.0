@@ -1,0 +1,17 @@
+2026-01-28 06:54:25.942 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] No server auth method
+2026-01-28 06:54:25.945 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Started ServiceDispatcher. HostPort=fe:9010
+2026-01-28 06:54:25.945 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] DataChannel factory: com.sleepycat.je.rep.utilint.net.SimpleChannelFactory
+2026-01-28 06:54:25.967 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] DTVLSN at start:0
+2026-01-28 06:54:25.969 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] node:NullNode(-1) state change from DETACHED to UNKNOWN
+2026-01-28 06:54:25.980 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Current group size: 0
+2026-01-28 06:54:25.982 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] New node fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77(-1) unknown to rep group
+2026-01-28 06:54:25.983 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Master changed to fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77
+2026-01-28 06:54:25.983 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Nascent group. fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77 is master by virtue of being the first node.
+2026-01-28 06:54:25.984 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] node:fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77(1) state change from UNKNOWN to MASTER
+2026-01-28 06:54:26.006 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Successfully added node:fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77(1) HostPort = 172.20.81.2: 9010 [ELECTABLE]
+2026-01-28 06:54:26.013 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Updated minimum JE group version to 7.5.0
+2026-01-28 06:54:26.015 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Node fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77 started
+2026-01-28 06:54:26.015 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] node:NullNode(-1) state change from MASTER to UNKNOWN
+2026-01-28 06:54:26.015 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] node:fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77(1) state change from UNKNOWN to MASTER
+2026-01-28 06:54:26.016 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Feeder manager accepting requests.
+2026-01-28 06:54:26.017 UTC INFO [fe_0e239587_f1ec_48ac_b65d_3d6a0bab0b77] Joining group as master
