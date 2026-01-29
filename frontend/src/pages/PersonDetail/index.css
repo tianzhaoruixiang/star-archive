@@ -1,0 +1,43 @@
+.person-detail {
+  padding: 0;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.detail-avatar {
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  background: #1890ff;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  border-radius: 50%;
+  text-align: center;
+}
+
+.detail-basic h2 {
+  margin: 0 0 12px 0;
+}
+
+.detail-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.social-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+}
