@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # Doris FE (Frontend)
+  doris-fe:
+    image: apache/doris:fe-4.0.2
+    container_name: archive-doris-fe
+    hostname: fe
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.2
+    ports:
+      - "8030:8030"   # FE HTTP Port
+      - "9030:9030"   # FE MySQL Port
+    environment:
+      - FE_SERVERS=fe1:172.20.80.2:9010
+      - FE_ID=1
+    volumes:
+      - ./data/doris/fe/doris-meta:/opt/apache-doris/fe/doris-meta
+      - ./data/doris/fe/log:/opt/apache-doris/fe/log
+      - ./init-db:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8030/api/bootstrap"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Doris BE (Backend)
+  doris-be:
+    image: apache/doris:be-4.0.2
+    container_name: archive-doris-be
+    hostname: be
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.3
+    ports:
+      - "8040:8040"   # BE HTTP Port
+    environment:
+      - FE_SERVERS=fe1:172.20.80.2:9010
+      - BE_ADDR=172.20.80.3:9050
+    volumes:
+      - ./data/doris/be/storage:/opt/apache-doris/be/storage
+      - ./data/doris/be/log:/opt/apache-doris/be/log
+    depends_on:
+      doris-fe:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # SeaweedFS Master
+  seaweedfs-master:
+    image: chrislusf/seaweedfs:latest
+    container_name: archive-seaweedfs-master
+    hostname: seaweedfs-master
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.10
+    ports:
+      - "9333:9333"    # Master HTTP API
+      - "19333:19333"  # Master gRPC
+    volumes:
+      - ./data/seaweedfs/master:/data
+    command: "master -ip=seaweedfs-master -port=9333 -mdir=/data -peers=seaweedfs-master:9333"
+    restart: unless-stopped
+
+  # SeaweedFS Volume
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:latest
+    container_name: archive-seaweedfs-volume
+    hostname: seaweedfs-volume
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.11
+    ports:
+      - "8080:8080"    # Volume HTTP API
+    volumes:
+      - ./data/seaweedfs/volume:/data
+    command: "volume -mserver=seaweedfs-master:9333 -port=8080 -dir=/data -max=0"
+    depends_on:
+      - seaweedfs-master
+    restart: unless-stopped
+
+  # SeaweedFS Filer
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:latest
+    container_name: archive-seaweedfs-filer
+    hostname: seaweedfs-filer
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.12
+    ports:
+      - "8888:8888"    # Filer HTTP API
+      - "18888:18888"  # Filer gRPC
+    volumes:
+      - ./seaweedfs/filer:/data
+    command: "filer -master=seaweedfs-master:9333 -port=8888"
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+    restart: unless-stopped
+
+networks:
+  archive-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.80.0/24
+
+volumes:
+  doris-fe-meta:
+  doris-fe-log:
+  doris-be-storage:
+  doris-be-log:
+  seaweedfs-master-data:
+  seaweedfs-volume-data:
+  seaweedfs-filer-data:

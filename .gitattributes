@@ -1,0 +1,23 @@
+# 自动处理行尾
+* text=auto
+
+# 明确声明文本文件
+*.py text eol=lf
+*.js text eol=lf
+*.vue text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# 二进制文件
+*.jpg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.db binary
+*.db-journal binary
+*.db-wal binary
+*.db-shm binary
+

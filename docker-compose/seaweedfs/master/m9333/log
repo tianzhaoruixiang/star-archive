@@ -1,7 +1,0 @@
-      48
-	raft:join"9{"name":"master:9333","connectionString":"master:19333"}
-      33
-MaxVolumeId""{"maxVolumeId":0,"topologyId":""}
-       c
-raft:nop      57
-MaxVolumeId"F{"maxVolumeId":0,"topologyId":"b8e9b5e1-1fd4-4d71-8208-c8cef98e0b32"}
