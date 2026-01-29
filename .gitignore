@@ -92,3 +92,4 @@ instance/
 .tox/
 .hypothesis/
 docker/data
+docker/seaweedfs

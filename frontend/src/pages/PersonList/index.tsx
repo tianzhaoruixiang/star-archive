@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Card, Row, Col, Tag, Pagination, Spin, Empty } from 'antd';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { Card, Row, Col, Tag, Pagination, Spin, Empty, Input } from 'antd';
+import { SearchOutlined, BellOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonList, fetchTags, fetchPersonListByTag } from '@/store/slices/personSlice';
 import './index.css';
 
-interface FlatTag {
+/** 标签项（与后端 tag 表 /persons/tags 一致） */
+interface TagItem {
   tagId: number;
   firstLevelName?: string;
   secondLevelName?: string;
@@ -14,24 +16,26 @@ interface FlatTag {
   parentTagId?: number;
 }
 
+/** 按一级 -> 二级 -> 标签列表 分组，用于筛选区展示 */
+function buildTagTree(tags: TagItem[] | null): Record<string, Record<string, TagItem[]>> {
+  if (!tags?.length) return {};
+  const byFirst: Record<string, Record<string, TagItem[]>> = {};
+  tags.forEach((t) => {
+    const f = t.firstLevelName ?? '其他';
+    const s = t.secondLevelName ?? '';
+    if (!byFirst[f]) byFirst[f] = {};
+    if (!byFirst[f][s]) byFirst[f][s] = [];
+    byFirst[f][s].push(t);
+  });
+  return byFirst;
+}
+
 const PersonList = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { list, pagination, loading, tags } = useAppSelector((state) => state.person);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-
-  const tagTree = useMemo(() => {
-    const flat = (tags || []) as FlatTag[];
-    const byFirst: Record<string, Record<string, FlatTag[]>> = {};
-    flat.forEach((t) => {
-      const f = t.firstLevelName ?? '其他';
-      const s = t.secondLevelName ?? '';
-      if (!byFirst[f]) byFirst[f] = {};
-      if (!byFirst[f][s]) byFirst[f][s] = [];
-      byFirst[f][s].push(t);
-    });
-    return byFirst;
-  }, [tags]);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   useEffect(() => {
     dispatch(fetchTags());
@@ -45,90 +49,146 @@ const PersonList = () => {
     }
   }, [dispatch, selectedTag]);
 
-  const handlePageChange = (page: number, size: number) => {
-    if (selectedTag) {
-      dispatch(fetchPersonListByTag({ tag: selectedTag, page: page - 1, size }));
-    } else {
-      dispatch(fetchPersonList({ page: page - 1, size }));
-    }
-  };
+  const handlePageChange = useCallback(
+    (page: number, size: number) => {
+      if (selectedTag) {
+        dispatch(fetchPersonListByTag({ tag: selectedTag, page: page - 1, size }));
+      } else {
+        dispatch(fetchPersonList({ page: page - 1, size }));
+      }
+    },
+    [dispatch, selectedTag]
+  );
 
-  const handleCardClick = (personId: string) => {
-    navigate(`/persons/${personId}`);
-  };
+  const handleTagClick = useCallback((tagName: string) => {
+    setSelectedTag((prev) => (prev === tagName ? null : tagName));
+  }, []);
+
+  const handleCardClick = useCallback(
+    (personId: string) => {
+      navigate(`/persons/${personId}`);
+    },
+    [navigate]
+  );
+
+  const tagTree = useMemo(() => buildTagTree((tags || []) as TagItem[]), [tags]);
+
+  const filteredList = useMemo(() => {
+    if (!searchKeyword.trim()) return list;
+    const kw = searchKeyword.trim().toLowerCase();
+    return (list as { chineseName?: string; originalName?: string; idCardNumber?: string; personId?: string }[]).filter(
+      (p) =>
+        (p.chineseName && p.chineseName.toLowerCase().includes(kw)) ||
+        (p.originalName && p.originalName.toLowerCase().includes(kw)) ||
+        (p.idCardNumber && p.idCardNumber.includes(kw))
+    );
+  }, [list, searchKeyword]);
 
   return (
-    <div className="person-list">
-      <Card title="人员档案" style={{ marginBottom: 16 }}>
-        <div className="tag-filter">
-          <span className="filter-label">标签筛选：</span>
-          <Tag
-            className={selectedTag === null ? 'tag-selected' : ''}
-            onClick={() => setSelectedTag(null)}
-            style={{ cursor: 'pointer' }}
-          >
-            全部
-          </Tag>
-          {Object.entries(tagTree).map(([first, seconds]) => (
-            <span key={first} className="tag-group">
-              <span className="tag-first">{first}</span>
-              {Object.entries(seconds).map(([second, items]) =>
-                items.map((t) => (
-                  <Tag
-                    key={t.tagId}
-                    className={selectedTag === t.tagName ? 'tag-selected' : ''}
-                    onClick={() => setSelectedTag(t.tagName)}
-                    style={{ cursor: 'pointer', fontSize: 12 }}
-                  >
-                    {t.tagName}
-                    {t.personCount != null && (
-                      <span className="tag-count">({t.personCount})</span>
-                    )}
-                  </Tag>
-                ))
-              )}
-            </span>
-          ))}
+    <div className="person-list-page">
+      {/* 顶部：标题 + 搜索 + 右侧图标 */}
+      <div className="person-list-top">
+        <h1 className="person-list-title">人员档案</h1>
+        <div className="person-list-top-right">
+          <Input
+            placeholder="搜索姓名、身份证号..."
+            prefix={<SearchOutlined />}
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            className="person-list-search"
+            allowClear
+          />
+          <div className="person-list-icons">
+            <div className="person-list-icon-wrap">
+              <BellOutlined />
+              <span className="person-list-icon-badge">88</span>
+            </div>
+            <div className="person-list-icon-wrap">
+              <AppstoreOutlined />
+            </div>
+          </div>
         </div>
-      </Card>
+      </div>
 
+      {/* 筛选标签（全部来自 Doris tag 表 /persons/tags），默认展示所有人员 */}
+      <div className="person-list-filter">
+        <div className="person-list-filter-title">筛选标签</div>
+        {Object.entries(tagTree).map(([firstLevelName, secondMap]) => (
+          <div key={firstLevelName} className="person-list-filter-block">
+            <div className="person-list-filter-category">
+              <span className="person-list-filter-bar" />
+              <span className="person-list-filter-category-label">{firstLevelName}</span>
+            </div>
+            {Object.entries(secondMap).map(([secondLevelName, items]) => (
+              <div key={`${firstLevelName}-${secondLevelName}`} className="person-list-filter-row">
+                {secondLevelName ? (
+                  <span className="person-list-filter-sub-label">{secondLevelName}：</span>
+                ) : null}
+                <div className="person-list-filter-tags">
+                  {items.map((t) => (
+                    <Tag
+                      key={t.tagId}
+                      className={`person-list-tag ${selectedTag === t.tagName ? 'person-list-tag-selected' : ''}`}
+                      onClick={() => handleTagClick(t.tagName)}
+                    >
+                      {t.tagName}
+                      {t.personCount != null && (
+                        <span className="person-list-tag-count">({t.personCount})</span>
+                      )}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* 分割线 */}
+      <div className="person-list-divider" />
+
+      {/* 结果列表 */}
       {loading ? (
-        <div className="loading-container">
-          <Spin size="large" />
+        <div className="person-list-loading">
+          <Spin size="large" tip="加载中..." />
         </div>
-      ) : list.length === 0 ? (
-        <Card>
-          <Empty description="暂无人员数据" />
+      ) : filteredList.length === 0 ? (
+        <Card className="person-list-result-card">
+          <Empty description={searchKeyword ? '未找到匹配人员' : '暂无人员数据'} />
         </Card>
       ) : (
         <>
-          <Row gutter={[16, 16]}>
-            {list.map((person) => (
-              <Col span={4} key={person.personId}>
+          <Row gutter={[16, 16]} className="person-list-grid">
+            {filteredList.map((person: { personId?: string; chineseName?: string; originalName?: string; idCardNumber?: string; birthDate?: string; personTags?: string[]; isKeyPerson?: boolean }) => (
+              <Col xs={24} sm={12} md={8} lg={6} xl={4} key={person.personId}>
                 <Card
                   hoverable
-                  className="person-card"
-                  onClick={() => handleCardClick(person.personId)}
+                  className="person-list-card"
+                  onClick={() => handleCardClick(person.personId!)}
                 >
-                  <div className="person-avatar">
-                    {person.chineseName?.charAt(0) || '?'}
+                  <div className="person-list-card-avatar">
+                    {(person.chineseName || person.originalName || '?').charAt(0)}
                   </div>
-                  <div className="person-name">{person.chineseName}</div>
-                  <div className="person-id">{person.idCardNumber || '无身份证'}</div>
-                  <div className="person-birth">
+                  <div className="person-list-card-name">
+                    {person.chineseName || person.originalName || '—'}
+                  </div>
+                  <div className="person-list-card-id">
+                    {person.idCardNumber || '无身份证'}
+                  </div>
+                  <div className="person-list-card-birth">
                     {person.birthDate
                       ? new Date(person.birthDate).toLocaleDateString()
                       : '未知'}
                   </div>
-                  <div className="person-tags">
-                    {person.personTags?.slice(0, 2).map((tag: string, idx: number) => (
-                      <Tag key={idx} color="blue" style={{ fontSize: 12 }}>
+                  <div className="person-list-card-tags">
+                    {(person.personTags || []).slice(0, 2).map((tag: string, idx: number) => (
+                      <Tag key={idx} className="person-list-card-tag">
                         {tag}
                       </Tag>
                     ))}
                   </div>
                   {person.isKeyPerson && (
-                    <Tag color="red" className="key-person-tag">
+                    <Tag color="red" className="person-list-card-key">
                       重点人员
                     </Tag>
                   )}
@@ -137,17 +197,20 @@ const PersonList = () => {
             ))}
           </Row>
 
-          <div className="pagination-container">
-            <Pagination
-              current={pagination.page + 1}
-              pageSize={pagination.size}
-              total={pagination.total}
-              onChange={handlePageChange}
-              showSizeChanger
-              showQuickJumper
-              showTotal={(total) => `共 ${total} 条`}
-            />
-          </div>
+          {!searchKeyword && (
+            <div className="person-list-pagination">
+              <Pagination
+                current={pagination.page + 1}
+                pageSize={pagination.size}
+                total={pagination.total}
+                onChange={handlePageChange}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(total) => `共 ${total} 条`}
+                className="person-list-pagination-inner"
+              />
+            </div>
+          )}
         </>
       )}
     </div>

@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS person
     `chinese_name` VARCHAR(100) COMMENT '中文姓名',
     `original_name` VARCHAR(200) COMMENT '原始姓名',
     `alias_names` ARRAY<VARCHAR(100)> COMMENT '人物别名',
+    `organization` VARCHAR(100) COMMENT '机构名称',
     `avatar_files` ARRAY<VARCHAR(100)> COMMENT '头像文件SeaweedFS编号',
     `gender` VARCHAR(10) COMMENT '性别',
     `id_numbers` ARRAY<VARCHAR(50)> COMMENT '证件号码数组',
@@ -363,6 +364,91 @@ ALTER TABLE qa_history ADD INDEX idx_question_type (question_type) USING INVERTE
 ALTER TABLE qa_history ADD INDEX idx_feedback (feedback) USING INVERTED;
 ALTER TABLE qa_history ADD INDEX idx_question (question) USING INVERTED PROPERTIES("parser" = "standard");
 ALTER TABLE qa_history ADD INDEX idx_session (session_id) USING INVERTED;
+
+-- ==========================================
+-- 10. 人员档案导入融合相关表
+-- ==========================================
+
+-- 10.1 档案导入任务表
+CREATE TABLE IF NOT EXISTS archive_import_task
+(
+    `task_id` VARCHAR(64) NOT NULL COMMENT '任务编号：UUID',
+    `document_id` VARCHAR(64) COMMENT '关联上传文档编号',
+    `file_name` VARCHAR(500) COMMENT '原始文件名',
+    `file_path_id` VARCHAR(100) COMMENT 'SeaweedFS 文件编号',
+    `file_type` VARCHAR(20) COMMENT '文件类型: DOC, DOCX, XLS, XLSX, CSV, PDF',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING, EXTRACTING, MATCHING, SUCCESS, FAILED',
+    `original_text` STRING COMMENT '解析后的原始文档全文，用于与抽取结果对比阅读',
+    `creator_user_id` INT COMMENT '创建者用户编号',
+    `creator_username` VARCHAR(100) COMMENT '创建者用户名',
+    `extract_count` INT DEFAULT 0 COMMENT '提取出的人物数量',
+    `error_message` STRING COMMENT '失败时错误信息',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
+)
+UNIQUE KEY(`task_id`)
+COMMENT "人员档案导入任务表"
+DISTRIBUTED BY HASH(task_id) BUCKETS 8
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+ALTER TABLE archive_import_task ADD INDEX idx_status (status) USING INVERTED;
+ALTER TABLE archive_import_task ADD INDEX idx_creator (creator_user_id) USING INVERTED;
+ALTER TABLE archive_import_task ADD INDEX idx_created_time (created_time) USING INVERTED;
+
+-- 10.2 档案提取结果表
+CREATE TABLE IF NOT EXISTS archive_extract_result
+(
+    `result_id` VARCHAR(64) NOT NULL COMMENT '结果编号：UUID',
+    `task_id` VARCHAR(64) NOT NULL COMMENT '任务编号',
+    `extract_index` INT NOT NULL COMMENT '同一任务中人物序号',
+    `original_name` VARCHAR(200) COMMENT '原始姓名',
+    `birth_date` DATE COMMENT '出生日期',
+    `gender` VARCHAR(10) COMMENT '性别',
+    `nationality` VARCHAR(100) COMMENT '国籍',
+    `original_text` TEXT COMMENT '原始文本内容',
+    `raw_json` TEXT COMMENT '大模型返回的完整结构化 JSON（与 person 表结构一致）',
+    `confirmed` BOOLEAN DEFAULT 0 COMMENT '用户是否确认导入',
+    `imported` BOOLEAN DEFAULT 0 COMMENT '是否已导入 person 表',
+    `imported_person_id` VARCHAR(200) COMMENT '导入后的人物编号',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`result_id`)
+COMMENT "档案提取结果表（结构化参考 person 表，人工确认后导入）"
+DISTRIBUTED BY HASH(result_id) BUCKETS 8
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+ALTER TABLE archive_extract_result ADD INDEX idx_task_id (task_id) USING INVERTED;
+ALTER TABLE archive_extract_result ADD INDEX idx_original_name (original_name) USING INVERTED;
+ALTER TABLE archive_extract_result ADD INDEX idx_birth_date (birth_date) USING INVERTED;
+ALTER TABLE archive_extract_result ADD INDEX idx_gender (gender) USING INVERTED;
+ALTER TABLE archive_extract_result ADD INDEX idx_nationality (nationality) USING INVERTED;
+
+-- 10.3 档案相似匹配结果表
+CREATE TABLE IF NOT EXISTS archive_similar_match
+(
+    `match_id` BIGINT NOT NULL COMMENT '匹配记录ID',
+    `task_id` VARCHAR(64) NOT NULL COMMENT '任务编号',
+    `result_id` VARCHAR(64) NOT NULL COMMENT '提取结果编号',
+    `person_id` VARCHAR(200) NOT NULL COMMENT '库内人物编号',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`match_id`)
+COMMENT "档案相似匹配结果表"
+DISTRIBUTED BY HASH(match_id) BUCKETS 8
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+ALTER TABLE archive_similar_match ADD INDEX idx_task_id (task_id) USING INVERTED;
+ALTER TABLE archive_similar_match ADD INDEX idx_result_id (result_id) USING INVERTED;
+ALTER TABLE archive_similar_match ADD INDEX idx_person_id (person_id) USING INVERTED;
 
 -- 关键查询示例（仅供参考；person_news_relation 未建时勿直接执行）
 -- SELECT p.person_id, p.chinese_name, p.original_name, p.nationality, p.person_tags,

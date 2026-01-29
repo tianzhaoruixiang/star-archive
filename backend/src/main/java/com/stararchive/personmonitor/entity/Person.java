@@ -110,4 +110,16 @@ public class Person {
     
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
+
+    /** 持久化前将 JSON 列的空字符串转为 null，避免 DB 报错：Empty string cannot be parsed as jsonb */
+    @PrePersist
+    @PreUpdate
+    private void normalizeJsonColumns() {
+        if (workExperience != null && workExperience.isBlank()) {
+            workExperience = null;
+        }
+        if (educationExperience != null && educationExperience.isBlank()) {
+            educationExperience = null;
+        }
+    }
 }

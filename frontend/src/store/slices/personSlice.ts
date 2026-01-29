@@ -30,29 +30,29 @@ const initialState: PersonState = {
 export const fetchPersonList = createAsyncThunk(
   'person/fetchList',
   async ({ page, size }: { page: number; size: number }) => {
-    const response = await personAPI.getPersonList(page, size);
-    return response.data;
+    const response = await personAPI.getPersonList(page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
+    return response?.data ?? response;
   }
 );
 
 export const fetchPersonDetail = createAsyncThunk(
   'person/fetchDetail',
   async (personId: string) => {
-    const response = await personAPI.getPersonDetail(personId);
-    return response.data;
+    const response = await personAPI.getPersonDetail(personId) as { data?: unknown };
+    return response?.data ?? response;
   }
 );
 
 export const fetchTags = createAsyncThunk('person/fetchTags', async () => {
-  const response = await personAPI.getTags();
-  return response.data;
+  const response = await personAPI.getTags() as { data?: unknown };
+  return response?.data ?? response;
 });
 
 export const fetchPersonListByTag = createAsyncThunk(
   'person/fetchListByTag',
   async ({ tag, page, size }: { tag: string; page: number; size: number }) => {
-    const response = await personAPI.getPersonListByTag(tag, page, size);
-    return response.data;
+    const response = await personAPI.getPersonListByTag(tag, page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
+    return response?.data ?? response;
   }
 );
 
@@ -79,8 +79,18 @@ const personSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || '加载失败';
       })
+      .addCase(fetchPersonDetail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchPersonDetail.fulfilled, (state, action) => {
+        state.loading = false;
         state.detail = action.payload;
+      })
+      .addCase(fetchPersonDetail.rejected, (state, action) => {
+        state.loading = false;
+        state.detail = null;
+        state.error = action.error.message || '加载失败';
       })
       .addCase(fetchTags.fulfilled, (state, action) => {
         state.tags = action.payload;

@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PersonCardDTO {
-    
+
     private String personId;
     private String chineseName;
     private String originalName;
@@ -24,4 +24,10 @@ public class PersonCardDTO {
     private List<String> personTags;
     private LocalDateTime updatedTime;
     private Boolean isKeyPerson;
+    /** 籍贯（重点人员管理卡片展示） */
+    private String householdAddress;
+    /** 电话摘要（取第一个号码，重点人员管理卡片展示） */
+    private String phoneSummary;
+    /** 原因/备注（重点人员管理卡片展示） */
+    private String remark;
 }

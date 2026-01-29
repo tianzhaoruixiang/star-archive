@@ -3,6 +3,7 @@ package com.stararchive.personmonitor.controller;
 import com.stararchive.personmonitor.common.ApiResponse;
 import com.stararchive.personmonitor.common.PageResponse;
 import com.stararchive.personmonitor.dto.DirectoryDTO;
+import com.stararchive.personmonitor.dto.KeyPersonCategoryDTO;
 import com.stararchive.personmonitor.dto.PersonCardDTO;
 import com.stararchive.personmonitor.service.KeyPersonLibraryService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,28 @@ public class KeyPersonLibraryController {
     }
 
     /**
+     * 获取重点人员类别列表（全部 + 各目录），用于左侧筛选
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponse<List<KeyPersonCategoryDTO>>> listCategories() {
+        List<KeyPersonCategoryDTO> list = keyPersonLibraryService.listCategories();
+        return ResponseEntity.ok(ApiResponse.success(list));
+    }
+
+    /**
+     * 按类别分页查询人员：categoryId 为 all 时返回全部，否则为目录 ID
+     */
+    @GetMapping("/persons")
+    public ResponseEntity<ApiResponse<PageResponse<PersonCardDTO>>> getPersonsByCategory(
+            @RequestParam String categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int size
+    ) {
+        PageResponse<PersonCardDTO> result = keyPersonLibraryService.getPersonsByCategory(categoryId, page, size);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /**
      * 按目录分页查询人员（每页 16 条）
      */
     @GetMapping("/directories/{directoryId}/persons")
@@ -43,5 +66,17 @@ public class KeyPersonLibraryController {
     ) {
         PageResponse<PersonCardDTO> result = keyPersonLibraryService.getPersonsByDirectory(directoryId, page, size);
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /**
+     * 将人员从指定目录中移除
+     */
+    @DeleteMapping("/directories/{directoryId}/persons/{personId}")
+    public ResponseEntity<ApiResponse<Void>> removePersonFromDirectory(
+            @PathVariable Integer directoryId,
+            @PathVariable String personId
+    ) {
+        keyPersonLibraryService.removePersonFromDirectory(directoryId, personId);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

@@ -137,9 +137,13 @@ public class PersonService {
         dto.setPersonTags(person.getPersonTags());
         dto.setUpdatedTime(person.getUpdatedTime());
         dto.setIsKeyPerson(person.getIsKeyPerson());
+        dto.setHouseholdAddress(person.getHouseholdAddress());
+        dto.setPhoneSummary(person.getPhoneNumbers() != null && !person.getPhoneNumbers().isEmpty()
+                ? person.getPhoneNumbers().get(0) : null);
+        dto.setRemark(person.getRemark());
         return dto;
     }
-    
+
     private PersonDetailDTO convertToDetailDTO(Person person) {
         PersonDetailDTO dto = new PersonDetailDTO();
         dto.setPersonId(person.getPersonId());

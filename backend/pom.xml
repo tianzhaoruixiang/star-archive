@@ -76,6 +76,25 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
+        <!-- Apache POI：Word/Excel 解析 -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+        <!-- POI Scratchpad：.doc 老格式 Word -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+        <!-- Apache PDFBox：PDF 解析 -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.31</version>
+        </dependency>
+
         <!-- HikariCP (Built-in with Spring Boot) -->
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -105,6 +124,11 @@
                     <target>21</target>
                 </configuration>
             </plugin>
+            <plugin>
+                  <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            <!-- Version can often be inherited from a parent pom -->
+             </plugin>
         </plugins>
     </build>
 </project>
