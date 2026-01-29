@@ -26,6 +26,25 @@ services:
       timeout: 10s
       retries: 5
 
+  # Doris 初始化（FE 就绪后执行建表与测试数据，执行一次后退出）
+  doris-init:
+    image: apache/doris:fe-4.0.2
+    container_name: archive-doris-init
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.4
+    volumes:
+      - ./init-db:/init-db
+    environment:
+      - DORIS_FE_HOST=doris-fe
+      - DORIS_FE_PORT=9030
+      - INIT_DB_DIR=/init-db
+    command: ["sh", "/init-db/init-doris.sh"]
+    depends_on:
+      doris-fe:
+        condition: service_healthy
+    restart: "no"
+
   # Doris BE (Backend)
   doris-be:
     image: apache/doris:be-4.0.2

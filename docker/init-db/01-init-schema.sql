@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS person
     `avatar_files` ARRAY<VARCHAR(100)> COMMENT '头像文件SeaweedFS编号',
     `gender` VARCHAR(10) COMMENT '性别',
     `id_numbers` ARRAY<VARCHAR(50)> COMMENT '证件号码数组',
-    `birth_date` DATETIME COMMENT '出生日期',
+    `birth_date` DATE COMMENT '出生日期',
     `nationality` VARCHAR(100) COMMENT '国籍',
     `nationality_code` VARCHAR(3) COMMENT '国籍三字码',
     `household_address` VARCHAR(500) COMMENT '户籍地址',
