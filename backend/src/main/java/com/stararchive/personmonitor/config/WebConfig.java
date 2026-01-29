@@ -1,15 +1,22 @@
 package com.stararchive.personmonitor.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
+
 /**
- * Web配置类 - 跨域配置
+ * Web配置类 - 跨域、UTF-8 响应编码
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -18,5 +25,17 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+    }
+
+    /**
+     * 统一 JSON 响应使用 UTF-8，解决 /api/persons/tags 等接口中文乱码
+     */
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setDefaultCharset(StandardCharsets.UTF_8);
+        converter.setSupportedMediaTypes(Collections.singletonList(
+                new MediaType(MediaType.APPLICATION_JSON, StandardCharsets.UTF_8)));
+        converters.add(0, converter);
     }
 }

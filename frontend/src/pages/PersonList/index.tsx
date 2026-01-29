@@ -1,22 +1,56 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, Row, Col, Tag, Pagination, Spin, Empty } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchPersonList, fetchTags } from '@/store/slices/personSlice';
+import { fetchPersonList, fetchTags, fetchPersonListByTag } from '@/store/slices/personSlice';
 import './index.css';
+
+interface FlatTag {
+  tagId: number;
+  firstLevelName?: string;
+  secondLevelName?: string;
+  tagName: string;
+  personCount?: number;
+  parentTagId?: number;
+}
 
 const PersonList = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { list, pagination, loading } = useAppSelector((state) => state.person);
+  const { list, pagination, loading, tags } = useAppSelector((state) => state.person);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  const tagTree = useMemo(() => {
+    const flat = (tags || []) as FlatTag[];
+    const byFirst: Record<string, Record<string, FlatTag[]>> = {};
+    flat.forEach((t) => {
+      const f = t.firstLevelName ?? '其他';
+      const s = t.secondLevelName ?? '';
+      if (!byFirst[f]) byFirst[f] = {};
+      if (!byFirst[f][s]) byFirst[f][s] = [];
+      byFirst[f][s].push(t);
+    });
+    return byFirst;
+  }, [tags]);
 
   useEffect(() => {
-    dispatch(fetchPersonList({ page: 0, size: 20 }));
     dispatch(fetchTags());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (selectedTag) {
+      dispatch(fetchPersonListByTag({ tag: selectedTag, page: 0, size: 20 }));
+    } else {
+      dispatch(fetchPersonList({ page: 0, size: 20 }));
+    }
+  }, [dispatch, selectedTag]);
+
   const handlePageChange = (page: number, size: number) => {
-    dispatch(fetchPersonList({ page: page - 1, size }));
+    if (selectedTag) {
+      dispatch(fetchPersonListByTag({ tag: selectedTag, page: page - 1, size }));
+    } else {
+      dispatch(fetchPersonList({ page: page - 1, size }));
+    }
   };
 
   const handleCardClick = (personId: string) => {
@@ -27,8 +61,34 @@ const PersonList = () => {
     <div className="person-list">
       <Card title="人员档案" style={{ marginBottom: 16 }}>
         <div className="tag-filter">
-          <span className="filter-label">标签筛选:</span>
-          <span className="filter-hint">标签筛选功能待实现</span>
+          <span className="filter-label">标签筛选：</span>
+          <Tag
+            className={selectedTag === null ? 'tag-selected' : ''}
+            onClick={() => setSelectedTag(null)}
+            style={{ cursor: 'pointer' }}
+          >
+            全部
+          </Tag>
+          {Object.entries(tagTree).map(([first, seconds]) => (
+            <span key={first} className="tag-group">
+              <span className="tag-first">{first}</span>
+              {Object.entries(seconds).map(([second, items]) =>
+                items.map((t) => (
+                  <Tag
+                    key={t.tagId}
+                    className={selectedTag === t.tagName ? 'tag-selected' : ''}
+                    onClick={() => setSelectedTag(t.tagName)}
+                    style={{ cursor: 'pointer', fontSize: 12 }}
+                  >
+                    {t.tagName}
+                    {t.personCount != null && (
+                      <span className="tag-count">({t.personCount})</span>
+                    )}
+                  </Tag>
+                ))
+              )}
+            </span>
+          ))}
         </div>
       </Card>
 

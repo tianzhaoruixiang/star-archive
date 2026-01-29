@@ -6,6 +6,9 @@ DROP DATABASE IF EXISTS `person_monitor`;
 CREATE DATABASE IF NOT EXISTS `person_monitor`;
 USE `person_monitor`;
 
+-- 会话字符集设为 UTF-8，避免中文乱码（Doris 使用 utf8）
+SET NAMES 'utf8';
+
 -- 1. 人物表 (Unique Key 模型)
 -- 人物表 - 使用 Unique Key 模型保证人物唯一性
 CREATE TABLE IF NOT EXISTS person
@@ -234,6 +237,23 @@ PROPERTIES (
 ALTER TABLE directory ADD INDEX idx_parent_id (parent_directory_id) USING INVERTED;
 ALTER TABLE directory ADD INDEX idx_creator (creator_user_id) USING INVERTED;
 ALTER TABLE directory ADD INDEX idx_directory_name (directory_name) USING INVERTED;
+
+-- 6.1 重点人员库-人员关联表 (Unique Key 模型)
+CREATE TABLE IF NOT EXISTS person_directory
+(
+    `directory_id` INT NOT NULL COMMENT '目录编号',
+    `person_id` VARCHAR(200) NOT NULL COMMENT '人物编号',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`directory_id`, `person_id`)
+COMMENT "重点人员库与人员关联表"
+DISTRIBUTED BY HASH(directory_id) BUCKETS 5
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+ALTER TABLE person_directory ADD INDEX idx_person_id (person_id) USING INVERTED;
 
 -- 7. 上传文档表 (Unique Key 模型)
 CREATE TABLE IF NOT EXISTS uploaded_document

@@ -48,6 +48,14 @@ export const fetchTags = createAsyncThunk('person/fetchTags', async () => {
   return response.data;
 });
 
+export const fetchPersonListByTag = createAsyncThunk(
+  'person/fetchListByTag',
+  async ({ tag, page, size }: { tag: string; page: number; size: number }) => {
+    const response = await personAPI.getPersonListByTag(tag, page, size);
+    return response.data;
+  }
+);
+
 const personSlice = createSlice({
   name: 'person',
   initialState,
@@ -76,6 +84,23 @@ const personSlice = createSlice({
       })
       .addCase(fetchTags.fulfilled, (state, action) => {
         state.tags = action.payload;
+      })
+      .addCase(fetchPersonListByTag.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPersonListByTag.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = action.payload.content;
+        state.pagination = {
+          page: action.payload.page,
+          size: action.payload.size,
+          total: action.payload.totalElements,
+        };
+      })
+      .addCase(fetchPersonListByTag.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || '加载失败';
       });
   },
 });

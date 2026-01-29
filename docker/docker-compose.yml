@@ -26,25 +26,6 @@ services:
       timeout: 10s
       retries: 5
 
-  # Doris 初始化（FE 就绪后执行建表与测试数据，执行一次后退出）
-  doris-init:
-    image: apache/doris:fe-4.0.2
-    container_name: archive-doris-init
-    networks:
-      archive-network:
-        ipv4_address: 172.20.80.4
-    volumes:
-      - ./init-db:/init-db
-    environment:
-      - DORIS_FE_HOST=doris-fe
-      - DORIS_FE_PORT=9030
-      - INIT_DB_DIR=/init-db
-    command: ["sh", "/init-db/init-doris.sh"]
-    depends_on:
-      doris-fe:
-        condition: service_healthy
-    restart: "no"
-
   # Doris BE (Backend)
   doris-be:
     image: apache/doris:be-4.0.2
@@ -65,6 +46,41 @@ services:
       doris-fe:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8040/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Doris 初始化：FE 与 BE 就绪后执行 init-db 中的 SQL（建表 + 测试数据）
+  doris-init:
+    image: apache/doris:fe-4.0.2
+    container_name: archive-doris-init
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.4
+    volumes:
+      - ./init-db:/init-db
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        echo "Waiting for Doris FE..."
+        until mysql -h doris-fe -P 9030 -u root -e 'SELECT 1' 2>/dev/null; do echo "  FE not ready, retry in 5s..."; sleep 5; done
+        echo "FE ready. Waiting 20s for BE to register..."
+        sleep 20
+        echo "Running 01-init-schema.sql..."
+        mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/01-init-schema.sql
+        echo "Running 02-test-data.sql..."
+        mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/02-test-data.sql || true
+        echo "Doris init completed."
+    depends_on:
+      doris-fe:
+        condition: service_healthy
+      doris-be:
+        condition: service_healthy
+    restart: "no"
 
   # SeaweedFS Master
   seaweedfs-master:

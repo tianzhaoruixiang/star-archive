@@ -1,0 +1,13 @@
+.workspace-page {
+  padding: 0;
+}
+
+.workspace-page .placeholder-block {
+  text-align: center;
+  padding: 48px 24px;
+  color: #999;
+}
+
+.workspace-page .placeholder-block p {
+  margin: 16px 0;
+}

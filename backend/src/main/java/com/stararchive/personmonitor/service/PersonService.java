@@ -95,7 +95,7 @@ public class PersonService {
     }
     
     /**
-     * 获取标签树
+     * 获取标签树（含每个标签对应人员数量）
      */
     public List<TagDTO> getTagTree() {
         log.info("查询标签树");
@@ -108,12 +108,23 @@ public class PersonService {
                     dto.setTagName(tag.getTagName());
                     dto.setTagDescription(tag.getTagDescription());
                     dto.setParentTagId(tag.getParentTagId());
-                    dto.setPersonCount(0L);
+                    try {
+                        dto.setPersonCount(personRepository.countByPersonTagsContaining(tag.getTagName()));
+                    } catch (Exception e) {
+                        dto.setPersonCount(0L);
+                    }
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
     
+    /**
+     * 转为人员卡片 DTO（供其他服务复用）
+     */
+    public PersonCardDTO toCardDTO(Person person) {
+        return convertToCardDTO(person);
+    }
+
     private PersonCardDTO convertToCardDTO(Person person) {
         PersonCardDTO dto = new PersonCardDTO();
         dto.setPersonId(person.getPersonId());

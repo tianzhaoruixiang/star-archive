@@ -1,0 +1,69 @@
+.key-person-library {
+  padding: 0;
+}
+
+.key-person-library .dir-item-active {
+  background: #e6f7ff;
+  border-radius: 4px;
+}
+
+.key-person-library .person-card {
+  text-align: center;
+  position: relative;
+  min-height: 200px;
+}
+
+.key-person-library .person-avatar {
+  width: 60px;
+  height: 60px;
+  line-height: 60px;
+  background: #1890ff;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+}
+
+.key-person-library .person-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key-person-library .person-id,
+.key-person-library .person-birth {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.key-person-library .person-tags {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+
+.key-person-library .key-person-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.key-person-library .pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.key-person-library .loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}

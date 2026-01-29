@@ -41,4 +41,10 @@ public interface PersonRepository extends JpaRepository<Person, String> {
      */
     @Query(value = "SELECT * FROM person WHERE JSON_CONTAINS(person_tags, JSON_ARRAY(:tag)) = 1", nativeQuery = true)
     Page<Person> findByTag(@Param("tag") String tag, Pageable pageable);
+
+    /**
+     * 统计包含某标签的人员数量（Doris 可用 array_contains，MySQL 用 JSON_CONTAINS）
+     */
+    @Query(value = "SELECT COUNT(*) FROM person WHERE JSON_CONTAINS(person_tags, JSON_ARRAY(:tag)) = 1", nativeQuery = true)
+    long countByPersonTagsContaining(@Param("tag") String tag);
 }

@@ -8,6 +8,7 @@ import com.stararchive.personmonitor.dto.TagDTO;
 import com.stararchive.personmonitor.service.PersonService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,9 +60,9 @@ public class PersonController {
     }
     
     /**
-     * 获取标签树
+     * 获取标签树（明确 UTF-8 避免中文乱码）
      */
-    @GetMapping("/tags")
+    @GetMapping(value = "/tags", produces = MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8")
     public ResponseEntity<ApiResponse<List<TagDTO>>> getTagTree() {
         List<TagDTO> tags = personService.getTagTree();
         return ResponseEntity.ok(ApiResponse.success(tags));

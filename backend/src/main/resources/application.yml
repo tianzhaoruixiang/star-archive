@@ -12,7 +12,7 @@ spring:
     name: person-monitor-system
   
   datasource:
-    url: jdbc:mysql://localhost:9030/person_monitor?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&sessionVariables=sql_mode='ANSI'&useInformationSchema=false
+    url: jdbc:mysql://localhost:9030/person_monitor?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&sessionVariables=sql_mode='ANSI'&useInformationSchema=false
     username: root
     password: 
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -53,6 +53,8 @@ spring:
     serialization:
       write-dates-as-timestamps: false
       fail-on-empty-beans: false
+    # 明确指定 JSON 序列化使用 UTF-8，避免中文乱码
+    default-charset: UTF-8
 
 # 分页配置
 page:

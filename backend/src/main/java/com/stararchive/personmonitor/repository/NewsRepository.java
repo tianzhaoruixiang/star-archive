@@ -35,6 +35,6 @@ public interface NewsRepository extends JpaRepository<News, String> {
     /**
      * 关键词搜索新闻
      */
-    @Query("SELECT n FROM News n WHERE n.title LIKE %:keyword% OR n.content LIKE %:keyword% ORDER BY n.publishTime DESC")
+    @Query("SELECT n FROM News n WHERE n.title LIKE CONCAT('%', :keyword, '%') OR n.content LIKE CONCAT('%', :keyword, '%') ORDER BY n.publishTime DESC")
     Page<News> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 }

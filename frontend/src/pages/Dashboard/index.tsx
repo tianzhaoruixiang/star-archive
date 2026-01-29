@@ -68,11 +68,25 @@ const Dashboard = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col span={24}>
-          <Card title="中国地图(待实现)" style={{ minHeight: 600 }}>
+          <Card title="中国地图" style={{ minHeight: 500 }}>
             <div className="map-placeholder">
-              地图组件占位 - 后续集成ECharts地图
+              地图占位：各省人员数量着色、可下探到省份详情；左上机构分布、右上活跃省份、左下签证类型、右下人员类别 — 待对接 map-stats 与 ECharts
             </div>
           </Card>
+        </Col>
+      </Row>
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        <Col span={6}>
+          <Card title="机构分布" size="small">前五名机构及人员数量，可滚动/展开 — 待对接数据</Card>
+        </Col>
+        <Col span={6}>
+          <Card title="活跃省份排名" size="small">全部/昨日新增/驻留 — 待对接民航铁路数据</Card>
+        </Col>
+        <Col span={6}>
+          <Card title="出入境签证类型" size="small">公务/旅游/记者等 — 待对接签证字段</Card>
+        </Col>
+        <Col span={6}>
+          <Card title="人员类别" size="small">业务标签统计排名 — 待对接 map-stats</Card>
         </Col>
       </Row>
     </div>

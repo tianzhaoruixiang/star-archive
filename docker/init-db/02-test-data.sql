@@ -4,6 +4,9 @@
 -- ==========================================
 USE person_monitor;
 
+-- 会话字符集设为 UTF-8，避免中文乱码（Doris 使用 utf8）
+SET NAMES 'utf8';
+
 -- 插入测试标签数据（含 calculation_rules, parent_tag_id）
 INSERT INTO tag (tag_id, first_level_name, second_level_name, tag_name, tag_description, calculation_rules, parent_tag_id, created_time, updated_time) VALUES
 (1, '基本属性', NULL, '年龄', '年龄段分类', NULL, NULL, NOW(), NOW()),
@@ -244,3 +247,16 @@ INSERT INTO news (
     NOW(),
     NOW()
 );
+
+-- 插入重点人员库目录（用于「重点人员库」页面左侧列表）
+INSERT INTO directory (directory_id, parent_directory_id, directory_name, creator_username, creator_user_id, created_time, updated_time) VALUES
+(1, NULL, '重点关注名单', 'admin', 1, NOW(), NOW()),
+(2, NULL, '出入境重点', 'admin', 1, NOW(), NOW()),
+(3, NULL, '舆情关联人员', 'admin', 1, NOW(), NOW());
+
+-- 插入重点人员库-人员关联（目录1含张三、王五；目录2含张三；目录3含王五）
+INSERT INTO person_directory (directory_id, person_id, created_time) VALUES
+(1, md5('张三1990-01-01男中国'), NOW()),
+(1, md5('王五1975-08-20男中国'), NOW()),
+(2, md5('张三1990-01-01男中国'), NOW()),
+(3, md5('王五1975-08-20男中国'), NOW());
