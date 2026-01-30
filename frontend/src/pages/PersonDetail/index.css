@@ -1,12 +1,4 @@
-/* 人员档案详情页 - 深色主题，参照流感监测系统详情图 */
-
-.person-detail-page {
-  margin: -24px -24px 0;
-  min-height: calc(100vh - 64px);
-  padding: 24px;
-  background: linear-gradient(180deg, #0d1629 0%, #131f35 50%, #0a1628 100%);
-  color: #e8e8e8;
-}
+/* 人员档案详情页 - 使用统一深色主题变量 */
 
 .person-detail-loading,
 .person-detail-empty {
@@ -15,7 +7,7 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  color: #8b9dc3;
+  color: var(--text-placeholder);
 }
 
 .person-detail-empty .ant-btn {
@@ -31,13 +23,13 @@
 }
 
 .person-detail-back {
-  background: linear-gradient(135deg, #5c6bc0 0%, #7986cb 100%) !important;
+  background: var(--accent-purple) !important;
   border: none !important;
   color: #fff !important;
-  font-size: 14px;
+  font-size: var(--font-body);
   height: 40px;
   padding: 0 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
 }
@@ -50,20 +42,20 @@
 .person-detail-title {
   margin: 0;
   font-size: 22px;
-  font-weight: 600;
-  color: #e8e8e8;
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-secondary);
 }
 
 /* 档案卡片：头像 + 姓名 + 标签 */
 .person-detail-profile-card {
-  margin-bottom: 20px;
-  border-radius: 12px;
-  border: 1px solid #1e3354;
-  background: rgba(14, 28, 52, 0.6);
+  margin-bottom: var(--spacing-xl);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
 }
 
 .person-detail-profile-card .ant-card-body {
-  padding: 24px;
+  padding: var(--page-gap);
 }
 
 .person-detail-profile {
@@ -94,6 +86,7 @@
   color: #66bb6a;
 }
 
+
 .person-detail-avatar-img {
   object-fit: cover;
   padding: 0;
@@ -111,9 +104,9 @@
 
 .person-detail-name {
   margin: 0 0 12px 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #fff;
+  font-size: var(--font-title);
+  font-weight: var(--font-weight-title);
+  color: var(--text-primary);
 }
 
 .person-detail-tags {
@@ -132,33 +125,33 @@
 
 /* 各区块卡片 */
 .person-detail-section-card {
-  margin-bottom: 20px;
-  border-radius: 12px;
-  border: 1px solid #1e3354;
-  background: rgba(14, 28, 52, 0.6);
+  margin-bottom: var(--spacing-xl);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
 }
 
 .person-detail-section-card .ant-card-body {
-  padding: 20px;
+  padding: var(--spacing-xl);
 }
 
 .person-detail-section-card .ant-card-head {
-  border-bottom: 1px solid #1e3354;
-  color: #b0b0b0;
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-muted);
 }
 
 .person-detail-section-card .ant-card-head-title {
-  color: #e8e8e8;
+  color: var(--text-secondary);
 }
 
 .person-detail-section-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   font-size: 16px;
-  font-weight: 600;
-  color: #e8e8e8;
-  margin-bottom: 16px;
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .person-detail-section-title .anticon {
@@ -176,11 +169,11 @@
 .person-detail-basic-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
-  background: rgba(30, 51, 84, 0.5);
-  border: 1px solid #2a4a6f;
-  border-radius: 8px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
 }
 
 .person-detail-basic-item-full {
@@ -188,13 +181,13 @@
 }
 
 .person-detail-basic-item .label {
-  font-size: 12px;
-  color: #8b9dc3;
+  font-size: var(--font-caption);
+  color: var(--text-placeholder);
 }
 
 .person-detail-basic-item .value {
-  font-size: 14px;
-  color: #e8e8e8;
+  font-size: var(--font-body);
+  color: var(--text-secondary);
   word-break: break-all;
 }
 
@@ -207,28 +200,28 @@
 
 .person-detail-exp-item {
   padding: 14px;
-  background: rgba(30, 51, 84, 0.4);
-  border: 1px solid #2a4a6f;
-  border-radius: 8px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
 }
 
 .person-detail-exp-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-sm);
   margin-bottom: 6px;
 }
 
 .person-detail-exp-row .school {
-  font-size: 14px;
+  font-size: var(--font-body);
   font-weight: 500;
-  color: #e8e8e8;
+  color: var(--text-secondary);
 }
 
 .person-detail-exp-row .major {
   font-size: 13px;
-  color: #b0b0b0;
+  color: var(--text-muted);
 }
 
 .person-detail-exp-date {
@@ -255,7 +248,7 @@
 .person-detail-social-list {
   margin: 0;
   padding-left: 20px;
-  color: #b0b0b0;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -267,14 +260,14 @@
 .person-detail-travel-list .time,
 .person-detail-social-list .time {
   display: block;
-  font-size: 12px;
-  color: #8b9dc3;
-  margin-top: 4px;
+  font-size: var(--font-caption);
+  color: var(--text-placeholder);
+  margin-top: var(--spacing-xs);
 }
 
 .person-detail-social-list .content {
-  margin-top: 4px;
-  color: #b0b0b0;
+  margin-top: var(--spacing-xs);
+  color: var(--text-muted);
 }
 
 /* 右侧悬浮按钮 */
@@ -293,9 +286,9 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(30, 51, 84, 0.9);
-  border: 1px solid #2a4a6f;
-  color: #8b9dc3;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-placeholder);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -305,6 +298,6 @@
 }
 
 .person-detail-float-btns .float-btn:hover {
-  background: rgba(24, 144, 255, 0.3);
-  color: #1890ff;
+  background: var(--primary-hover);
+  color: var(--primary);
 }

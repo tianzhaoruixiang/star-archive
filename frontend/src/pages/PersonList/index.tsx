@@ -85,17 +85,17 @@ const PersonList = () => {
   }, [list, searchKeyword]);
 
   return (
-    <div className="person-list-page">
+    <div className="page-wrapper person-list-page">
       {/* 顶部：标题 + 搜索 + 右侧图标 */}
       <div className="person-list-top">
-        <h1 className="person-list-title">人员档案</h1>
+        <h1 className="page-title person-list-title">人员档案</h1>
         <div className="person-list-top-right">
           <Input
             placeholder="搜索姓名、身份证号..."
             prefix={<SearchOutlined />}
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            className="person-list-search"
+            className="page-search person-list-search"
             allowClear
           />
           <div className="person-list-icons">
@@ -198,7 +198,7 @@ const PersonList = () => {
           </Row>
 
           {!searchKeyword && (
-            <div className="person-list-pagination">
+            <div className="page-pagination person-list-pagination">
               <Pagination
                 current={pagination.page + 1}
                 pageSize={pagination.size}

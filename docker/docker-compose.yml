@@ -30,6 +30,10 @@ services:
   doris-be:
     image: apache/doris:be-4.0.2
     container_name: archive-doris-be
+    deploy:
+      resources:
+        limits:
+          memory: 2G # 限制容器总内存为 8GB
     hostname: be
     networks:
       archive-network:

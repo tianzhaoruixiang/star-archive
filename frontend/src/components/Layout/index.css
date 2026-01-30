@@ -1,3 +1,4 @@
+/* 统一设计变量引用（若未在全局加载则此处生效） */
 .layout {
   height: 100vh;
 }
@@ -5,75 +6,160 @@
 .header {
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 20px 0 16px;
   background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  height: 64px;
 }
 
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
-  margin-right: 40px;
-  white-space: nowrap;
+  gap: 12px;
+  margin-right: 32px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.logo:hover {
+  opacity: 0.95;
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 18px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
+.logo-text {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* 导航菜单 */
 .menu {
   flex: 1;
+  min-width: 0;
   border-bottom: none;
+  background: transparent !important;
+  line-height: 62px !important;
 }
 
+.menu .ant-menu-item {
+  margin: 0 4px;
+  padding: 0 16px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}
+
+.menu .ant-menu-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.menu .ant-menu-item-selected {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.menu .ant-menu-item .anticon {
+  font-size: 16px;
+  margin-right: 6px;
+}
+
+/* 用户区 */
 .user-section {
   display: flex;
   align-items: center;
-  gap: 16px;
-  color: white;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #fff;
+}
+
+.user-trigger:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.user-avatar {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
 }
 
 .username {
   font-size: 14px;
-}
-
-.logout-icon {
-  font-size: 18px;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.logout-icon:hover {
-  color: #1890ff;
+  font-weight: 500;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .logout-btn {
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
-  padding: 4px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  transition: background 0.3s, color 0.3s;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+  color: #fff;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .logout-btn:hover {
   background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* 用户下拉内容 */
+.header-user-dropdown-info {
+  padding: 4px 0;
+  min-width: 160px;
+}
+
+.header-user-dropdown-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.header-user-dropdown-role {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-top: 2px;
+}
+
+/* 下拉菜单样式覆盖 */
+.header .ant-dropdown-menu-item-disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .content {
   padding: 24px;
-  background: #f0f2f5;
+  background: #0a1628;
   overflow: auto;
   min-height: calc(100vh - 64px);
 }

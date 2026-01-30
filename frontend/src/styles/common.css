@@ -1,0 +1,136 @@
+/**
+ * 统一页面与组件样式 - 深色主题
+ */
+@import './variables.css';
+
+/* 页面通用包裹层（抵消 Layout content 的 padding，铺满背景） */
+.page-wrapper {
+  margin: calc(-1 * var(--page-padding)) calc(-1 * var(--page-padding)) 0;
+  min-height: calc(100vh - 64px);
+  padding: var(--page-padding);
+  background: var(--page-bg);
+  color: var(--text-secondary);
+}
+
+/* 页面标题 */
+.page-title {
+  margin: 0 0 var(--spacing-xl);
+  font-size: var(--font-title);
+  font-weight: var(--font-weight-title);
+  color: var(--text-primary);
+}
+
+.page-title-accent {
+  color: var(--primary);
+}
+
+/* 通用卡片（深色） */
+.page-card {
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+.page-card .ant-card-body {
+  padding: var(--card-padding);
+}
+
+/* 加载/空状态 */
+.page-loading,
+.page-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 320px;
+  color: var(--text-placeholder);
+}
+
+.page-empty .ant-empty-description {
+  color: var(--text-placeholder);
+}
+
+/* 搜索框（深色） */
+.page-search .ant-input-affix-wrapper {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-secondary) !important;
+}
+
+.page-search .ant-input-affix-wrapper:hover,
+.page-search .ant-input-affix-wrapper-focused {
+  border-color: var(--input-focus-border) !important;
+}
+
+.page-search .ant-input {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+}
+
+.page-search .ant-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.page-search .ant-input-prefix {
+  color: var(--text-placeholder);
+}
+
+/* 分页（深色） */
+.page-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--page-gap);
+}
+
+.page-pagination .ant-pagination-item a,
+.page-pagination .ant-pagination-item-link {
+  color: var(--text-secondary);
+}
+
+.page-pagination .ant-pagination-item-active a {
+  color: var(--primary);
+}
+
+.page-pagination .ant-pagination-total-text {
+  color: var(--text-placeholder);
+}
+
+.page-pagination .ant-select-selector {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* 主按钮（紫色渐变，与头部风格一致） */
+.page-btn-primary {
+  background: var(--accent-purple) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.page-btn-primary:hover {
+  opacity: 0.9;
+  color: #fff !important;
+}
+
+/* 标签（深色） */
+.page-tag {
+  margin: 0 !important;
+  padding: 2px 8px !important;
+  font-size: var(--font-caption) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--text-muted) !important;
+}
+
+.page-tag:hover {
+  border-color: var(--primary) !important;
+  color: var(--text-secondary) !important;
+}
+
+.page-tag-selected {
+  border-color: var(--primary) !important;
+  background: var(--primary-hover) !important;
+  color: var(--primary) !important;
+}

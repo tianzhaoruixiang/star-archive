@@ -1,23 +1,12 @@
-/* 重点人员管理 - 深色主题，参照流感监测系统重点人员管理图 */
+/* 重点人员管理 - 使用统一深色主题变量 */
 
-.key-person-page {
-  margin: -24px -24px 0;
-  min-height: calc(100vh - 64px);
-  padding: 24px;
-  background: linear-gradient(180deg, #0d1629 0%, #131f35 50%, #0a1628 100%);
-  color: #e8e8e8;
-}
-
-.key-person-title {
-  margin: 0 0 20px;
-  font-size: 24px;
-  font-weight: 700;
-  color: #1890ff;
+.key-person-page .key-person-title {
+  margin: 0 0 var(--spacing-xl);
 }
 
 .key-person-body {
   display: flex;
-  gap: 24px;
+  gap: var(--page-gap);
   min-height: 500px;
 }
 
@@ -25,17 +14,17 @@
 .key-person-sidebar {
   width: 220px;
   flex-shrink: 0;
-  padding: 16px;
-  background: rgba(14, 28, 52, 0.6);
-  border: 1px solid #1e3354;
-  border-radius: 12px;
+  padding: var(--spacing-lg);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
 }
 
 .key-person-sidebar-title {
   font-size: 16px;
-  font-weight: 600;
-  color: #e8e8e8;
-  margin-bottom: 16px;
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .key-person-sidebar-loading {
@@ -64,11 +53,11 @@
 }
 
 .key-person-category-item:hover {
-  background: rgba(30, 51, 84, 0.6);
+  background: var(--input-bg);
 }
 
 .key-person-category-item-active {
-  background: linear-gradient(135deg, #5c6bc0 0%, #7986cb 100%);
+  background: var(--accent-purple);
   color: #fff;
 }
 
@@ -77,12 +66,12 @@
 }
 
 .key-person-category-name {
-  font-size: 14px;
+  font-size: var(--font-body);
 }
 
 .key-person-category-count {
-  font-size: 14px;
-  color: #8b9dc3;
+  font-size: var(--font-body);
+  color: var(--text-placeholder);
 }
 
 /* 右侧主内容 */
@@ -99,21 +88,21 @@
 }
 
 .key-person-main-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
+  font-size: var(--font-subtitle);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-primary);
 }
 
 .key-person-main-total {
-  font-size: 14px;
-  color: #8b9dc3;
+  font-size: var(--font-body);
+  color: var(--text-placeholder);
 }
 
 .key-person-pagination-info {
   text-align: center;
   font-size: 13px;
-  color: #8b9dc3;
-  margin-bottom: 16px;
+  color: var(--text-placeholder);
+  margin-bottom: var(--spacing-lg);
 }
 
 .key-person-loading,
@@ -125,24 +114,24 @@
 }
 
 .key-person-empty .ant-empty-description {
-  color: #8b9dc3;
+  color: var(--text-placeholder);
 }
 
 .key-person-grid {
-  margin-bottom: 24px;
+  margin-bottom: var(--page-gap);
 }
 
 /* 人员卡片 */
 .key-person-card {
-  border-radius: 12px;
-  border: 1px solid #1e3354;
-  background: rgba(14, 28, 52, 0.6);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .key-person-card:hover {
-  border-color: #1890ff;
+  border-color: var(--primary);
   box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
 }
 
@@ -165,7 +154,7 @@
   font-size: 20px;
   font-weight: 600;
   color: #fff;
-  background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+  background: var(--accent-green);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -173,24 +162,24 @@
 .key-person-card-status {
   margin: 0 !important;
   padding: 2px 8px !important;
-  font-size: 12px !important;
-  border-radius: 4px !important;
-  background: rgba(30, 51, 84, 0.8) !important;
-  border: 1px solid #2a4a6f !important;
-  color: #b0b0b0 !important;
+  font-size: var(--font-caption) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--text-muted) !important;
 }
 
 .key-person-card-name {
   font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 8px;
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .key-person-card-row {
   font-size: 13px;
-  color: #b0b0b0;
-  margin-bottom: 4px;
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -206,21 +195,21 @@
 .key-person-card-tag {
   margin: 0 !important;
   padding: 2px 8px !important;
-  font-size: 12px !important;
-  border-radius: 4px !important;
-  background: rgba(30, 51, 84, 0.8) !important;
-  border: 1px solid #2a4a6f !important;
-  color: #b0b0b0 !important;
+  font-size: var(--font-caption) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--text-muted) !important;
 }
 
 .key-person-card-reason {
-  font-size: 12px;
-  color: #8b9dc3;
-  padding: 8px 10px;
-  margin-bottom: 8px;
+  font-size: var(--font-caption);
+  color: var(--text-placeholder);
+  padding: var(--spacing-sm) 10px;
+  margin-bottom: var(--spacing-sm);
   background: rgba(20, 40, 70, 0.6);
   border-radius: 6px;
-  border: 1px solid #1e3354;
+  border: 1px solid var(--card-border);
 }
 
 .key-person-card-actions {
@@ -231,12 +220,12 @@
 }
 
 .key-person-card-link {
-  font-size: 12px;
-  color: #1890ff;
+  font-size: var(--font-caption);
+  color: var(--primary);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .key-person-card-link:hover {
@@ -247,12 +236,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: var(--spacing-xs);
   width: 100%;
   padding: 6px 12px;
   font-size: 13px;
   color: #fff;
-  background: #ff4d4f;
+  background: var(--accent-red);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -260,39 +249,10 @@
 }
 
 .key-person-card-remove:hover:not(:disabled) {
-  background: #ff7875;
+  opacity: 0.9;
 }
 
 .key-person-card-remove:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.key-person-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
-}
-
-.key-person-pagination .ant-pagination {
-  color: #e8e8e8;
-}
-
-.key-person-pagination .ant-pagination-item a,
-.key-person-pagination .ant-pagination-item-link {
-  color: #e8e8e8;
-}
-
-.key-person-pagination .ant-pagination-item-active a {
-  color: #1890ff;
-}
-
-.key-person-pagination .ant-pagination-total-text {
-  color: #8b9dc3;
-}
-
-.key-person-pagination .ant-select-selector {
-  background: rgba(30, 51, 84, 0.6) !important;
-  border-color: #2a4a6f !important;
-  color: #e8e8e8 !important;
 }

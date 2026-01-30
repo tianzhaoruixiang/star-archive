@@ -1,26 +1,80 @@
-.situation-awareness {
-  padding: 0;
+/* 态势感知 - 使用统一深色主题变量 */
+
+.situation-awareness .ant-card {
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+.situation-awareness .ant-card-head {
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-muted);
+}
+
+.situation-awareness .ant-card-head-title {
+  color: var(--text-secondary);
+  font-size: var(--font-subtitle);
+  font-weight: var(--font-weight-subtitle);
+}
+
+.situation-awareness .ant-card-body {
+  color: var(--text-muted);
 }
 
 .situation-awareness .tab-toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.situation-awareness .tab-toolbar .ant-input {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+.situation-awareness .tab-toolbar .ant-input::placeholder {
+  color: var(--text-placeholder);
 }
 
 .situation-awareness .hint {
-  color: #999;
-  font-size: 12px;
+  color: var(--text-placeholder);
+  font-size: var(--font-caption);
 }
 
 .situation-awareness .list-meta {
-  font-size: 12px;
-  color: #999;
+  font-size: var(--font-caption);
+  color: var(--text-placeholder);
 }
 
 .situation-awareness .analysis-placeholder {
   text-align: center;
-  padding: 48px 24px;
-  color: #999;
+  padding: 48px var(--page-gap);
+  color: var(--text-placeholder);
+}
+
+.situation-awareness .ant-tabs-tab {
+  color: var(--text-muted);
+}
+
+.situation-awareness .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary);
+}
+
+.situation-awareness .ant-tabs-ink-bar {
+  background: var(--primary);
+}
+
+.situation-awareness .ant-tabs-nav::before {
+  border-bottom-color: var(--input-border);
+}
+
+.situation-awareness .ant-list-item {
+  color: var(--text-secondary);
+  border-bottom-color: var(--card-border);
+}
+
+.situation-awareness .ant-empty-description {
+  color: var(--text-placeholder);
 }

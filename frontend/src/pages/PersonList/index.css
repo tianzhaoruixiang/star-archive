@@ -1,11 +1,7 @@
-/* 人员档案列表页 - 深色主题，参照流感监测系统标签筛选图 */
+/* 人员档案列表页 - 使用统一深色主题变量 */
 
-.person-list-page {
-  margin: -24px -24px 0;
-  min-height: calc(100vh - 64px);
-  padding: 24px;
-  background: linear-gradient(180deg, #0d1629 0%, #131f35 50%, #0a1628 100%);
-  color: #e8e8e8;
+.person-list-page .person-list-title {
+  margin: 0;
 }
 
 /* 顶部：标题 + 搜索 + 图标 */
@@ -14,50 +10,18 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.person-list-title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #fff;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--page-gap);
 }
 
 .person-list-top-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-lg);
 }
 
 .person-list-search {
   width: 280px;
-}
-
-.person-list-search .ant-input-affix-wrapper {
-  background: rgba(30, 51, 84, 0.6) !important;
-  border: 1px solid #2a4a6f !important;
-  border-radius: 8px !important;
-  color: #e8e8e8 !important;
-}
-
-.person-list-search .ant-input-affix-wrapper:hover,
-.person-list-search .ant-input-affix-wrapper-focused {
-  border-color: #1890ff !important;
-}
-
-.person-list-search .ant-input {
-  background: transparent !important;
-  color: #e8e8e8 !important;
-}
-
-.person-list-search .ant-input::placeholder {
-  color: #8b9dc3;
-}
-
-.person-list-search .ant-input-prefix {
-  color: #8b9dc3;
 }
 
 .person-list-icons {
@@ -70,9 +34,9 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(30, 51, 84, 0.8);
-  border: 1px solid #2a4a6f;
-  color: #8b9dc3;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-placeholder);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,8 +47,8 @@
 }
 
 .person-list-icon-wrap:hover {
-  background: rgba(24, 144, 255, 0.2);
-  color: #1890ff;
+  background: var(--primary-hover);
+  color: var(--primary);
 }
 
 .person-list-icon-badge {
@@ -97,7 +61,7 @@
   padding: 0 4px;
   font-size: 11px;
   color: #fff;
-  background: #ff4d4f;
+  background: var(--accent-red);
   border-radius: 9px;
   text-align: center;
 }
@@ -109,9 +73,9 @@
 
 .person-list-filter-title {
   font-size: 16px;
-  font-weight: 600;
-  color: #e8e8e8;
-  margin-bottom: 16px;
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .person-list-filter-block {
@@ -128,15 +92,15 @@
 .person-list-filter-bar {
   width: 4px;
   height: 18px;
-  background: #1890ff;
+  background: var(--primary);
   border-radius: 2px;
   flex-shrink: 0;
 }
 
 .person-list-filter-category-label {
   font-size: 15px;
-  font-weight: 600;
-  color: #e8e8e8;
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-secondary);
 }
 
 .person-list-filter-row {
@@ -153,9 +117,9 @@
 
 .person-list-filter-sub-label {
   font-size: 13px;
-  color: #8b9dc3;
+  color: var(--text-placeholder);
   flex-shrink: 0;
-  padding-top: 4px;
+  padding-top: var(--spacing-xs);
 }
 
 .person-list-filter-tags {
@@ -170,39 +134,39 @@
   padding: 4px 12px !important;
   font-size: 13px !important;
   border-radius: 6px !important;
-  border: 1px solid #2a4a6f !important;
-  background: rgba(30, 51, 84, 0.5) !important;
-  color: #b0b0b0 !important;
+  border: 1px solid var(--input-border) !important;
+  background: var(--input-bg) !important;
+  color: var(--text-muted) !important;
   cursor: pointer !important;
   transition: border-color 0.2s, background 0.2s, color 0.2s !important;
 }
 
 .person-list-tag:hover {
-  border-color: #1890ff !important;
-  color: #e8e8e8 !important;
+  border-color: var(--primary) !important;
+  color: var(--text-secondary) !important;
 }
 
 .person-list-tag-selected {
-  border-color: #1890ff !important;
-  background: rgba(24, 144, 255, 0.2) !important;
-  color: #1890ff !important;
+  border-color: var(--primary) !important;
+  background: var(--primary-hover) !important;
+  color: var(--primary) !important;
 }
 
 .person-list-tag-count {
   margin-left: 2px;
-  color: #8b9dc3;
-  font-size: 12px;
+  color: var(--text-placeholder);
+  font-size: var(--font-caption);
 }
 
 .person-list-tag-selected .person-list-tag-count {
-  color: #1890ff;
+  color: var(--primary);
 }
 
 /* 分割线 */
 .person-list-divider {
   height: 1px;
-  background: #1e3354;
-  margin: 20px 0;
+  background: var(--card-border);
+  margin: var(--spacing-xl) 0;
 }
 
 /* 加载 */
@@ -211,14 +175,14 @@
   justify-content: center;
   align-items: center;
   min-height: 320px;
-  color: #8b9dc3;
+  color: var(--text-placeholder);
 }
 
 /* 结果区 */
 .person-list-result-card {
-  border-radius: 12px;
-  border: 1px solid #1e3354;
-  background: rgba(14, 28, 52, 0.6);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
 }
 
 .person-list-result-card .ant-card-body {
@@ -226,22 +190,22 @@
 }
 
 .person-list-result-card .ant-empty-description {
-  color: #8b9dc3;
+  color: var(--text-placeholder);
 }
 
 .person-list-grid {
-  margin-bottom: 24px;
+  margin-bottom: var(--page-gap);
 }
 
 .person-list-card {
-  border-radius: 12px;
-  border: 1px solid #1e3354;
-  background: rgba(14, 28, 52, 0.6);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .person-list-card:hover {
-  border-color: #1890ff;
+  border-color: var(--primary);
   box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
 }
 
@@ -255,7 +219,7 @@
   height: 56px;
   line-height: 56px;
   margin: 0 auto 12px;
-  background: linear-gradient(135deg, #5c6bc0 0%, #7986cb 100%);
+  background: var(--accent-purple);
   color: #fff;
   font-size: 22px;
   font-weight: bold;
@@ -264,17 +228,18 @@
 
 .person-list-card-name {
   font-size: 15px;
-  font-weight: 600;
-  color: #e8e8e8;
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-secondary);
   margin-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.person-list-card-id {
-  font-size: 12px;
-  color: #8b9dc3;
+.person-list-card-id,
+.person-list-card-birth {
+  font-size: var(--font-caption);
+  color: var(--text-placeholder);
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -282,8 +247,6 @@
 }
 
 .person-list-card-birth {
-  font-size: 12px;
-  color: #8b9dc3;
   margin-bottom: 10px;
 }
 
@@ -297,7 +260,7 @@
 
 .person-list-card-tag {
   font-size: 11px !important;
-  border-radius: 4px !important;
+  border-radius: var(--radius-sm) !important;
   background: rgba(92, 107, 192, 0.3) !important;
   border: none !important;
   color: #c5cae9 !important;
@@ -314,35 +277,29 @@
   position: relative;
 }
 
-/* 分页 */
-.person-list-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
-}
-
+/* 分页 - 继承 page-pagination 变量 */
 .person-list-pagination-inner .ant-pagination-item a,
 .person-list-pagination-inner .ant-pagination-item-link,
 .person-list-pagination-inner .ant-pagination-total-text {
-  color: #b0b0b0 !important;
+  color: var(--text-muted) !important;
 }
 
 .person-list-pagination-inner .ant-pagination-item:hover a,
 .person-list-pagination-inner .ant-pagination-item-link:hover {
-  color: #1890ff !important;
+  color: var(--primary) !important;
 }
 
 .person-list-pagination-inner .ant-pagination-item-active {
-  background: rgba(24, 144, 255, 0.2) !important;
-  border-color: #1890ff !important;
+  background: var(--primary-hover) !important;
+  border-color: var(--primary) !important;
 }
 
 .person-list-pagination-inner .ant-pagination-item-active a {
-  color: #1890ff !important;
+  color: var(--primary) !important;
 }
 
 .person-list-pagination-inner .ant-select-selector {
-  background: rgba(30, 51, 84, 0.6) !important;
-  border-color: #2a4a6f !important;
-  color: #e8e8e8 !important;
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-secondary) !important;
 }

@@ -1,13 +1,86 @@
-.workspace-page {
-  padding: 0;
+/* 工作区 - 使用统一深色主题变量 */
+
+.workspace-page .ant-card {
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+.workspace-page .ant-card-head {
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-muted);
+}
+
+.workspace-page .ant-card-head-title {
+  color: var(--text-secondary);
+  font-size: var(--font-subtitle);
+  font-weight: var(--font-weight-subtitle);
+}
+
+.workspace-page .ant-card-body {
+  color: var(--text-muted);
 }
 
 .workspace-page .placeholder-block {
   text-align: center;
-  padding: 48px 24px;
-  color: #999;
+  padding: 48px var(--page-gap);
+  color: var(--text-placeholder);
 }
 
 .workspace-page .placeholder-block p {
-  margin: 16px 0;
+  margin: var(--spacing-lg) 0;
+}
+
+.workspace-page .ant-tabs-tab {
+  color: var(--text-muted);
+}
+
+.workspace-page .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary);
+}
+
+.workspace-page .ant-tabs-ink-bar {
+  background: var(--primary);
+}
+
+.workspace-page .ant-tabs-nav::before {
+  border-bottom-color: var(--input-border);
+}
+
+.workspace-page .ant-upload-drag {
+  background: var(--card-bg) !important;
+  border-color: var(--input-border) !important;
+  border-radius: var(--radius-md);
+}
+
+.workspace-page .ant-upload-drag:hover {
+  border-color: var(--primary) !important;
+}
+
+.workspace-page .ant-table {
+  color: var(--text-secondary);
+  background: transparent !important;
+}
+
+.workspace-page .ant-table-thead > tr > th {
+  background: var(--input-bg) !important;
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-muted);
+}
+
+.workspace-page .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--card-border);
+}
+
+.workspace-page .ant-table-tbody > tr:hover > td {
+  background: var(--primary-hover) !important;
+}
+
+.workspace-page .ant-btn-primary {
+  background: var(--accent-purple) !important;
+  border: none !important;
+}
+
+.workspace-page .ant-empty-description {
+  color: var(--text-placeholder);
 }

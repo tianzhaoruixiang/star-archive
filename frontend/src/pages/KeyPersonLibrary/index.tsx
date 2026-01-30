@@ -108,8 +108,8 @@ const KeyPersonLibrary: React.FC = () => {
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.size));
 
   return (
-    <div className="key-person-page">
-      <h1 className="key-person-title">重点人员管理</h1>
+    <div className="page-wrapper key-person-page">
+      <h1 className="page-title page-title-accent key-person-title">重点人员管理</h1>
 
       <div className="key-person-body">
         <aside className="key-person-sidebar">
@@ -231,7 +231,7 @@ const KeyPersonLibrary: React.FC = () => {
                   </Col>
                 ))}
               </Row>
-              <div className="key-person-pagination">
+              <div className="page-pagination key-person-pagination">
                 <Pagination
                   current={pagination.page}
                   pageSize={pagination.size}

@@ -7,6 +7,7 @@ import KeyPersonLibrary from './pages/KeyPersonLibrary';
 import SituationAwareness from './pages/SituationAwareness';
 import Workspace from './pages/Workspace';
 import WorkspaceImportDetail from './pages/Workspace/ImportDetail';
+import ModelManagement from './pages/ModelManagement';
 import Login from './pages/Login';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="key-person-library" element={<KeyPersonLibrary />} />
         <Route path="workspace" element={<Workspace />} />
         <Route path="workspace/fusion/:taskId" element={<WorkspaceImportDetail />} />
+        <Route path="model-management" element={<ModelManagement />} />
       </Route>
     </Routes>
   );

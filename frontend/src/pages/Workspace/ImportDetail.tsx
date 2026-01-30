@@ -219,7 +219,7 @@ const ImportDetail: React.FC = () => {
                         )}
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                           <div style={{ fontWeight: 500, fontSize: 12 }}>{p.chineseName || p.originalName || p.personId}</div>
-                          {p.idCardNumber && <div style={{ fontSize: 11, color: '#999' }}>{p.idCardNumber}</div>}
+                          {p.idCardNumber && <div style={{ fontSize: 11, color: 'var(--text-placeholder)' }}>{p.idCardNumber}</div>}
                         </div>
                       </div>
                     </Card>
@@ -235,8 +235,8 @@ const ImportDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="workspace-page" style={{ padding: 24 }}>
-        <div style={{ textAlign: 'center', padding: 48 }}>
+      <div className="page-wrapper workspace-page">
+        <div className="page-loading">
           <Spin size="large" />
         </div>
       </div>
@@ -245,7 +245,7 @@ const ImportDetail: React.FC = () => {
 
   if (!detail) {
     return (
-      <div className="workspace-page" style={{ padding: 24 }}>
+      <div className="page-wrapper workspace-page">
         <Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>
           返回工作区
         </Button>
@@ -260,7 +260,7 @@ const ImportDetail: React.FC = () => {
 
   if (isExtracting) {
     return (
-      <div className="workspace-page" style={{ padding: 24 }}>
+      <div className="page-wrapper workspace-page">
         <div style={{ marginBottom: 16 }}>
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>
             返回工作区
@@ -269,7 +269,7 @@ const ImportDetail: React.FC = () => {
         <Card size="small" title={detail.task.fileName}>
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
             <Spin size="large" />
-            <div style={{ marginTop: 16, color: '#666' }}>
+            <div style={{ marginTop: 16, color: 'var(--text-placeholder)' }}>
               大模型正在提取档案，请稍候… 完成后可在此对比查看并确认导入
             </div>
           </div>
@@ -279,13 +279,13 @@ const ImportDetail: React.FC = () => {
   }
 
   return (
-    <div className="workspace-page" style={{ padding: 24 }}>
+    <div className="page-wrapper workspace-page">
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>
             返回工作区
           </Button>
-          <span style={{ color: '#999' }}>|</span>
+          <span style={{ color: 'var(--text-placeholder)' }}>|</span>
           <span>
             <strong>任务详情：</strong>
             {detail.task.fileName} · {STATUS_MAP[detail.task.status]?.text ?? detail.task.status} · 提取 {detail.task.extractCount} 人

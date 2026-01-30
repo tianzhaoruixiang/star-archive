@@ -185,7 +185,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard">
+    <div className="page-wrapper dashboard">
       {/* 顶部 4 个指标卡 */}
       <Row gutter={[16, 16]} className="dashboard-cards">
         <Col xs={24} sm={12} lg={6}>

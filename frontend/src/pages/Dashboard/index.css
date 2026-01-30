@@ -1,19 +1,11 @@
-/* 首页深色主题，参照流感监测系统大屏 */
-
-.dashboard {
-  margin: -24px -24px 0;
-  padding: 24px;
-  min-height: calc(100vh - 64px);
-  background: #0a1628;
-  color: #e8e8e8;
-}
+/* 首页 - 使用统一深色主题变量 */
 
 .dashboard-loading {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 400px;
-  color: #8b9dc3;
+  color: var(--text-placeholder);
 }
 
 /* 顶部 4 个指标卡 */
@@ -46,7 +38,7 @@
 }
 
 .dashboard-card-purple {
-  background: linear-gradient(135deg, #5c6bc0 0%, #7986cb 100%);
+  background: var(--accent-purple);
 }
 
 .dashboard-card-purple .dashboard-card-icon {
@@ -88,25 +80,25 @@
 }
 
 .dashboard-panel {
-  margin-bottom: 16px;
-  border-radius: 12px;
-  border: 1px solid #1e3354;
-  background: rgba(14, 28, 52, 0.8);
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
 }
 
 .dashboard-panel .ant-card-head {
-  border-bottom: 1px solid #1e3354;
-  color: #b0b0b0;
-  font-size: 14px;
+  border-bottom: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: var(--font-body);
 }
 
 .dashboard-panel .ant-card-head-title {
-  color: #e8e8e8;
+  color: var(--text-secondary);
 }
 
 .dashboard-panel .ant-card-body {
-  padding: 16px;
-  color: #b0b0b0;
+  padding: var(--spacing-lg);
+  color: var(--text-muted);
 }
 
 /* 左侧 / 右侧 排行列表 */
@@ -145,7 +137,7 @@
   flex-shrink: 0;
   width: 22px;
   text-align: center;
-  color: #8b9dc3;
+  color: var(--text-placeholder);
   font-weight: 600;
 }
 
@@ -155,7 +147,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #e8e8e8;
+  color: var(--text-secondary);
 }
 
 .rank-value {
@@ -168,7 +160,7 @@
   flex-shrink: 0;
   width: 60px;
   height: 6px;
-  background: #1e3354;
+  background: var(--card-border);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -194,20 +186,20 @@
 }
 
 .dashboard-trend-tabs .ant-tabs-tab {
-  color: #8b9dc3;
+  color: var(--text-placeholder);
   padding: 4px 12px;
 }
 
 .dashboard-trend-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: #1890ff;
+  color: var(--primary);
 }
 
 .dashboard-trend-tabs .ant-tabs-ink-bar {
-  background: #1890ff;
+  background: var(--primary);
 }
 
 .dashboard-trend-tabs .ant-tabs-nav::before {
-  border-bottom-color: #2a3f5f;
+  border-bottom-color: var(--input-border);
 }
 
 /* 地图区域 */
@@ -248,9 +240,9 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(30, 51, 84, 0.9);
-  border: 1px solid #2a4a6f;
-  color: #8b9dc3;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-placeholder);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,7 +252,7 @@
 }
 
 .float-btn:hover {
-  background: rgba(24, 144, 255, 0.3);
-  color: #1890ff;
+  background: var(--primary-hover);
+  color: var(--primary);
 }
 

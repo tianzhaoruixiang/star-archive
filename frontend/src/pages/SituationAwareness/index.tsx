@@ -35,7 +35,7 @@ const SituationAwareness = () => {
   useEffect(() => { loadSocial(); }, []);
 
   return (
-    <div className="situation-awareness">
+    <div className="page-wrapper situation-awareness">
       <Card title="态势感知">
         <Tabs defaultActiveKey="news">
           <TabPane tab="新闻动态" key="news">

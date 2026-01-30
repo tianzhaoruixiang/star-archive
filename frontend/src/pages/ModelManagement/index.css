@@ -1,0 +1,221 @@
+/* 模型管理 - 使用统一深色主题变量 */
+
+.model-management-page {
+  padding-bottom: 100px;
+}
+
+/* 顶部子导航 */
+.model-management-subnav {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--page-gap);
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  width: fit-content;
+}
+
+.model-management-subnav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-body);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.model-management-subnav-item:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.model-management-subnav-item-active {
+  background: var(--accent-purple) !important;
+  color: #fff !important;
+}
+
+.model-management-subnav-icon {
+  font-size: 16px;
+}
+
+/* 标题与描述 */
+.model-management-title {
+  margin-bottom: var(--spacing-sm);
+}
+
+.model-management-desc {
+  margin: 0 0 var(--page-gap);
+  font-size: var(--font-body);
+  color: var(--text-placeholder);
+}
+
+/* 模型卡片 */
+.model-management-cards {
+  margin-bottom: var(--page-gap);
+}
+
+.model-management-card {
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  height: 100%;
+}
+
+.model-management-card .ant-card-body {
+  padding: var(--card-padding);
+}
+
+.model-management-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.model-management-card-title {
+  font-size: var(--font-subtitle);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+}
+
+.model-management-card-status {
+  flex-shrink: 0;
+  margin: 0 !important;
+  padding: 4px 12px !important;
+  font-size: var(--font-caption) !important;
+  border-radius: 20px !important;
+  border: none !important;
+}
+
+.model-management-card-status-running {
+  background: rgba(82, 196, 26, 0.2) !important;
+  color: #52c41a !important;
+}
+
+.model-management-card-status-paused {
+  background: rgba(250, 173, 20, 0.2) !important;
+  color: #faad14 !important;
+}
+
+.model-management-card-desc {
+  margin: 0 0 var(--spacing-lg);
+  font-size: var(--font-body);
+  color: var(--text-placeholder);
+  line-height: 1.5;
+}
+
+.model-management-card-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.model-management-card-metric {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+  font-size: var(--font-body);
+}
+
+.model-management-card-metric-label {
+  color: var(--text-placeholder);
+  flex-shrink: 0;
+}
+
+.model-management-card-metric-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.model-management-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.model-management-card-btn {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+.model-management-card-btn:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.model-management-card-btn-delete {
+  background: var(--accent-red) !important;
+  border-color: var(--accent-red) !important;
+  color: #fff !important;
+}
+
+.model-management-card-btn-delete:hover {
+  opacity: 0.9;
+  color: #fff !important;
+}
+
+/* 创建新模型按钮 */
+.model-management-create-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--page-gap);
+}
+
+.model-management-create-btn {
+  min-width: 200px;
+  height: 44px;
+  font-size: var(--font-body);
+  font-weight: 500;
+  background: var(--accent-purple) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: var(--radius-md);
+}
+
+.model-management-create-btn:hover {
+  opacity: 0.95;
+  color: #fff !important;
+}
+
+/* 右侧悬浮按钮 */
+.model-management-float-btns {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  z-index: 100;
+}
+
+.model-management-float-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-placeholder);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.model-management-float-btn:hover {
+  background: var(--primary-hover);
+  color: var(--primary);
+}

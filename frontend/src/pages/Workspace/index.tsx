@@ -155,7 +155,7 @@ const Workspace = () => {
   ];
 
   return (
-    <div className="workspace-page">
+    <div className="page-wrapper workspace-page">
       <Card title="个人工作区">
         <Tabs activeKey={activeTab} onChange={(k) => setActiveTab(k ?? 'data')}>
           <TabPane tab="数据管理" key="data">

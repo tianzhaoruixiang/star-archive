@@ -102,7 +102,7 @@ const PersonDetail = () => {
 
   if (!detail) {
     return (
-      <div className="person-detail-page">
+      <div className="page-wrapper person-detail-page">
         <div className="person-detail-empty">
           <Empty description="未找到该人员档案" />
           <Button type="primary" onClick={() => navigate('/persons')}>
@@ -119,7 +119,7 @@ const PersonDetail = () => {
   const occupation = tags[0] || detail.highestEducation || '—';
 
   return (
-    <div className="person-detail-page">
+    <div className="page-wrapper person-detail-page">
       {/* 顶部：返回 + 标题 */}
       <div className="person-detail-header">
         <Button
