@@ -56,6 +56,11 @@ spring:
     # 明确指定 JSON 序列化使用 UTF-8，避免中文乱码
     default-charset: UTF-8
 
+  # 开发热更新（spring-boot-devtools）：修改代码并编译后自动重启
+  devtools:
+    restart:
+      enabled: true
+
 # 分页配置
 page:
   default-size: 20

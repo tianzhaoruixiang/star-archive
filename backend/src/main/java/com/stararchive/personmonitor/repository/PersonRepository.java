@@ -59,4 +59,16 @@ public interface PersonRepository extends JpaRepository<Person, String> {
             @Param("birthDate") LocalDate birthDate,
             @Param("gender") String gender,
             @Param("nationality") String nationality);
+
+    /**
+     * 按机构统计人数，返回 TOP15（机构名称、人数）
+     */
+    @Query(value = "SELECT organization, COUNT(*) FROM person WHERE organization IS NOT NULL AND organization != '' GROUP BY organization ORDER BY COUNT(*) DESC LIMIT 15", nativeQuery = true)
+    List<Object[]> findOrganizationCountsTop15();
+
+    /**
+     * 按所属群体统计人数，用于首页群体类别卡片（按人数降序）
+     */
+    @Query(value = "SELECT belonging_group, COUNT(*) FROM person WHERE belonging_group IS NOT NULL AND belonging_group != '' GROUP BY belonging_group ORDER BY COUNT(*) DESC", nativeQuery = true)
+    List<Object[]> findBelongingGroupCounts();
 }

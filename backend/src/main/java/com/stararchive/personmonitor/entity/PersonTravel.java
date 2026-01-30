@@ -43,6 +43,15 @@ public class PersonTravel {
     @Column(name = "ticket_number", length = 100)
     private String ticketNumber;
     
+    @Column(name = "visa_type", length = 50)
+    private String visaType;
+    
+    @Column(name = "destination_province", length = 50)
+    private String destinationProvince;
+    
+    @Column(name = "departure_province", length = 50)
+    private String departureProvince;
+    
     @Column(name = "created_time")
     private LocalDateTime createdTime;
     

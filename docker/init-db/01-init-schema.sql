@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS person
     `original_name` VARCHAR(200) COMMENT '原始姓名',
     `alias_names` ARRAY<VARCHAR(100)> COMMENT '人物别名',
     `organization` VARCHAR(100) COMMENT '机构名称',
+    `belonging_group` VARCHAR(50) COMMENT '所属群体（用于首页群体类别统计，如康复、确诊、疑似、正常）',
     `avatar_files` ARRAY<VARCHAR(100)> COMMENT '头像文件SeaweedFS编号',
     `gender` VARCHAR(10) COMMENT '性别',
     `id_numbers` ARRAY<VARCHAR(50)> COMMENT '证件号码数组',
@@ -66,6 +67,7 @@ ALTER TABLE person ADD INDEX idx_created_time (created_time) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_id_card (id_card_number) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_phone (phone_numbers) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_email (emails) USING INVERTED;
+ALTER TABLE person ADD INDEX idx_belonging_group (belonging_group) USING INVERTED;
 
 -- 2. 人物行为活动数据人物行程表 (Unique Key 模型)
 CREATE TABLE IF NOT EXISTS person_travel
@@ -78,6 +80,9 @@ CREATE TABLE IF NOT EXISTS person_travel
     `destination` VARCHAR(500) COMMENT '目的地',
     `travel_type` VARCHAR(20) NOT NULL COMMENT '行程类型: TRAIN-火车, FLIGHT-飞机, CAR-汽车',
     `ticket_number` VARCHAR(100) COMMENT '行程票据编号',
+    `visa_type` VARCHAR(50) COMMENT '签证类型: 公务签证/外交签证/记者签证/旅游签证/其他，出入境时填写',
+    `destination_province` VARCHAR(50) COMMENT '目的地省份（用于各地排名统计）',
+    `departure_province` VARCHAR(50) COMMENT '出发地省份（用于各地排名统计）',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )
@@ -449,6 +454,21 @@ PROPERTIES (
 ALTER TABLE archive_similar_match ADD INDEX idx_task_id (task_id) USING INVERTED;
 ALTER TABLE archive_similar_match ADD INDEX idx_result_id (result_id) USING INVERTED;
 ALTER TABLE archive_similar_match ADD INDEX idx_person_id (person_id) USING INVERTED;
+
+-- 系统配置表（key-value，控制系统名称、Logo、前端 base URL、各导航与核心板块显示隐藏）
+CREATE TABLE IF NOT EXISTS system_config
+(
+    `config_key`   VARCHAR(100)  NOT NULL COMMENT '配置键',
+    `config_value` VARCHAR(1000) NULL COMMENT '配置值',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+)
+UNIQUE KEY(`config_key`)
+COMMENT "系统配置表"
+DISTRIBUTED BY HASH(config_key) BUCKETS 1
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
 
 -- 关键查询示例（仅供参考；person_news_relation 未建时勿直接执行）
 -- SELECT p.person_id, p.chinese_name, p.original_name, p.nationality, p.person_tags,

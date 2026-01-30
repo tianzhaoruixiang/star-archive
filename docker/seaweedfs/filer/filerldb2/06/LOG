@@ -125,3 +125,37 @@
 00:51:35.228837 version@stat F·[1] S·304B[304B] Sc·[0.25]
 00:51:35.257028 db@janitor F·3 G·0
 00:51:35.257222 db@open done T·44.943536ms
+01:18:39.267783 db@close closing
+01:18:39.456512 db@close done T·188.749649ms
+=============== Jan 30, 2026 (UTC) ===============
+01:19:35.161459 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+01:19:35.167677 version@stat F·[1] S·304B[304B] Sc·[0.25]
+01:19:35.168256 db@open opening
+01:19:35.169779 journal@recovery F·1
+01:19:35.175521 journal@recovery recovering @23
+01:19:35.185924 memdb@flush created L0@25 N·1 S·251B "m\xd3)..30e,v4":"m\xd3)..30e,v4"
+01:19:35.193648 version@stat F·[2] S·555B[555B] Sc·[0.50]
+01:19:35.226450 db@janitor F·4 G·0
+01:19:35.227121 db@open done T·58.584016ms
+01:44:53.784693 db@close closing
+01:44:53.787916 db@close done T·3.215009ms
+=============== Jan 30, 2026 (UTC) ===============
+01:52:15.223595 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+01:52:15.228856 version@stat F·[2] S·555B[555B] Sc·[0.50]
+01:52:15.229354 db@open opening
+01:52:15.230636 journal@recovery F·1
+01:52:15.238802 journal@recovery recovering @26
+01:52:15.248175 version@stat F·[2] S·555B[555B] Sc·[0.50]
+01:52:15.279706 db@janitor F·4 G·0
+01:52:15.279930 db@open done T·50.404487ms
+01:59:42.632431 db@close closing
+01:59:42.641395 db@close done T·8.963183ms
+=============== Jan 30, 2026 (UTC) ===============
+02:05:53.370667 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+02:05:53.376433 version@stat F·[2] S·555B[555B] Sc·[0.50]
+02:05:53.376905 db@open opening
+02:05:53.378268 journal@recovery F·1
+02:05:53.383887 journal@recovery recovering @28
+02:05:53.394750 version@stat F·[2] S·555B[555B] Sc·[0.50]
+02:05:53.425649 db@janitor F·4 G·0
+02:05:53.425858 db@open done T·48.734555ms

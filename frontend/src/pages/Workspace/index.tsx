@@ -1,6 +1,6 @@
 import { Tabs, Card, Tree, Button, Upload, Empty, Row, Col, Table, message, Tag } from 'antd';
 import type { UploadFile, UploadProps } from 'antd';
-import { PlusOutlined, UploadOutlined, EyeOutlined } from '@ant-design/icons';
+import { UploadOutlined, EyeOutlined } from '@ant-design/icons';
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { archiveFusionAPI } from '@/services/api';
@@ -10,6 +10,7 @@ import type {
   PageResponse,
 } from '@/types/archiveFusion';
 import { useAppSelector } from '@/store/hooks';
+import { formatDateTime } from '@/utils/date';
 import './index.css';
 
 const { TabPane } = Tabs;
@@ -140,7 +141,7 @@ const Workspace = () => {
       dataIndex: 'createdTime',
       key: 'createdTime',
       width: 170,
-      render: (t: string) => (t ? new Date(t).toLocaleString() : '-'),
+      render: (t: string) => formatDateTime(t, '-'),
     },
     {
       title: '操作',
@@ -179,15 +180,6 @@ const Workspace = () => {
                 </Card>
               </Col>
             </Row>
-          </TabPane>
-          <TabPane tab="模型管理" key="model">
-            <Card>
-              <div className="placeholder-block">
-                <PlusOutlined style={{ fontSize: 48, color: '#ccc' }} />
-                <p>新建模型，通过建模精细化锁定重点人员；运行模型可展示符合条件人员卡片</p>
-                <Button type="primary" disabled>新建模型（待对接）</Button>
-              </div>
-            </Card>
           </TabPane>
           <TabPane tab="档案融合" key="fusion">
             <Card

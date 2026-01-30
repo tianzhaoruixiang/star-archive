@@ -1,5 +1,6 @@
 package com.stararchive.personmonitor.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -17,6 +18,12 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    private final ObjectMapper objectMapper;
+
+    public WebConfig(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -28,11 +35,12 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     /**
-     * 统一 JSON 响应使用 UTF-8，解决 /api/persons/tags 等接口中文乱码
+     * 统一 JSON 响应使用 UTF-8，并沿用 Spring Boot 配置的 ObjectMapper（日期序列化为字符串，避免数组格式）
      */
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
+        converter.setObjectMapper(objectMapper);
         converter.setDefaultCharset(StandardCharsets.UTF_8);
         converter.setSupportedMediaTypes(Collections.singletonList(
                 new MediaType(MediaType.APPLICATION_JSON, StandardCharsets.UTF_8)));

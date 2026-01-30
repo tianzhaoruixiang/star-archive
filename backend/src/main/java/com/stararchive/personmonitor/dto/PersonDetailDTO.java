@@ -25,6 +25,8 @@ public class PersonDetailDTO {
     private String nationality;
     private String nationalityCode;
     private String householdAddress;
+    private String organization;
+    private String belongingGroup;
     private String highestEducation;
     private List<String> phoneNumbers;
     private List<String> emails;

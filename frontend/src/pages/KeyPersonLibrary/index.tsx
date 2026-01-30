@@ -3,6 +3,7 @@ import { Card, Row, Col, Tag, Pagination, Spin, Empty, message } from 'antd';
 import { LinkOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { keyPersonLibraryAPI, type KeyPersonCategory } from '@/services/api';
+import { formatDateOnly } from '@/utils/date';
 import './index.css';
 
 interface PersonCard {
@@ -164,7 +165,9 @@ const KeyPersonLibrary: React.FC = () => {
                         <div className="key-person-card-avatar">
                           {(person.chineseName || '?').charAt(0)}
                         </div>
-                        <Tag className="key-person-card-status">正常</Tag>
+                        <Tag className="key-person-card-status">
+                          {person.personTags?.[0] ?? '—'}
+                        </Tag>
                       </div>
                       <div className="key-person-card-name">
                         {person.chineseName || '—'}
@@ -176,10 +179,8 @@ const KeyPersonLibrary: React.FC = () => {
                         籍贯: {person.householdAddress || '—'}
                       </div>
                       <div className="key-person-card-row">
-                        年龄:{' '}
-                        {person.birthDate
-                          ? `${new Date().getFullYear() - new Date(person.birthDate).getFullYear()}岁`
-                          : '—'}
+                        出生日期:{' '}
+                        {formatDateOnly(person.birthDate)}
                       </div>
                       <div className="key-person-card-row">
                         电话: {person.phoneSummary || '—'}
@@ -190,13 +191,7 @@ const KeyPersonLibrary: React.FC = () => {
                             {tag}
                           </Tag>
                         ))}
-                        <Tag className="key-person-card-tag">优先级: 3</Tag>
                       </div>
-                      {person.remark && (
-                        <div className="key-person-card-reason">
-                          原因: {person.remark}
-                        </div>
-                      )}
                       <div className="key-person-card-actions">
                         <span
                           className="key-person-card-link"

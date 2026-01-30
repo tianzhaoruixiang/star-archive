@@ -37,6 +37,12 @@ public class Person {
     @Column(name = "alias_names", columnDefinition = "json")
     private List<String> aliasNames;
     
+    @Column(name = "organization", length = 100)
+    private String organization;
+    
+    @Column(name = "belonging_group", length = 50)
+    private String belongingGroup;
+    
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "avatar_files", columnDefinition = "json")
     private List<String> avatarFiles;

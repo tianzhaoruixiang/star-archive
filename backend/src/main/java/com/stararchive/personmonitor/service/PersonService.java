@@ -141,6 +141,7 @@ public class PersonService {
         dto.setPhoneSummary(person.getPhoneNumbers() != null && !person.getPhoneNumbers().isEmpty()
                 ? person.getPhoneNumbers().get(0) : null);
         dto.setRemark(person.getRemark());
+        dto.setBelongingGroup(person.getBelongingGroup());
         return dto;
     }
 
@@ -157,6 +158,8 @@ public class PersonService {
         dto.setNationality(person.getNationality());
         dto.setNationalityCode(person.getNationalityCode());
         dto.setHouseholdAddress(person.getHouseholdAddress());
+        dto.setOrganization(person.getOrganization());
+        dto.setBelongingGroup(person.getBelongingGroup());
         dto.setHighestEducation(person.getHighestEducation());
         dto.setPhoneNumbers(person.getPhoneNumbers());
         dto.setEmails(person.getEmails());
@@ -185,6 +188,7 @@ public class PersonService {
         dto.setDestination(travel.getDestination());
         dto.setTravelType(travel.getTravelType());
         dto.setTicketNumber(travel.getTicketNumber());
+        dto.setVisaType(travel.getVisaType());
         return dto;
     }
     

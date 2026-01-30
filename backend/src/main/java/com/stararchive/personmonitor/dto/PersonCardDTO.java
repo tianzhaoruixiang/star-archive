@@ -30,4 +30,6 @@ public class PersonCardDTO {
     private String phoneSummary;
     /** 原因/备注（重点人员管理卡片展示） */
     private String remark;
+    /** 所属群体（用于群体类别统计与展示） */
+    private String belongingGroup;
 }

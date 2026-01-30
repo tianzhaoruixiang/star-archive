@@ -22,4 +22,5 @@ public class PersonTravelDTO {
     private String destination;
     private String travelType;
     private String ticketNumber;
+    private String visaType;
 }

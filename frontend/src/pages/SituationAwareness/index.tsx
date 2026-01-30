@@ -2,6 +2,7 @@ import { Tabs, Card, Input, List, Tag, Empty } from 'antd';
 import { SearchOutlined, BarChartOutlined } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import { newsAPI, socialAPI } from '@/services/api';
+import { formatDateTime } from '@/utils/date';
 import './index.css';
 
 const { TabPane } = Tabs;
@@ -67,9 +68,7 @@ const SituationAwareness = () => {
                         {item.title}
                       </div>
                       <span className="list-meta">
-                        {item.publishTime
-                          ? new Date(item.publishTime).toLocaleString()
-                          : ''}
+                        {formatDateTime(item.publishTime, '')}
                       </span>
                     </List.Item>
                   )}
@@ -94,9 +93,7 @@ const SituationAwareness = () => {
                         {item.socialAccount} — {item.title ?? item.content?.slice(0, 50)}
                       </div>
                       <span className="list-meta">
-                        {item.publishTime
-                          ? new Date(item.publishTime).toLocaleString()
-                          : ''}
+                        {formatDateTime(item.publishTime, '')}
                       </span>
                     </List.Item>
                   )}

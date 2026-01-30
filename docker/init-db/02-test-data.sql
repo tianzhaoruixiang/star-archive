@@ -121,9 +121,9 @@ INSERT INTO tag (tag_id, first_level_name, second_level_name, tag_name, tag_desc
 (212, '行为规律', NULL, '出国未归', '出国未归', NULL, NULL, NOW(), NOW()),
 (213, '行为规律', NULL, '多次快进快出', '多次快进快出', NULL, NULL, NOW(), NOW());
 
--- 插入测试人员数据（全字段）
+-- 插入测试人员数据（全字段，含机构、所属群体）
 INSERT INTO person (
-    person_id, person_type, is_key_person, chinese_name, original_name, alias_names, avatar_files,
+    person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
     gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
@@ -136,6 +136,8 @@ INSERT INTO person (
     '张三',
     'Zhang San',
     ARRAY('阿三', '老三'),
+    '某科技公司',
+    '康复',
     NULL,
     '男',
     ARRAY('110101199001011234'),
@@ -165,6 +167,8 @@ INSERT INTO person (
     '李四',
     'Li Si',
     NULL,
+    '某研究院',
+    '确诊',
     NULL,
     '女',
     ARRAY('110101198505151234'),
@@ -194,6 +198,8 @@ INSERT INTO person (
     '王五',
     'Wang Wu',
     ARRAY('老王'),
+    '某集团',
+    '疑似',
     NULL,
     '男',
     ARRAY('110101197508201234'),
@@ -217,10 +223,11 @@ INSERT INTO person (
     NOW()
 );
 
--- 插入测试行程数据（全字段已覆盖）
+-- 插入测试行程数据（含 visa_type、destination_province、departure_province）
 INSERT INTO person_travel (
     travel_id, person_id, event_time, person_name, departure, destination,
-    travel_type, ticket_number, created_time, updated_time
+    travel_type, ticket_number, visa_type, destination_province, departure_province,
+    created_time, updated_time
 ) VALUES
 (
     1,
@@ -231,6 +238,9 @@ INSERT INTO person_travel (
     '上海浦东国际机场',
     'FLIGHT',
     'CA1234',
+    '公务签证',
+    '上海市',
+    '北京市',
     NOW(),
     NOW()
 ),
@@ -243,6 +253,9 @@ INSERT INTO person_travel (
     '杭州东站',
     'TRAIN',
     'G7123',
+    NULL,
+    '浙江省',
+    '上海市',
     NOW(),
     NOW()
 ),
@@ -255,6 +268,114 @@ INSERT INTO person_travel (
     '苏州工业园区',
     'CAR',
     NULL,
+    NULL,
+    '江苏省',
+    '上海市',
+    NOW(),
+    NOW()
+),
+(
+    4,
+    md5('李四1985-05-15女中国'),
+    '2025-01-22 07:45:00',
+    '李四',
+    '广州白云国际机场',
+    '北京首都国际机场',
+    'FLIGHT',
+    'CZ3001',
+    '旅游签证',
+    '北京市',
+    '广东省',
+    NOW(),
+    NOW()
+),
+(
+    5,
+    md5('李四1985-05-15女中国'),
+    '2025-01-25 09:00:00',
+    '李四',
+    '深圳北站',
+    '广州南站',
+    'TRAIN',
+    'G6012',
+    NULL,
+    '广东省',
+    '广东省',
+    NOW(),
+    NOW()
+),
+(
+    6,
+    md5('张三1990-01-01男中国'),
+    '2025-01-28 16:30:00',
+    '张三',
+    '杭州萧山国际机场',
+    '成都双流国际机场',
+    'FLIGHT',
+    'CA4512',
+    '公务签证',
+    '四川省',
+    '浙江省',
+    NOW(),
+    NOW()
+),
+(
+    7,
+    md5('王五1975-08-20男中国'),
+    '2025-02-01 08:15:00',
+    '王五',
+    '南京南站',
+    '武汉站',
+    'TRAIN',
+    'D3022',
+    NULL,
+    '湖北省',
+    '江苏省',
+    NOW(),
+    NOW()
+),
+(
+    8,
+    md5('李四1985-05-15女中国'),
+    '2025-02-03 11:20:00',
+    '李四',
+    '北京首都国际机场',
+    '上海浦东国际机场',
+    'FLIGHT',
+    'MU5102',
+    '旅游签证',
+    '上海市',
+    '北京市',
+    NOW(),
+    NOW()
+),
+(
+    9,
+    md5('张三1990-01-01男中国'),
+    '2025-02-05 14:00:00',
+    '张三',
+    '成都东站',
+    '重庆北站',
+    'TRAIN',
+    'G8513',
+    NULL,
+    '重庆市',
+    '四川省',
+    NOW(),
+    NOW()
+),
+(
+    10,
+    md5('王五1975-08-20男中国'),
+    '2025-02-08 06:40:00',
+    '王五',
+    '上海虹桥国际机场',
+    '深圳宝安国际机场',
+    'FLIGHT',
+    'ZH9508',
+    '公务签证',
+    '广东省',
+    '上海市',
     NOW(),
     NOW()
 );
@@ -358,3 +479,16 @@ INSERT INTO person_directory (directory_id, person_id, created_time) VALUES
 (1, md5('王五1975-08-20男中国'), NOW()),
 (2, md5('张三1990-01-01男中国'), NOW()),
 (3, md5('王五1975-08-20男中国'), NOW());
+
+-- 系统配置默认值（系统名称、Logo、前端 base URL、各导航显示隐藏）
+INSERT INTO system_config (config_key, config_value, updated_time) VALUES
+('system_name', '重点人员档案监测系统', NOW()),
+('system_logo_url', '', NOW()),
+('frontend_base_url', '/', NOW()),
+('nav_dashboard', 'true', NOW()),
+('nav_persons', 'true', NOW()),
+('nav_key_person_library', 'true', NOW()),
+('nav_workspace', 'true', NOW()),
+('nav_model_management', 'true', NOW()),
+('nav_situation', 'true', NOW()),
+('nav_system_config', 'true', NOW());

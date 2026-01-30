@@ -63,6 +63,13 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <!-- Spring Boot DevTools：开发时热更新，修改代码并编译后自动重启 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -114,6 +121,8 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <!-- 开发时 fork 运行，配合 devtools 实现修改代码编译后自动重启 -->
+                    <fork>true</fork>
                 </configuration>
             </plugin>
             <plugin>
@@ -124,11 +133,6 @@
                     <target>21</target>
                 </configuration>
             </plugin>
-            <plugin>
-                  <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            <!-- Version can often be inherited from a parent pom -->
-             </plugin>
         </plugins>
     </build>
 </project>

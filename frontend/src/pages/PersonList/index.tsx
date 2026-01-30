@@ -4,6 +4,7 @@ import { SearchOutlined, BellOutlined, AppstoreOutlined } from '@ant-design/icon
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonList, fetchTags, fetchPersonListByTag } from '@/store/slices/personSlice';
+import { formatDateOnly } from '@/utils/date';
 import './index.css';
 
 /** 标签项（与后端 tag 表 /persons/tags 一致） */
@@ -176,9 +177,7 @@ const PersonList = () => {
                     {person.idCardNumber || '无身份证'}
                   </div>
                   <div className="person-list-card-birth">
-                    {person.birthDate
-                      ? new Date(person.birthDate).toLocaleDateString()
-                      : '未知'}
+                    出生日期: {formatDateOnly(person.birthDate)}
                   </div>
                   <div className="person-list-card-tags">
                     {(person.personTags || []).slice(0, 2).map((tag: string, idx: number) => (

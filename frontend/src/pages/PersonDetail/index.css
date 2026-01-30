@@ -1,4 +1,11 @@
-/* 人员档案详情页 - 使用统一深色主题变量 */
+/* 人员档案详情页 - 简历式两栏布局，适配数据库字段 */
+
+.page-wrapper.person-detail-page {
+  width: 75%;
+  max-width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 .person-detail-loading,
 .person-detail-empty {
@@ -14,12 +21,8 @@
   margin-top: 16px;
 }
 
-/* 顶部：返回 + 标题 */
 .person-detail-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .person-detail-back {
@@ -39,211 +42,266 @@
   color: #fff !important;
 }
 
-.person-detail-title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: var(--font-weight-subtitle);
-  color: var(--text-secondary);
-}
-
-/* 档案卡片：头像 + 姓名 + 标签 */
-.person-detail-profile-card {
-  margin-bottom: var(--spacing-xl);
+/* 简历式主体 */
+.person-detail-resume {
   border-radius: var(--card-radius);
   border: 1px solid var(--card-border);
   background: var(--card-bg);
+  overflow: hidden;
 }
 
-.person-detail-profile-card .ant-card-body {
-  padding: var(--page-gap);
-}
-
-.person-detail-profile {
+/* 顶带：RESUME + 姓名 + 身份/意向 */
+.person-detail-resume-head {
   display: flex;
   align-items: flex-start;
-  gap: 24px;
+  justify-content: space-between;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.25) 0%, rgba(57, 73, 171, 0.2) 100%);
+  border-bottom: 1px solid var(--card-border);
 }
 
-.person-detail-avatar-wrap {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.person-detail-avatar-placeholder,
-.person-detail-avatar-img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 3px solid #42a5f5;
-  background: rgba(255, 255, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-  color: #66bb6a;
-}
-
-
-.person-detail-avatar-img {
-  object-fit: cover;
-  padding: 0;
-}
-
-.person-detail-status-tag {
-  font-size: 12px;
+.person-detail-resume-label {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  transform: rotate(-12deg);
   border-radius: 4px;
 }
 
-.person-detail-profile-main {
-  flex: 1;
-  min-width: 0;
+.person-detail-resume-head-right {
+  text-align: right;
 }
 
-.person-detail-name {
-  margin: 0 0 12px 0;
-  font-size: var(--font-title);
-  font-weight: var(--font-weight-title);
-  color: var(--text-primary);
+.person-detail-resume-name {
+  margin: 0 0 6px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 1px;
 }
 
-.person-detail-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.person-detail-attr-tag {
-  background: rgba(92, 107, 192, 0.4) !important;
-  border: 1px solid rgba(92, 107, 192, 0.6);
-  color: #c5cae9;
-  border-radius: 6px;
-  font-size: 13px;
-}
-
-/* 各区块卡片 */
-.person-detail-section-card {
-  margin-bottom: var(--spacing-xl);
-  border-radius: var(--card-radius);
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
-}
-
-.person-detail-section-card .ant-card-body {
-  padding: var(--spacing-xl);
-}
-
-.person-detail-section-card .ant-card-head {
-  border-bottom: 1px solid var(--card-border);
+.person-detail-resume-intent {
+  margin: 0;
+  font-size: var(--font-body);
   color: var(--text-muted);
 }
 
-.person-detail-section-card .ant-card-head-title {
-  color: var(--text-secondary);
+/* 双栏主体 */
+.person-detail-resume-body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 0;
+  min-height: 400px;
 }
 
-.person-detail-section-title {
+@media (max-width: 992px) {
+  .person-detail-resume-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 左栏 */
+.person-detail-resume-left {
+  padding: 24px 20px;
+  border-right: 1px solid var(--card-border);
+  background: rgba(20, 40, 70, 0.35);
+}
+
+@media (max-width: 992px) {
+  .person-detail-resume-left {
+    border-right: none;
+    border-bottom: 1px solid var(--card-border);
+  }
+}
+
+.person-detail-resume-avatar-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.person-detail-resume-avatar,
+.person-detail-resume-avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid var(--primary);
+  object-fit: cover;
+}
+
+.person-detail-resume-avatar-placeholder {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 48px;
+  color: var(--primary);
+}
+
+.person-detail-resume-block {
+  margin-bottom: 22px;
+}
+
+.person-detail-resume-block:last-child {
+  margin-bottom: 0;
+}
+
+.person-detail-resume-block-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--input-border);
+}
+
+.person-detail-resume-block-title .anticon {
   font-size: 16px;
-  font-weight: var(--font-weight-subtitle);
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-lg);
 }
 
-.person-detail-section-title .anticon {
-  color: #8d6e63;
-  font-size: 18px;
+.person-detail-resume-remark {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
 }
 
-/* 基本信息两列灰框 */
-.person-detail-basic-grid {
+.person-detail-resume-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.person-detail-resume-tag {
+  margin: 0 !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--text-muted) !important;
+}
+
+.person-detail-resume-identity {
+  margin-top: 4px;
+}
+
+/* 右栏 */
+.person-detail-resume-right {
+  padding: 24px 28px;
+}
+
+.person-detail-resume-right .person-detail-resume-block {
+  margin-bottom: 28px;
+}
+
+.person-detail-resume-right .person-detail-resume-block:last-child {
+  margin-bottom: 0;
+}
+
+.person-detail-resume-info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 12px 24px;
 }
 
-.person-detail-basic-item {
+@media (max-width: 576px) {
+  .person-detail-resume-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.person-detail-resume-info-item {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-md) 14px;
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-md);
+  gap: 2px;
 }
 
-.person-detail-basic-item-full {
-  grid-column: 1 / -1;
-}
-
-.person-detail-basic-item .label {
-  font-size: var(--font-caption);
+.person-detail-resume-info-item .info-label {
+  font-size: 12px;
   color: var(--text-placeholder);
 }
 
-.person-detail-basic-item .value {
-  font-size: var(--font-body);
+.person-detail-resume-info-item .info-value {
+  font-size: 14px;
   color: var(--text-secondary);
   word-break: break-all;
 }
 
-/* 教育/工作经历列表 */
-.person-detail-exp-list {
+/* 教育/工作经历项 */
+.person-detail-resume-exp-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
-.person-detail-exp-item {
-  padding: 14px;
+.person-detail-resume-exp-item {
+  padding: 14px 16px;
   background: var(--input-bg);
   border: 1px solid var(--input-border);
   border-radius: var(--radius-md);
 }
 
-.person-detail-exp-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  margin-bottom: 6px;
+.person-detail-resume-exp-time {
+  font-size: 13px;
+  color: var(--primary);
+  margin-bottom: 4px;
 }
 
-.person-detail-exp-row .school {
-  font-size: var(--font-body);
+.person-detail-resume-exp-org {
+  font-size: 15px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  margin-bottom: 4px;
 }
 
-.person-detail-exp-row .major {
+.person-detail-resume-exp-role {
   font-size: 13px;
   color: var(--text-muted);
 }
 
-.person-detail-exp-date {
-  font-size: 12px;
-  color: #8b9dc3;
+.person-detail-resume-empty {
+  font-size: 13px;
+  color: var(--text-placeholder);
+  padding: 16px 0;
 }
 
-.person-detail-exp-empty {
-  color: #8b9dc3;
-}
-
-.person-detail-raw-text {
+.person-detail-resume-raw {
   margin: 0;
   padding: 12px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
   white-space: pre-wrap;
   word-break: break-word;
+  color: var(--text-muted);
 }
 
-/* 民航/社交列表 */
+/* 民航/社交（全宽次要） */
+.person-detail-resume-extra {
+  margin-top: var(--page-gap);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.person-detail-resume-extra-card {
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+.person-detail-resume-extra-card .ant-card-head-title {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 .person-detail-travel-list,
 .person-detail-social-list {
   margin: 0;
@@ -260,13 +318,13 @@
 .person-detail-travel-list .time,
 .person-detail-social-list .time {
   display: block;
-  font-size: var(--font-caption);
+  font-size: 12px;
   color: var(--text-placeholder);
-  margin-top: var(--spacing-xs);
+  margin-top: 4px;
 }
 
 .person-detail-social-list .content {
-  margin-top: var(--spacing-xs);
+  margin-top: 4px;
   color: var(--text-muted);
 }
 

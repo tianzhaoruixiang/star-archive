@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { personAPI } from '@/services/api';
+import type { PersonDetailData } from '@/types/person';
 
 interface PersonState {
   list: any[];
-  detail: any | null;
+  detail: PersonDetailData | null;
   tags: any[];
   pagination: {
     page: number;

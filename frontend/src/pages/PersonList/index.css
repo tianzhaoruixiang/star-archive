@@ -1,5 +1,12 @@
 /* 人员档案列表页 - 使用统一深色主题变量 */
 
+.page-wrapper.person-list-page {
+  width: 75%;
+  max-width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .person-list-page .person-list-title {
   margin: 0;
 }
@@ -66,39 +73,43 @@
   text-align: center;
 }
 
-/* 筛选标签区域 */
+/* 筛选标签区域 - 字体略小、排版更紧凑 */
 .person-list-filter {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .person-list-filter-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: var(--font-weight-subtitle);
   color: var(--text-secondary);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
 }
 
 .person-list-filter-block {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+}
+
+.person-list-filter-block:last-child {
+  margin-bottom: 0;
 }
 
 .person-list-filter-category {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .person-list-filter-bar {
-  width: 4px;
-  height: 18px;
+  width: 3px;
+  height: 14px;
   background: var(--primary);
   border-radius: 2px;
   flex-shrink: 0;
 }
 
 .person-list-filter-category-label {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: var(--font-weight-subtitle);
   color: var(--text-secondary);
 }
@@ -107,8 +118,8 @@
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  margin-bottom: 10px;
+  gap: 6px 8px;
+  margin-bottom: 6px;
 }
 
 .person-list-filter-row:last-child {
@@ -116,24 +127,24 @@
 }
 
 .person-list-filter-sub-label {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-placeholder);
   flex-shrink: 0;
-  padding-top: var(--spacing-xs);
+  padding-top: 2px;
 }
 
 .person-list-filter-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 10px;
+  gap: 4px 6px;
   flex: 1;
 }
 
 .person-list-tag {
   margin: 0 !important;
-  padding: 4px 12px !important;
-  font-size: 13px !important;
-  border-radius: 6px !important;
+  padding: 2px 8px !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
   border: 1px solid var(--input-border) !important;
   background: var(--input-bg) !important;
   color: var(--text-muted) !important;
@@ -153,9 +164,9 @@
 }
 
 .person-list-tag-count {
-  margin-left: 2px;
+  margin-left: 1px;
   color: var(--text-placeholder);
-  font-size: var(--font-caption);
+  font-size: 11px;
 }
 
 .person-list-tag-selected .person-list-tag-count {
