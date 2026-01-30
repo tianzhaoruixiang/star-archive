@@ -492,3 +492,8 @@ INSERT INTO system_config (config_key, config_value, updated_time) VALUES
 ('nav_model_management', 'true', NOW()),
 ('nav_situation', 'true', NOW()),
 ('nav_system_config', 'true', NOW());
+
+-- 预测模型测试数据（智能化模型管理，语义规则为自然语言）
+INSERT INTO prediction_model (model_id, name, description, status, rule_config, locked_count, accuracy, created_time, updated_time) VALUES
+('m001_high_risk', '高风险人群识别模型', '基于年龄、状态、到访记录等多维度特征识别高风险人群', 'RUNNING', '满足年龄大于20岁，并且具有高消费标签的所有人群', 45, '92.5%', NOW(), NOW()),
+('m002_close_contact', '密切接触者预测模型', '通过航班、铁路记录预测密切接触者', 'PAUSED', '满足近期有跨省行程且所属群体为重点关注的所有人员', 23, '88.3%', NOW(), NOW());

@@ -131,12 +131,35 @@ services:
       - "8888:8888"    # Filer HTTP API
       - "18888:18888"  # Filer gRPC
     volumes:
-      - ./seaweedfs/filer:/data
+      - ./data/seaweedfs/filer:/data
     command: "filer -master=seaweedfs-master:9333 -port=8888"
     depends_on:
       - seaweedfs-master
       - seaweedfs-volume
     restart: unless-stopped
+
+  # OnlyOffice Document Server（档案融合文件预览）
+  onlyoffice:
+    image: onlyoffice/documentserver:9.2
+    container_name: archive-onlyoffice
+    networks:
+      archive-network:
+        ipv4_address: 172.20.80.20
+    ports:
+      - "8081:80"
+    # volumes:
+    #   - ./data/onlyoffice/data:/var/www/onlyoffice/Data
+    #   - ./data/onlyoffice/logs:/var/log/onlyoffice
+    environment:
+      - JWT_ENABLED=false
+      - JWT_SECRET=your-secret-key-here
+      - DB_TYPE=sqlite
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
 
 networks:
   archive-network:

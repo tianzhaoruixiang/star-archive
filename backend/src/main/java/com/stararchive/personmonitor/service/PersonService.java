@@ -9,6 +9,7 @@ import com.stararchive.personmonitor.repository.PersonRepository;
 import com.stararchive.personmonitor.repository.PersonSocialDynamicRepository;
 import com.stararchive.personmonitor.repository.PersonTravelRepository;
 import com.stararchive.personmonitor.repository.TagRepository;
+import com.stararchive.personmonitor.service.SeaweedFSService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class PersonService {
     private final PersonTravelRepository travelRepository;
     private final PersonSocialDynamicRepository socialDynamicRepository;
     private final TagRepository tagRepository;
+    private final SeaweedFSService seaweedFSService;
     
     /**
      * 分页查询人员列表
@@ -130,8 +132,8 @@ public class PersonService {
         dto.setPersonId(person.getPersonId());
         dto.setChineseName(person.getChineseName());
         dto.setOriginalName(person.getOriginalName());
-        dto.setAvatarUrl(person.getAvatarFiles() != null && !person.getAvatarFiles().isEmpty() 
-                ? person.getAvatarFiles().get(0) : null);
+        dto.setAvatarUrl(person.getAvatarFiles() != null && !person.getAvatarFiles().isEmpty()
+                ? seaweedFSService.getAvatarProxyPath(person.getAvatarFiles().get(0)) : null);
         dto.setIdCardNumber(person.getIdCardNumber());
         dto.setBirthDate(person.getBirthDate());
         dto.setPersonTags(person.getPersonTags());
@@ -151,8 +153,8 @@ public class PersonService {
         dto.setChineseName(person.getChineseName());
         dto.setOriginalName(person.getOriginalName());
         dto.setAliasNames(person.getAliasNames());
-        dto.setAvatarUrl(person.getAvatarFiles() != null && !person.getAvatarFiles().isEmpty() 
-                ? person.getAvatarFiles().get(0) : null);
+        dto.setAvatarUrl(person.getAvatarFiles() != null && !person.getAvatarFiles().isEmpty()
+                ? seaweedFSService.getAvatarProxyPath(person.getAvatarFiles().get(0)) : null);
         dto.setGender(person.getGender());
         dto.setBirthDate(person.getBirthDate());
         dto.setNationality(person.getNationality());

@@ -2,27 +2,39 @@ package com.stararchive.personmonitor.controller;
 
 import com.stararchive.personmonitor.common.ApiResponse;
 import com.stararchive.personmonitor.common.PageResponse;
+import com.stararchive.personmonitor.config.OnlyOfficeProperties;
 import com.stararchive.personmonitor.dto.ArchiveFusionBatchCreateResultDTO;
 import com.stararchive.personmonitor.dto.ArchiveFusionTaskDetailDTO;
 import com.stararchive.personmonitor.dto.ArchiveImportTaskDTO;
+import com.stararchive.personmonitor.dto.OnlyOfficePreviewConfigDTO;
+import com.stararchive.personmonitor.entity.ArchiveImportTask;
 import com.stararchive.personmonitor.service.ArchiveFusionService;
+import com.stararchive.personmonitor.service.SeaweedFSService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 人员档案导入融合 API：上传文件、任务列表、任务详情（提取结果与相似档案）
  */
+@Slf4j
 @RestController
 @RequestMapping("/workspace/archive-fusion")
 @RequiredArgsConstructor
 public class ArchiveFusionController {
 
     private final ArchiveFusionService archiveFusionService;
+    private final SeaweedFSService seaweedFSService;
+    private final OnlyOfficeProperties onlyOfficeProperties;
 
     /**
      * 上传文件并创建档案融合任务（解析 -> 大模型抽取 -> 相似匹配）
@@ -77,6 +89,100 @@ public class ArchiveFusionController {
             @RequestParam(value = "size", defaultValue = "20") int size) {
         PageResponse<ArchiveImportTaskDTO> result = archiveFusionService.listTasks(creatorUserId, page, size);
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /**
+     * 获取任务对应档案文件的下载/预览流。
+     * download=1 时设置 Content-Disposition: attachment 触发下载；否则为内联预览。
+     */
+    @GetMapping("/tasks/{taskId}/file")
+    public ResponseEntity<byte[]> getTaskFile(
+            @PathVariable String taskId,
+            @RequestParam(value = "download", defaultValue = "0") int download) {
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        ArchiveImportTask task = taskOpt.get();
+        String path = task.getFilePathId();
+        if (path == null || path.isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+        byte[] data = seaweedFSService.download(path);
+        if (data == null || data.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+        MediaType contentType = contentTypeFromFileName(task.getFileName());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(contentType);
+        String filename = task.getFileName() != null ? task.getFileName() : "file";
+        if (download == 1) {
+            String encoded = URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+            headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"; filename*=UTF-8''" + encoded);
+        } else {
+            headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"");
+        }
+        return ResponseEntity.ok().headers(headers).body(data);
+    }
+
+    /**
+     * 获取 OnlyOffice 预览配置：前端用此配置加载 OnlyOffice 并打开文档。
+     * documentUrl 为 OnlyOffice 服务端可访问的文档地址（需与 onlyoffice.document-download-base 同网可达）。
+     */
+    @GetMapping("/tasks/{taskId}/preview-config")
+    public ResponseEntity<ApiResponse<OnlyOfficePreviewConfigDTO>> getPreviewConfig(@PathVariable String taskId) {
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            log.warn("预览配置: 任务不存在 taskId={}", taskId);
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        ArchiveImportTask task = taskOpt.get();
+        String path = task.getFilePathId();
+        if (path == null || path.isBlank()) {
+            log.warn("预览配置: 任务未关联文件 taskId={}, filePathId=null", taskId);
+            return ResponseEntity.status(404).body(ApiResponse.error("任务未关联文件，无法预览"));
+        }
+        String docServerUrl = onlyOfficeProperties != null ? onlyOfficeProperties.getDocumentServerUrl() : null;
+        String docDownloadBase = onlyOfficeProperties != null ? onlyOfficeProperties.getDocumentDownloadBase() : null;
+        boolean enabled = onlyOfficeProperties == null || onlyOfficeProperties.isEnabled();
+        if (docDownloadBase == null || docDownloadBase.isBlank()) {
+            docDownloadBase = "http://localhost:8000/api";
+        }
+        if (docServerUrl == null || docServerUrl.isBlank()) {
+            docServerUrl = "http://localhost:8081";
+        }
+        String base = docDownloadBase.replaceAll("/$", "");
+        String documentUrl = base + "/workspace/archive-fusion/tasks/" + taskId + "/file";
+        String fileType = task.getFileType() != null ? task.getFileType().toLowerCase() : "docx";
+        String title = task.getFileName() != null ? task.getFileName() : "document." + fileType;
+        String documentType = isCellType(fileType) ? "cell" : "word";
+
+        OnlyOfficePreviewConfigDTO config = OnlyOfficePreviewConfigDTO.builder()
+                .documentServerUrl(docServerUrl)
+                .documentUrl(documentUrl)
+                .documentKey(taskId)
+                .fileType(fileType)
+                .title(title)
+                .documentType(documentType)
+                .enabled(enabled)
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(config));
+    }
+
+    private static boolean isCellType(String fileType) {
+        return "xlsx".equals(fileType) || "xls".equals(fileType) || "csv".equals(fileType);
+    }
+
+    private static MediaType contentTypeFromFileName(String fileName) {
+        if (fileName == null) return MediaType.APPLICATION_OCTET_STREAM;
+        String lower = fileName.toLowerCase();
+        if (lower.endsWith(".docx")) return MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        if (lower.endsWith(".doc")) return MediaType.parseMediaType("application/msword");
+        if (lower.endsWith(".xlsx")) return MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        if (lower.endsWith(".xls")) return MediaType.parseMediaType("application/vnd.ms-excel");
+        if (lower.endsWith(".csv")) return MediaType.parseMediaType("text/csv");
+        if (lower.endsWith(".pdf")) return MediaType.APPLICATION_PDF;
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 
     /**

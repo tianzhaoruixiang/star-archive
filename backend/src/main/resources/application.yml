@@ -71,6 +71,17 @@ seaweedfs:
   filer-url: http://localhost:8888
   path-prefix: archive-fusion
 
+# OnlyOffice Document Server（档案融合文件预览）
+# document-server-url：前端加载 OnlyOffice 脚本的地址（浏览器访问）
+# document-download-base：OnlyOffice 服务端拉取文档的地址，必须为 OnlyOffice 容器能访问的 URL。
+#   - OnlyOffice 在 Docker、后端在宿主机时，填 http://host.docker.internal:8000/api（Windows/Mac Docker Desktop）
+#   - Linux 下可用宿主机 IP，如 http://172.17.0.1:8000/api
+#   - 后端与 OnlyOffice 同机且非 Docker 时，可填 http://localhost:8000/api
+onlyoffice:
+  document-server-url: http://localhost:8081
+  document-download-base: http://host.docker.internal:8000/api
+  enabled: true
+
 # 阿里云百炼 Qwen API（人员档案大模型抽取），API Key 建议使用环境变量 BAILIAN_API_KEY
 bailian:
   api-key: sk-3557896ee7d34bdf94e4f88093eec565

@@ -10,12 +10,19 @@ import com.stararchive.personmonitor.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFPictureData;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +37,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.stararchive.personmonitor.common.ByteArrayMultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -75,8 +85,8 @@ public class ArchiveFusionService {
     private static final AtomicLong matchIdGenerator = new AtomicLong(System.currentTimeMillis() * 1000);
 
     /**
-     * 创建导入任务：立即上传文件至 SeaweedFS、新建任务（状态 EXTRACTING），大模型提取异步执行；
-     * 返回任务 DTO 供前端展示，提取完成后用户可对比查看和确认导入。
+     * 批量上传：上传文件至 SeaweedFS、新建任务（状态 PENDING），接口立即返回。
+     * 大模型提取由异步任务执行，执行成功后更新任务状态为 SUCCESS/FAILED 及提取人数。
      */
     @Transactional(rollbackFor = Exception.class)
     public ArchiveImportTaskDTO createTaskAndExtract(MultipartFile file, Integer creatorUserId, String creatorUsername) {
@@ -97,7 +107,7 @@ public class ArchiveFusionService {
                 .fileName(fileName)
                 .fileType(fileType)
                 .filePathId(filePathId)
-                .status(STATUS_EXTRACTING)
+                .status(STATUS_PENDING)
                 .creatorUserId(creatorUserId)
                 .creatorUsername(creatorUsername)
                 .extractCount(0)
@@ -112,12 +122,22 @@ public class ArchiveFusionService {
 
     /**
      * 异步执行大模型提取：从 SeaweedFS 拉取文件，解析并抽取，更新任务状态与提取结果。
+     * 仅处理 PENDING 状态任务，开始时将状态更新为 EXTRACTING，完成后更新为 SUCCESS/FAILED。
      */
     @Async
     public void runExtractionAsync(String taskId) {
         ArchiveImportTask task = taskRepository.findById(taskId).orElse(null);
-        if (task == null || !STATUS_EXTRACTING.equals(task.getStatus())) {
+        if (task == null) {
             return;
+        }
+        String status = task.getStatus();
+        if (!STATUS_PENDING.equals(status) && !STATUS_EXTRACTING.equals(status)) {
+            return;
+        }
+        if (STATUS_PENDING.equals(status)) {
+            task.setStatus(STATUS_EXTRACTING);
+            task.setUpdatedTime(LocalDateTime.now());
+            taskRepository.save(task);
         }
         String path = task.getFilePathId();
         if (path == null || path.isBlank()) {
@@ -199,9 +219,14 @@ public class ArchiveFusionService {
                 }
                 task.setOriginalText(text);
                 taskRepository.save(task);
+                List<String> avatarPaths = extractAndUploadImagesFromFile(file, task.getFileType(), taskId);
                 List<Map<String, Object>> one = extractOnePersonByQwen(text);
                 if (!one.isEmpty()) {
-                    textAndPersons.add(new TextAndPerson(text, one.get(0)));
+                    Map<String, Object> personMap = one.get(0);
+                    if (!avatarPaths.isEmpty()) {
+                        personMap.put("avatar_files", avatarPaths);
+                    }
+                    textAndPersons.add(new TextAndPerson(text, personMap));
                 }
             }
             if (textAndPersons.isEmpty()) {
@@ -275,7 +300,8 @@ public class ArchiveFusionService {
     }
 
     /**
-     * 批量上传并创建档案融合任务：对每个文件调用 createTaskAndExtract，汇总成功与失败结果
+     * 批量上传：对每个文件上传至 SeaweedFS 并创建任务（状态 PENDING），接口立即返回；
+     * 大模型提取由异步任务执行，完成后更新任务状态。
      */
     public ArchiveFusionBatchCreateResultDTO batchCreateTasksAndExtract(
             List<MultipartFile> files,
@@ -536,6 +562,117 @@ public class ArchiveFusionService {
         }
     }
 
+    /**
+     * 从档案文件（DOCX/PDF）中提取图片，上传至 SeaweedFS，返回 Filer 相对路径列表。
+     * 用于人物头像：导入时写入 person.avatar_files，前端通过 /api/avatar?path= 展示。
+     */
+    private List<String> extractAndUploadImagesFromFile(MultipartFile file, String fileType, String taskId) {
+        List<String> paths = new ArrayList<>();
+        String typeUpper = fileType != null ? fileType.toUpperCase() : "";
+        try {
+            if ("DOCX".equals(typeUpper)) {
+                paths = extractImagesFromDocxAndUpload(file, taskId);
+            } else if ("PDF".equals(typeUpper)) {
+                paths = extractImagesFromPdfAndUpload(file, taskId);
+            }
+        } catch (Exception e) {
+            log.warn("档案图片提取或上传失败: fileType={}, taskId={}", fileType, taskId, e);
+        }
+        return paths;
+    }
+
+    private List<String> extractImagesFromDocxAndUpload(MultipartFile file, String taskId) throws Exception {
+        List<String> paths = new ArrayList<>();
+        try (XWPFDocument doc = new XWPFDocument(file.getInputStream())) {
+            List<XWPFPictureData> pictures = doc.getAllPictures();
+            for (int i = 0; i < pictures.size(); i++) {
+                XWPFPictureData pic = pictures.get(i);
+                byte[] data = pic.getData();
+                if (data == null || data.length == 0) continue;
+                String fileName = pic.getFileName();
+                if (fileName == null || fileName.isBlank()) {
+                    fileName = "image-" + i + ".jpg";
+                }
+                try {
+                    String path = seaweedFSService.uploadBytes(data, fileName, taskId);
+                    paths.add(path);
+                } catch (Exception e) {
+                    log.warn("DOCX 单张图片上传失败: fileName={}", fileName, e);
+                }
+            }
+        }
+        return paths;
+    }
+
+    private List<String> extractImagesFromPdfAndUpload(MultipartFile file, String taskId) throws Exception {
+        List<String> paths = new ArrayList<>();
+        try (PDDocument doc = PDDocument.load(file.getInputStream())) {
+            int imageIndex = 0;
+            for (PDPage page : doc.getPages()) {
+                PDResources resources = page.getResources();
+                if (resources == null) continue;
+                for (COSName name : resources.getXObjectNames()) {
+                    try {
+                        PDXObject xObject = resources.getXObject(name);
+                        if (xObject instanceof PDImageXObject img) {
+                            byte[] data = imageBytesFromPDImage(img);
+                            if (data != null && data.length > 0) {
+                                String fileName = "pdf-image-" + imageIndex + ".png";
+                                String path = seaweedFSService.uploadBytes(data, fileName, taskId);
+                                paths.add(path);
+                                imageIndex++;
+                            }
+                        } else if (xObject instanceof PDFormXObject form) {
+                            List<String> nested = extractImagesFromPdfFormAndUpload(form, taskId, imageIndex);
+                            paths.addAll(nested);
+                            imageIndex += nested.size();
+                        }
+                    } catch (Exception e) {
+                        log.debug("PDF 单张图片处理跳过: {}", e.getMessage());
+                    }
+                }
+            }
+        }
+        return paths;
+    }
+
+    private List<String> extractImagesFromPdfFormAndUpload(PDFormXObject form, String taskId, int startIndex) {
+        List<String> paths = new ArrayList<>();
+        try {
+            PDResources resources = form.getResources();
+            if (resources == null) return paths;
+            int i = startIndex;
+            for (COSName name : resources.getXObjectNames()) {
+                PDXObject xObject = resources.getXObject(name);
+                if (xObject instanceof PDImageXObject img) {
+                    byte[] data = imageBytesFromPDImage(img);
+                    if (data != null && data.length > 0) {
+                        String fileName = "pdf-image-" + i + ".png";
+                        String path = seaweedFSService.uploadBytes(data, fileName, taskId);
+                        paths.add(path);
+                        i++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("PDF Form 内图片处理跳过: {}", e.getMessage());
+        }
+        return paths;
+    }
+
+    private byte[] imageBytesFromPDImage(PDImageXObject img) {
+        try {
+            BufferedImage bufferedImage = img.getImage();
+            if (bufferedImage == null) return null;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ImageIO.write(bufferedImage, "png", out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            log.debug("PDImage 转字节失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private static String stringOrNull(Object o) {
         if (o == null) return null;
         String s = o.toString().trim();
@@ -574,6 +711,13 @@ public class ArchiveFusionService {
                 : taskRepository.findAllByOrderByCreatedTimeDesc(pageable);
         List<ArchiveImportTaskDTO> list = taskPage.getContent().stream().map(this::toTaskDTO).collect(Collectors.toList());
         return PageResponse.of(list, page, size, taskPage.getTotalElements());
+    }
+
+    /**
+     * 按 taskId 获取任务（用于文件下载/预览时取 filePathId、fileName）
+     */
+    public java.util.Optional<ArchiveImportTask> getTask(String taskId) {
+        return taskRepository.findById(taskId);
     }
 
     public ArchiveFusionTaskDetailDTO getTaskDetail(String taskId) {

@@ -64,3 +64,14 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
 }
+
+/** OnlyOffice 预览配置（后端返回，用于初始化 DocEditor） */
+export interface OnlyOfficePreviewConfigDTO {
+  documentServerUrl: string;
+  documentUrl: string;
+  documentKey: string;
+  fileType: string;
+  title: string;
+  documentType: 'word' | 'cell';
+  enabled: boolean;
+}

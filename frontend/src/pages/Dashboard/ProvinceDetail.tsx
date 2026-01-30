@@ -1,8 +1,11 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, Button, Row, Col, Statistic, Spin } from 'antd';
 import { ArrowLeftOutlined, TeamOutlined, CarOutlined } from '@ant-design/icons';
+import * as echarts from 'echarts';
+import ReactECharts from 'echarts-for-react';
 import { dashboardAPI, type ProvinceStatsDTO } from '@/services/api';
+import { getProvinceAdcode, fetchProvinceGeoJson } from '@/utils/provinceGeo';
 import './index.css';
 
 const ProvinceDetail: FC = () => {
@@ -10,6 +13,8 @@ const ProvinceDetail: FC = () => {
   const name = provinceName ? decodeURIComponent(provinceName) : '';
   const [stats, setStats] = useState<ProvinceStatsDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [provinceGeoLoaded, setProvinceGeoLoaded] = useState(false);
+  const [provinceMapKey, setProvinceMapKey] = useState<string>('');
 
   useEffect(() => {
     if (!name) {
@@ -28,6 +33,58 @@ const ProvinceDetail: FC = () => {
       .catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, [name]);
+
+  const adcode = getProvinceAdcode(name);
+  useEffect(() => {
+    if (!adcode) {
+      setProvinceGeoLoaded(false);
+      setProvinceMapKey('');
+      return;
+    }
+    const mapKey = `province_${adcode}`;
+    fetchProvinceGeoJson(adcode)
+      .then((geoJson: unknown) => {
+        if (geoJson && typeof geoJson === 'object') {
+          echarts.registerMap(mapKey, geoJson as Parameters<typeof echarts.registerMap>[1]);
+          setProvinceMapKey(mapKey);
+          setProvinceGeoLoaded(true);
+        } else {
+          setProvinceGeoLoaded(false);
+          setProvinceMapKey('');
+        }
+      })
+      .catch(() => {
+        setProvinceGeoLoaded(false);
+        setProvinceMapKey('');
+      });
+  }, [adcode]);
+
+  const provinceMapOption = useCallback(() => {
+    if (!provinceGeoLoaded || !provinceMapKey) return { backgroundColor: 'transparent' };
+    return {
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'item', formatter: '{b}' },
+      series: [
+        {
+          type: 'map',
+          map: provinceMapKey,
+          roam: true,
+          layoutCenter: ['50%', '50%'],
+          layoutSize: '120%',
+          label: { show: true, color: '#8b9dc3' },
+          itemStyle: {
+            areaColor: 'rgba(30, 64, 175, 0.4)',
+            borderColor: 'rgba(99, 102, 241, 0.6)',
+            borderWidth: 1,
+          },
+          emphasis: {
+            label: { show: true, color: '#c7d2fe' },
+            itemStyle: { areaColor: 'rgba(99, 102, 241, 0.6)' },
+          },
+        },
+      ],
+    };
+  }, [provinceGeoLoaded, provinceMapKey]);
 
   const renderRankList = (list: ProvinceStatsDTO['visaTypeRank'], emptyText: string) => {
     if (!list || list.length === 0) {
@@ -89,46 +146,68 @@ const ProvinceDetail: FC = () => {
           <Spin size="large" tip="加载中..." />
         </div>
       ) : (
-        <>
-          <Card title={`${name} 监测概况`} className="dashboard-panel dashboard-province-detail-title-card">
-            <Row gutter={16}>
-              <Col xs={24} sm={12}>
-                <Statistic
-                  title="涉及人员数"
-                  value={stats?.totalPersonCount ?? 0}
-                  prefix={<TeamOutlined />}
-                  valueStyle={{ color: 'var(--primary)' }}
-                />
+        <Row gutter={16} className="dashboard-province-detail-body">
+          <Col xs={24} lg={14}>
+            <Card title={`${name} 监测概况`} className="dashboard-panel dashboard-province-detail-title-card">
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Statistic
+                    title="涉及人员数"
+                    value={stats?.totalPersonCount ?? 0}
+                    prefix={<TeamOutlined />}
+                    valueStyle={{ color: 'var(--primary)' }}
+                  />
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Statistic
+                    title="行程记录数"
+                    value={stats?.travelRecordCount ?? 0}
+                    prefix={<CarOutlined />}
+                    valueStyle={{ color: 'var(--primary)' }}
+                  />
+                </Col>
+              </Row>
+            </Card>
+
+            <Row gutter={16} className="dashboard-province-detail-cards">
+              <Col xs={24} md={8}>
+                <Card className="dashboard-panel" title="签证类型分布" size="small">
+                  {renderRankList(stats?.visaTypeRank ?? [], '暂无签证类型数据')}
+                </Card>
               </Col>
-              <Col xs={24} sm={12}>
-                <Statistic
-                  title="行程记录数"
-                  value={stats?.travelRecordCount ?? 0}
-                  prefix={<CarOutlined />}
-                  valueStyle={{ color: 'var(--primary)' }}
-                />
+              <Col xs={24} md={8}>
+                <Card className="dashboard-panel" title="机构分布" size="small">
+                  {renderRankList(stats?.organizationRank ?? [], '暂无机构数据')}
+                </Card>
+              </Col>
+              <Col xs={24} md={8}>
+                <Card className="dashboard-panel" title="所属群体分布" size="small">
+                  {renderRankList(stats?.belongingGroupRank ?? [], '暂无群体数据')}
+                </Card>
               </Col>
             </Row>
-          </Card>
-
-          <Row gutter={16} className="dashboard-province-detail-cards">
-            <Col xs={24} md={8}>
-              <Card className="dashboard-panel" title="签证类型分布" size="small">
-                {renderRankList(stats?.visaTypeRank ?? [], '暂无签证类型数据')}
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card className="dashboard-panel" title="机构分布" size="small">
-                {renderRankList(stats?.organizationRank ?? [], '暂无机构数据')}
-              </Card>
-            </Col>
-            <Col xs={24} md={8}>
-              <Card className="dashboard-panel" title="所属群体分布" size="small">
-                {renderRankList(stats?.belongingGroupRank ?? [], '暂无群体数据')}
-              </Card>
-            </Col>
-          </Row>
-        </>
+          </Col>
+          <Col xs={24} lg={10}>
+            <Card className="dashboard-panel dashboard-province-detail-map-card" title={`${name} 地图`} size="small">
+              <div className="dashboard-province-detail-map-wrap">
+                {provinceGeoLoaded ? (
+                  <ReactECharts
+                    option={provinceMapOption()}
+                    style={{ height: 400, width: '100%' }}
+                    opts={{ renderer: 'canvas' }}
+                    notMerge
+                  />
+                ) : adcode ? (
+                  <div className="dashboard-province-detail-map-loading">
+                    <Spin tip="地图加载中..." />
+                  </div>
+                ) : (
+                  <div className="dashboard-province-detail-map-empty">暂无可用的省份地图数据</div>
+                )}
+              </div>
+            </Card>
+          </Col>
+        </Row>
       )}
     </div>
   );

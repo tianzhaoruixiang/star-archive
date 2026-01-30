@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -62,6 +63,48 @@ public class SeaweedFSService {
     }
 
     /**
+     * 上传字节数组到 Filer，路径为 {pathPrefix}/{taskId}/avatars/{safeFileName}，返回 Filer 内相对路径。
+     * 用于档案融合中提取的人物头像上传。
+     */
+    public String uploadBytes(byte[] data, String suggestedFileName, String taskId) throws IOException {
+        if (data == null || data.length == 0) {
+            throw new IllegalArgumentException("上传数据不能为空");
+        }
+        String safeName = suggestedFileName != null && !suggestedFileName.isBlank()
+                ? sanitizeFileName(suggestedFileName)
+                : "avatar-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8) + ".jpg";
+        if (!safeName.contains(".")) {
+            safeName = safeName + ".jpg";
+        }
+        final String filename = safeName;
+        String path = properties.getPathPrefix() + "/" + taskId + "/avatars/" + filename;
+        String base = properties.getFilerUrl().replaceAll("/$", "");
+        URI uri = URI.create(base + "/" + path);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new org.springframework.core.io.ByteArrayResource(data) {
+            @Override
+            public String getFilename() {
+                return filename;
+            }
+        });
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.exchange(
+                uri,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IOException("SeaweedFS upload failed: " + response.getStatusCode() + " " + response.getBody());
+        }
+        log.info("SeaweedFS uploaded avatar: {}", path);
+        return path;
+    }
+
+    /**
      * 根据 Filer 相对路径下载文件，返回字节数组；失败返回 null。
      */
     public byte[] download(String path) {
@@ -77,6 +120,17 @@ public class SeaweedFSService {
             log.warn("SeaweedFS download failed: path={}, error={}", path, e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * 返回用于前端展示头像的代理 URL 路径（相对路径，如 /api/avatar?path=xxx）。
+     * 前端 img src 使用该路径即可通过后端代理从 SeaweedFS 获取图片。
+     */
+    public String getAvatarProxyPath(String filerRelativePath) {
+        if (filerRelativePath == null || filerRelativePath.isBlank()) {
+            return null;
+        }
+        return "/api/avatar?path=" + URLEncoder.encode(filerRelativePath, StandardCharsets.UTF_8);
     }
 
     private static String sanitizeFileName(String name) {

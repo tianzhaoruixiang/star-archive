@@ -55,6 +55,32 @@
   color: var(--text-placeholder);
 }
 
+.model-management-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 280px;
+}
+
+.model-management-form .ant-form-item {
+  margin-bottom: var(--spacing-md);
+}
+
+.model-management-rule-preview {
+  margin: 0;
+  padding: var(--spacing-lg);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 400px;
+  overflow: auto;
+}
+
 /* 模型卡片 */
 .model-management-cards {
   margin-bottom: var(--page-gap);

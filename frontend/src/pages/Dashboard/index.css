@@ -101,7 +101,29 @@
   color: var(--text-muted);
 }
 
-/* 左侧 / 右侧 排行列表 */
+/* 机构分布TOP15、各地排名、签证类型排名、群体类别 - 统一默认高度以符合页面布局 */
+.dashboard-panel-rank-card {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-panel-rank-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dashboard-panel-rank-card .rank-list,
+.dashboard-panel-rank-card .rank-list-scroll {
+  flex: 1;
+  min-height: 240px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* 左侧 / 右侧 排行列表（非 rank-card 内保持原样） */
 .rank-list {
   max-height: 320px;
   overflow-y: auto;
@@ -258,8 +280,32 @@
 
 /* 省份下钻详情页 */
 .dashboard-province-detail {
-  max-width: 960px;
-  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-province-detail-body {
+  margin-top: 0;
+}
+
+.dashboard-province-detail-map-card .ant-card-body {
+  padding: 0;
+}
+
+.dashboard-province-detail-map-wrap {
+  position: relative;
+  height: 400px;
+  width: 100%;
+}
+
+.dashboard-province-detail-map-loading,
+.dashboard-province-detail-map-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--text-placeholder);
+  font-size: 14px;
 }
 
 .dashboard-province-detail-header {

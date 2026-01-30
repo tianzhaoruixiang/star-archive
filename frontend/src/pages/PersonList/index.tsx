@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Card, Row, Col, Tag, Pagination, Spin, Empty, Input } from 'antd';
 import { SearchOutlined, BellOutlined, AppstoreOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonList, fetchTags, fetchPersonListByTag } from '@/store/slices/personSlice';
-import { formatDateOnly } from '@/utils/date';
+import PersonCard, { type PersonCardData } from '@/components/PersonCard';
 import './index.css';
 
 /** 标签项（与后端 tag 表 /persons/tags 一致） */
@@ -32,7 +31,6 @@ function buildTagTree(tags: TagItem[] | null): Record<string, Record<string, Tag
 }
 
 const PersonList = () => {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { list, pagination, loading, tags } = useAppSelector((state) => state.person);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -65,13 +63,6 @@ const PersonList = () => {
     setSelectedTag((prev) => (prev === tagName ? null : tagName));
   }, []);
 
-  const handleCardClick = useCallback(
-    (personId: string) => {
-      navigate(`/persons/${personId}`);
-    },
-    [navigate]
-  );
-
   const tagTree = useMemo(() => buildTagTree((tags || []) as TagItem[]), [tags]);
 
   const filteredList = useMemo(() => {
@@ -99,15 +90,6 @@ const PersonList = () => {
             className="page-search person-list-search"
             allowClear
           />
-          <div className="person-list-icons">
-            <div className="person-list-icon-wrap">
-              <BellOutlined />
-              <span className="person-list-icon-badge">88</span>
-            </div>
-            <div className="person-list-icon-wrap">
-              <AppstoreOutlined />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -160,38 +142,13 @@ const PersonList = () => {
       ) : (
         <>
           <Row gutter={[16, 16]} className="person-list-grid">
-            {filteredList.map((person: { personId?: string; chineseName?: string; originalName?: string; idCardNumber?: string; birthDate?: string; personTags?: string[]; isKeyPerson?: boolean }) => (
+            {filteredList.map((person: PersonCardData) => (
               <Col xs={24} sm={12} md={8} lg={6} xl={4} key={person.personId}>
-                <Card
-                  hoverable
-                  className="person-list-card"
-                  onClick={() => handleCardClick(person.personId!)}
-                >
-                  <div className="person-list-card-avatar">
-                    {(person.chineseName || person.originalName || '?').charAt(0)}
-                  </div>
-                  <div className="person-list-card-name">
-                    {person.chineseName || person.originalName || '—'}
-                  </div>
-                  <div className="person-list-card-id">
-                    {person.idCardNumber || '无身份证'}
-                  </div>
-                  <div className="person-list-card-birth">
-                    出生日期: {formatDateOnly(person.birthDate)}
-                  </div>
-                  <div className="person-list-card-tags">
-                    {(person.personTags || []).slice(0, 2).map((tag: string, idx: number) => (
-                      <Tag key={idx} className="person-list-card-tag">
-                        {tag}
-                      </Tag>
-                    ))}
-                  </div>
-                  {person.isKeyPerson && (
-                    <Tag color="red" className="person-list-card-key">
-                      重点人员
-                    </Tag>
-                  )}
-                </Card>
+                <PersonCard
+                  person={person}
+                  showActionLink
+                  actionLinkText="查看详情"
+                />
               </Col>
             ))}
           </Row>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, Row, Col, Statistic, Spin, Tabs } from 'antd';
 import {
   TeamOutlined,
@@ -27,6 +27,7 @@ const TREND_COLORS = ['#1890ff', '#52c41a', '#fa8c16', '#722ed1'];
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { statistics, loading } = useAppSelector((state) => state.dashboard);
   const [chartType, setChartType] = useState<'line' | 'bar'>('line');
@@ -166,7 +167,7 @@ const Dashboard = () => {
             color: ['#e0e7ff', '#6366f1', '#3730a3', '#1e1b4b'],
           },
           right: 12,
-          bottom: 24,
+          bottom: 0,
           textStyle: { color: '#8b9dc3' },
         },
         series: [
@@ -174,9 +175,14 @@ const Dashboard = () => {
             name: '人员数量',
             type: 'map',
             map: 'china',
-            roam: false,
-            layoutCenter: ['50%', '50%'],
-            layoutSize: '150%',
+            roam: true,
+            layoutCenter: ['50%', '70%'],
+            layoutSize: '130%',
+            label: {
+              show: true,
+              fontSize: 10,
+              color: '#1f2937',
+            },
             emphasis: { label: { show: true }, itemStyle: { areaColor: '#60a5fa' } },
             data: provinceList.map((p) => ({ name: p.name, value: p.value })),
           },
@@ -278,7 +284,7 @@ const Dashboard = () => {
       <Row gutter={16} className="dashboard-main">
         {/* 左侧：机构分布 TOP15、签证类型排名 */}
         <Col xs={24} lg={6}>
-          <Card className="dashboard-panel" title="机构分布TOP15" size="small">
+          <Card className="dashboard-panel dashboard-panel-rank-card" title="机构分布TOP15" size="small">
             <div className="rank-list rank-list-scroll">
               {organizationTop15.length === 0 ? (
                 <div style={{ color: 'var(--text-placeholder)', padding: 16, textAlign: 'center' }}>暂无机构数据</div>
@@ -302,7 +308,7 @@ const Dashboard = () => {
               )}
             </div>
           </Card>
-          <Card className="dashboard-panel" title="签证类型排名" size="small">
+          <Card className="dashboard-panel dashboard-panel-rank-card" title="签证类型排名" size="small">
             <div className="rank-list rank-list-scroll">
               {visaTypeTop15.length === 0 ? (
                 <div style={{ color: 'var(--text-placeholder)', padding: 16, textAlign: 'center' }}>暂无签证类型数据</div>
@@ -334,6 +340,7 @@ const Dashboard = () => {
             <div className="map-container">
               <div className="map-outline" />
               <ReactECharts
+                key={`china-map-${location.key}-${chinaGeoLoaded}`}
                 option={mapOption()}
                 style={{ height: 520, width: '100%', position: 'absolute', left: 0, top: 0 }}
                 opts={{ renderer: 'canvas' }}
@@ -370,7 +377,7 @@ const Dashboard = () => {
 
         {/* 右侧：各地排名、群体类别 */}
         <Col xs={24} lg={6}>
-          <Card className="dashboard-panel" title="各地排名" size="small">
+          <Card className="dashboard-panel dashboard-panel-rank-card" title="各地排名" size="small">
             <Tabs
               activeKey={locationTab}
               onChange={setLocationTab}
@@ -418,7 +425,7 @@ const Dashboard = () => {
               })()}
             </div>
           </Card>
-          <Card className="dashboard-panel" title="群体类别" size="small">
+          <Card className="dashboard-panel dashboard-panel-rank-card" title="群体类别" size="small">
             <div className="rank-list rank-list-scroll">
               {groupCategoryStats.length === 0 ? (
                 <div style={{ color: 'var(--text-placeholder)', padding: 16, textAlign: 'center' }}>暂无群体类别数据</div>
@@ -444,12 +451,6 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
-
-      {/* 右侧悬浮按钮（可选） */}
-      <div className="dashboard-float-btns">
-        <div className="float-btn" title="应用菜单">▦</div>
-        <div className="float-btn" title="刷新">K</div>
-      </div>
     </div>
   );
 };

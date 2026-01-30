@@ -154,7 +154,7 @@ const PersonDetail = () => {
               <div className="person-detail-resume-block">
                 <div className="person-detail-resume-block-title">
                   <AuditOutlined />
-                  <span>技能/标签</span>
+                  <span>人物标签</span>
                 </div>
                 <div className="person-detail-resume-tags">
                   {tags.map((tag: string, idx: number) => (

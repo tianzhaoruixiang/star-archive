@@ -1,0 +1,48 @@
+[
+  {
+    "name": "张三",
+    "idCard": "110101199001011234",
+    "age": 30,
+    "gender": "男",
+    "occupation": "教师",
+    "hometown": "北京市",
+    "region": "北京市",
+    "phone": "13800138000",
+    "status": "正常",
+    "nationality": "中国",
+    "visaType": "",
+    "institution": "",
+    "tags": [
+      "重点人员",
+      "教师"
+    ],
+    "educationHistory": [
+      {
+        "school": "北京大学",
+        "degree": "本科",
+        "major": "计算机科学",
+        "startDate": "2010-09",
+        "endDate": "2014-06"
+      }
+    ],
+    "workHistory": [
+      {
+        "company": "北京市第一中学",
+        "position": "教师",
+        "description": "负责数学教学工作",
+        "startDate": "2014-09",
+        "endDate": "至今"
+      }
+    ],
+    "socialMedia": [],
+    "visitRecords": [
+      {
+        "place": "上海市",
+        "date": "2024-01-15",
+        "purpose": "出差"
+      }
+    ],
+    "flightRecords": [],
+    "trainRecords": []
+  }
+]

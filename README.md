@@ -85,7 +85,7 @@
 
 将文本抽取为结构化人物数据使用大模型实现，使用OpenAI标准接口实现，采用阿里云百炼的 Qwen3模型， APIkey为=sk-3557896ee7d34bdf94e4f88093eec565， 模型名称和调用地址支持在前端配置。
 
-在用户导入人物档案Excel，csv，pdf，doc，docx后，使用OpenAI标准格式的接口，QWEN3大模型提取结构化的档案信息JSON格式（结构化参考doris 中的 person 表 ），大模型抽取完成后支持用户进行原始文档阅读和抽取后的人物信息进行对比查看，支持人工确认后导入
+在用户导入人物档案Excel，csv，pdf，doc，docx后，使用OpenAI标准格式的接口，QWEN3大模型提取结构化的档案信息JSON格式（结构化参考doris 中的 person 表 ），大模型抽取完成后支持用户进行原始文档阅读和抽取后的人物信息进行对比查看，支持人工确认后导入。档案融合上传后的文件支持 **OnlyOffice 预览** 和 **下载**：任务列表与任务详情页提供「预览」「下载」按钮；预览需启动 OnlyOffice Document Server（见 `docker/docker-compose-onlyoffice.yml`），并在后端 `application.yml` 中配置 `onlyoffice.document-server-url` 与 `onlyoffice.document-download-base`（OnlyOffice 服务端拉取文档的后端基地址，Docker 内可填 `http://host.docker.internal:8000/api`）。
 
 ### 5.2 模型管理
 用户可以新建模型，通过建模的方式精细化锁定重点人员，运行模型可通过模型计算来展示所有符合要求人员卡片，形成新的页面展示这些人员。用户可新增、删除模型。模型计算结果进行版本保存。

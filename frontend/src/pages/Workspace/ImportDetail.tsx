@@ -1,5 +1,5 @@
-import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, Table } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, Table, Modal } from 'antd';
+import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { archiveFusionAPI } from '@/services/api';
@@ -7,12 +7,14 @@ import type {
   ArchiveFusionTaskDetailDTO,
   ArchiveExtractResultDTO,
   PersonCardDTO,
+  OnlyOfficePreviewConfigDTO,
 } from '@/types/archiveFusion';
 import ArchiveResumeView from '@/components/ArchiveResumeView';
+import OnlyOfficeViewer from '@/components/OnlyOfficeViewer';
 import './index.css';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
-  PENDING: { color: 'default', text: '待处理' },
+  PENDING: { color: 'default', text: '待提取' },
   EXTRACTING: { color: 'processing', text: '提取中' },
   MATCHING: { color: 'processing', text: '匹配中' },
   SUCCESS: { color: 'success', text: '成功' },
@@ -64,6 +66,8 @@ const ImportDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedResultIds, setSelectedResultIds] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
+  const [previewConfig, setPreviewConfig] = useState<OnlyOfficePreviewConfigDTO | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const loadDetail = useCallback(async (id: string) => {
     setLoading(true);
@@ -121,6 +125,32 @@ const ImportDetail: React.FC = () => {
     );
   }, []);
 
+  const handleDownload = useCallback(() => {
+    if (!detail?.task?.taskId) return;
+    window.open(archiveFusionAPI.getFileDownloadUrl(detail.task.taskId), '_blank');
+  }, [detail?.task?.taskId]);
+
+  const handlePreview = useCallback(async () => {
+    if (!detail?.task?.taskId) return;
+    setPreviewConfig(null);
+    setPreviewLoading(true);
+    try {
+      const res = await archiveFusionAPI.getPreviewConfig(detail.task.taskId) as { data?: OnlyOfficePreviewConfigDTO; message?: string };
+      const cfg = res?.data ?? (res as unknown as OnlyOfficePreviewConfigDTO);
+      if (cfg && typeof cfg.documentServerUrl === 'string') {
+        setPreviewConfig(cfg);
+      } else {
+        message.warning(res?.message ?? '无法获取预览配置');
+      }
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string }; status?: number } };
+      const msg = e?.response?.data?.message ?? (e?.response?.status === 404 ? '任务不存在或未关联文件' : '获取预览配置失败');
+      message.error(msg);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, [detail?.task?.taskId]);
+
   const unimportedResultIds = detail?.extractResults?.filter((r) => !r.imported).map((r) => r.resultId) ?? [];
   const selectAllUnimported = useCallback(() => {
     setSelectedResultIds(
@@ -162,64 +192,45 @@ const ImportDetail: React.FC = () => {
       // ignore
     }
     return (
-      <Card key={r.resultId} size="small" style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+      <Card key={r.resultId} size="small" className="import-detail-result-card">
+        <div className="import-detail-result-head">
           {canSelect ? (
             <Checkbox
               checked={selectedResultIds.includes(r.resultId)}
               onChange={(e) => toggleResultSelection(r.resultId, e.target.checked)}
             />
           ) : (
-            <CheckCircleOutlined style={{ color: '#52c41a', marginTop: 4 }} />
+            <CheckCircleOutlined className="import-detail-result-checked" />
           )}
-          <div style={{ flex: 1 }}>
-            <strong>提取人物 #{r.extractIndex + 1}</strong>
+          <div className="import-detail-result-main">
+            <strong className="import-detail-result-title">提取人物 #{r.extractIndex + 1}</strong>
             {r.imported && r.importedPersonId && (
-              <Tag color="green" style={{ marginLeft: 8 }}>已导入</Tag>
+              <Tag color="green" className="import-detail-result-tag">已导入</Tag>
             )}
-            <span style={{ marginLeft: 12 }}>
+            <span className="import-detail-result-meta">
               {r.originalName && <span>姓名：{r.originalName}</span>}
               {r.birthDate && <span style={{ marginLeft: 12 }}>出生：{r.birthDate}</span>}
               {r.gender && <span style={{ marginLeft: 12 }}>性别：{r.gender}</span>}
               {r.nationality && <span style={{ marginLeft: 12 }}>国籍：{r.nationality}</span>}
             </span>
-            <Collapse
-              size="small"
-              style={{ marginTop: 8 }}
-              defaultActiveKey={['resume']}
-              items={[
-                {
-                  key: 'resume',
-                  label: '人物简历（结构化档案）',
-                  children: (
-                    <ArchiveResumeView data={rawObj} />
-                  ),
-                },
-              ]}
-            />
+            <Collapse size="small" className="import-detail-result-collapse" defaultActiveKey={['resume']} items={[
+              { key: 'resume', label: '人物简历（结构化档案）', children: <ArchiveResumeView data={rawObj} /> },
+            ]} />
             {r.similarPersons && r.similarPersons.length > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <div style={{ marginBottom: 6, color: '#666' }}>库内相似档案：</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div className="import-detail-similar">
+                <div className="import-detail-similar-title">库内相似档案</div>
+                <div className="import-detail-similar-list">
                   {r.similarPersons.map((p: PersonCardDTO) => (
-                    <Card
-                      key={p.personId}
-                      size="small"
-                      hoverable
-                      style={{ width: 160 }}
-                      onClick={() => navigate(`/persons/${p.personId}`)}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Card key={p.personId} size="small" hoverable className="import-detail-similar-card" onClick={() => navigate(`/persons/${p.personId}`)}>
+                      <div className="import-detail-similar-card-inner">
                         {p.avatarUrl ? (
-                          <img src={p.avatarUrl} alt="" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />
+                          <img src={p.avatarUrl} alt="" className="import-detail-similar-avatar" />
                         ) : (
-                          <div style={{ width: 32, height: 32, background: '#f0f0f0', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <UserOutlined />
-                          </div>
+                          <div className="import-detail-similar-avatar-placeholder"><UserOutlined /></div>
                         )}
-                        <div style={{ flex: 1, overflow: 'hidden' }}>
-                          <div style={{ fontWeight: 500, fontSize: 12 }}>{p.chineseName || p.originalName || p.personId}</div>
-                          {p.idCardNumber && <div style={{ fontSize: 11, color: 'var(--text-placeholder)' }}>{p.idCardNumber}</div>}
+                        <div className="import-detail-similar-info">
+                          <div className="import-detail-similar-name">{p.chineseName || p.originalName || p.personId}</div>
+                          {p.idCardNumber && <div className="import-detail-similar-id">{p.idCardNumber}</div>}
                         </div>
                       </div>
                     </Card>
@@ -235,9 +246,9 @@ const ImportDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="page-wrapper workspace-page">
-        <div className="page-loading">
-          <Spin size="large" />
+      <div className="page-wrapper workspace-page import-detail-page">
+        <div className="import-detail-loading">
+          <Spin size="large" tip="加载中..." />
         </div>
       </div>
     );
@@ -245,11 +256,13 @@ const ImportDetail: React.FC = () => {
 
   if (!detail) {
     return (
-      <div className="page-wrapper workspace-page">
-        <Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>
-          返回工作区
-        </Button>
-        <Empty description="任务不存在或加载失败" style={{ marginTop: 24 }} />
+      <div className="page-wrapper workspace-page import-detail-page">
+        <div className="import-detail-back">
+          <Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>
+            返回工作区
+          </Button>
+        </div>
+        <Empty description="任务不存在或加载失败" className="import-detail-empty-state" />
       </div>
     );
   }
@@ -260,18 +273,17 @@ const ImportDetail: React.FC = () => {
 
   if (isExtracting) {
     return (
-      <div className="page-wrapper workspace-page">
-        <div style={{ marginBottom: 16 }}>
+      <div className="page-wrapper workspace-page import-detail-page">
+        <div className="import-detail-back">
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>
             返回工作区
           </Button>
         </div>
-        <Card size="small" title={detail.task.fileName}>
-          <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+        <Card className="import-detail-extracting-card" size="small">
+          <div className="import-detail-extracting">
             <Spin size="large" />
-            <div style={{ marginTop: 16, color: 'var(--text-placeholder)' }}>
-              大模型正在提取档案，请稍候… 完成后可在此对比查看并确认导入
-            </div>
+            <p className="import-detail-extracting-text">大模型正在提取档案，请稍候…</p>
+            <p className="import-detail-extracting-hint">完成后可在此对比查看并确认导入</p>
           </div>
         </Card>
       </div>
@@ -279,106 +291,107 @@ const ImportDetail: React.FC = () => {
   }
 
   return (
-    <div className="page-wrapper workspace-page">
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')}>
+    <div className="page-wrapper workspace-page import-detail-page">
+      <div className="import-detail-toolbar">
+        <div className="import-detail-toolbar-left">
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/workspace')} className="import-detail-back-btn">
             返回工作区
           </Button>
-          <span style={{ color: 'var(--text-placeholder)' }}>|</span>
-          <span>
-            <strong>任务详情：</strong>
-            {detail.task.fileName} · {STATUS_MAP[detail.task.status]?.text ?? detail.task.status} · 提取 {detail.task.extractCount} 人
-          </span>
-          {detail.task.errorMessage && (
-            <Tag color="error">{detail.task.errorMessage}</Tag>
-          )}
+          <div className="import-detail-task-info">
+            <span className="import-detail-task-name">{detail.task.fileName}</span>
+            <Tag color={STATUS_MAP[detail.task.status]?.color}>{STATUS_MAP[detail.task.status]?.text ?? detail.task.status}</Tag>
+            <span className="import-detail-task-meta">提取 {detail.task.extractCount} 人</span>
+            {detail.task.errorMessage && <Tag color="error">{detail.task.errorMessage}</Tag>}
+          </div>
+          <span className="import-detail-toolbar-divider" />
+          <Button type="link" size="small" icon={<FileTextOutlined />} loading={previewLoading} onClick={handlePreview}>预览</Button>
+          <Button type="link" size="small" icon={<DownloadOutlined />} onClick={handleDownload}>下载</Button>
         </div>
         {canCompareAndImport && showImportBtn && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div className="import-detail-toolbar-right">
             <Button type="primary" loading={importing} onClick={handleImportAll}>
               全部导入（{unimportedResultIds.length}）
             </Button>
-            <Button
-              type="default"
-              loading={importing}
-              disabled={selectedResultIds.length === 0}
-              onClick={handleConfirmImport}
-            >
+            <Button type="default" loading={importing} disabled={selectedResultIds.length === 0} onClick={handleConfirmImport}>
               确认并导入已勾选（{selectedResultIds.length}）
             </Button>
-            <Button type="link" size="small" onClick={selectAllUnimported}>
-              全选未导入
-            </Button>
+            <Button type="link" size="small" onClick={selectAllUnimported}>全选未导入</Button>
           </div>
         )}
       </div>
 
-      <Row gutter={16} style={{ minHeight: 360 }}>
-        <Col xs={24} lg={12}>
-          <Card size="small" title="原始文档（可对比阅读）" style={{ height: '100%' }}>
-            {(() => {
-              const parsed = parseOriginalTextAsTable(detail.task.originalText, detail.task.fileType ?? '');
-              if (parsed && (parsed.rows.length > 0 || parsed.headers.length > 0)) {
-                const colCount = parsed.headers.length;
-                const padRow = (row: string[]) =>
-                  row.length >= colCount ? row.slice(0, colCount) : [...row, ...Array(colCount - row.length).fill('')];
-                const columns = parsed.headers.map((h, i) => ({
-                  title: h,
-                  dataIndex: String(i),
-                  key: String(i),
-                  ellipsis: true,
-                  render: (v: string) => v ?? '—',
-                }));
-                const dataSource = parsed.rows.map((row, i) => ({
-                  key: i,
-                  ...Object.fromEntries(padRow(row).map((cell, j) => [String(j), cell])),
-                }));
+      <div className="import-detail-content">
+        <Row gutter={16}>
+          <Col xs={24} lg={12}>
+            <Card size="small" title="原始文档（可对比阅读）" className="import-detail-card import-detail-card-original">
+              {(() => {
+                const parsed = parseOriginalTextAsTable(detail.task.originalText, detail.task.fileType ?? '');
+                if (parsed && (parsed.rows.length > 0 || parsed.headers.length > 0)) {
+                  const colCount = parsed.headers.length;
+                  const padRow = (row: string[]) =>
+                    row.length >= colCount ? row.slice(0, colCount) : [...row, ...Array(colCount - row.length).fill('')];
+                  const columns = parsed.headers.map((h, i) => ({
+                    title: h,
+                    dataIndex: String(i),
+                    key: String(i),
+                    ellipsis: true,
+                    render: (v: string) => v ?? '—',
+                  }));
+                  const dataSource = parsed.rows.map((row, i) => ({
+                    key: i,
+                    ...Object.fromEntries(padRow(row).map((cell, j) => [String(j), cell])),
+                  }));
+                  return (
+                    <div className="import-detail-original-body">
+                      <Table
+                        size="small"
+                        pagination={false}
+                        columns={columns}
+                        dataSource={dataSource}
+                        scroll={{ x: 'max-content' }}
+                        className="import-detail-original-table"
+                      />
+                    </div>
+                  );
+                }
                 return (
-                  <div style={{ maxHeight: 520, overflow: 'auto' }}>
-                    <Table
-                      size="small"
-                      pagination={false}
-                      columns={columns}
-                      dataSource={dataSource}
-                      scroll={{ x: 'max-content' }}
-                      style={{ fontSize: 12 }}
-                    />
-                  </div>
+                  <pre className="import-detail-original-pre">
+                    {detail.task.originalText || '无原文'}
+                  </pre>
                 );
-              }
-              return (
-                <pre
-                  style={{
-                    margin: 0,
-                    maxHeight: 520,
-                    overflow: 'auto',
-                    fontSize: 12,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    background: '#fafafa',
-                    padding: 12,
-                    borderRadius: 4,
-                  }}
-                >
-                  {detail.task.originalText || '无原文'}
-                </pre>
-              );
-            })()}
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card size="small" title="抽取人物信息（勾选后点击确认并导入）" style={{ height: '100%' }}>
-            <div style={{ maxHeight: 520, overflow: 'auto' }}>
-              {detail.extractResults && detail.extractResults.length > 0 ? (
-                detail.extractResults.map(renderExtractResult)
-              ) : (
-                <Empty description="无提取结果" style={{ marginTop: 12 }} />
-              )}
-            </div>
-          </Card>
-        </Col>
-      </Row>
+              })()}
+            </Card>
+          </Col>
+          <Col xs={24} lg={12}>
+            <Card size="small" title="抽取人物信息（勾选后点击确认并导入）" className="import-detail-card import-detail-card-results">
+              <div className="import-detail-results-body">
+                {detail.extractResults && detail.extractResults.length > 0 ? (
+                  detail.extractResults.map(renderExtractResult)
+                ) : (
+                  <Empty description="无提取结果" className="import-detail-empty" />
+                )}
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+      <Modal
+        title={`文档预览：${detail.task.fileName ?? ''}`}
+        open={previewConfig !== null}
+        onCancel={() => setPreviewConfig(null)}
+        footer={null}
+        width="90%"
+        style={{ top: 24 }}
+        destroyOnClose
+      >
+        {previewConfig && (
+          <OnlyOfficeViewer
+            config={previewConfig}
+            height="75vh"
+            onError={(msg) => message.warning(msg)}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

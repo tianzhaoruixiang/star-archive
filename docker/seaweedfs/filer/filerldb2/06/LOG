@@ -159,3 +159,45 @@
 02:05:53.394750 version@stat F·[2] S·555B[555B] Sc·[0.50]
 02:05:53.425649 db@janitor F·4 G·0
 02:05:53.425858 db@open done T·48.734555ms
+02:48:40.357361 db@close closing
+02:48:40.360675 db@close done T·3.313267ms
+=============== Jan 30, 2026 (UTC) ===============
+02:49:41.036531 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+02:49:41.042797 version@stat F·[2] S·555B[555B] Sc·[0.50]
+02:49:41.043276 db@open opening
+02:49:41.044374 journal@recovery F·1
+02:49:41.049750 journal@recovery recovering @30
+02:49:41.059823 version@stat F·[2] S·555B[555B] Sc·[0.50]
+02:49:41.102575 db@janitor F·4 G·0
+02:49:41.102854 db@open done T·59.433719ms
+05:40:55.169561 db@close closing
+05:40:55.173729 db@close done T·4.165332ms
+=============== Jan 30, 2026 (UTC) ===============
+05:41:47.548244 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+05:41:47.558955 version@stat F·[2] S·555B[555B] Sc·[0.50]
+05:41:47.559737 db@open opening
+05:41:47.561879 journal@recovery F·1
+05:41:47.571474 journal@recovery recovering @32
+05:41:47.583077 memdb@flush created L0@34 N·3 S·356B "m\xd3)..e24,v7":"m\xd3)..d5c,v8"
+05:41:47.600190 version@stat F·[3] S·911B[911B] Sc·[0.75]
+05:41:47.644408 db@janitor F·5 G·0
+05:41:47.644769 db@open done T·84.673025ms
+05:52:43.932589 db@close closing
+05:52:43.936383 db@close done T·3.791996ms
+=============== Jan 30, 2026 (UTC) ===============
+05:53:52.447709 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+05:53:52.452944 version@stat F·[3] S·911B[911B] Sc·[0.75]
+05:53:52.453418 db@open opening
+05:53:52.454639 journal@recovery F·1
+05:53:52.460701 journal@recovery recovering @35
+05:53:52.469162 memdb@flush created L0@37 N·2 S·383B "m\xd3)..23d,v10":"\xdb\xe9\"..doc,v11"
+05:53:52.476876 version@stat F·[4] S·1KiB[1KiB] Sc·[1.00]
+05:53:52.506154 db@janitor F·6 G·0
+05:53:52.506703 db@open done T·53.125252ms
+05:53:52.506915 table@compaction L0·2 -> L1·0 S·687B Q·12
+05:53:52.525482 table@build created L1@40 N·4 S·488B "m\xd3)..8f6,v1":"\xdb\xe9\"..doc,v11"
+05:53:52.525720 version@stat F·[2 1] S·1KiB[607B 488B] Sc·[0.50 0.00]
+05:53:52.530441 table@compaction committed F-1 S-199B Ke·0 D·0 T·22.88476ms
+05:53:52.533447 table@remove removed @20
+06:11:36.367916 db@close closing
+06:11:36.370659 db@close done T·2.751779ms

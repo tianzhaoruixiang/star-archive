@@ -470,6 +470,49 @@ PROPERTIES (
     "enable_unique_key_merge_on_write" = "true"
 );
 
+-- ==========================================
+-- 11. 智能化模型管理 - 预测模型表
+-- ==========================================
+CREATE TABLE IF NOT EXISTS prediction_model
+(
+    `model_id` VARCHAR(64) NOT NULL COMMENT '模型编号：UUID',
+    `name` VARCHAR(200) NOT NULL COMMENT '模型名称',
+    `description` VARCHAR(500) COMMENT '模型描述',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'PAUSED' COMMENT '状态: RUNNING-运行中, PAUSED-已暂停',
+    `rule_config` STRING COMMENT '语义规则（自然语言），如：满足年龄大于20岁且具有高消费标签的所有人群',
+    `locked_count` INT DEFAULT 0 COMMENT '锁定人数（模型识别出的重点人数）',
+    `accuracy` VARCHAR(50) COMMENT '准确率，如 92.5%',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
+)
+UNIQUE KEY(`model_id`)
+COMMENT "预测模型表-智能化模型管理"
+DISTRIBUTED BY HASH(model_id) BUCKETS 4
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+ALTER TABLE prediction_model ADD INDEX idx_status (status) USING INVERTED;
+ALTER TABLE prediction_model ADD INDEX idx_created_time (created_time) USING INVERTED;
+
+-- 11.1 模型锁定人员表（语义匹配结果：模型启动后大模型根据语义规则筛选出的人员）
+CREATE TABLE IF NOT EXISTS prediction_model_locked_person
+(
+    `model_id` VARCHAR(64) NOT NULL COMMENT '模型编号',
+    `person_id` VARCHAR(200) NOT NULL COMMENT '人物编号',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`model_id`, `person_id`)
+COMMENT "模型锁定人员-语义规则匹配结果"
+DISTRIBUTED BY HASH(model_id) BUCKETS 4
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+ALTER TABLE prediction_model_locked_person ADD INDEX idx_person_id (person_id) USING INVERTED;
+
 -- 关键查询示例（仅供参考；person_news_relation 未建时勿直接执行）
 -- SELECT p.person_id, p.chinese_name, p.original_name, p.nationality, p.person_tags,
 --     COUNT(DISTINCT t.travel_id) as travel_count, COUNT(DISTINCT s.dynamic_id) as social_count

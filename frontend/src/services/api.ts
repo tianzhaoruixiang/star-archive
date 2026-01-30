@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { OnlyOfficePreviewConfigDTO } from '@/types/archiveFusion';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -146,6 +147,35 @@ export const systemConfigAPI = {
 };
 
 /** 人员档案导入融合：上传、任务列表、任务详情、确认导入 */
+/** 预测模型（智能化模型管理） */
+export interface PredictionModelDTO {
+  modelId: string;
+  name: string;
+  description?: string;
+  status: string;
+  ruleConfig?: string;
+  lockedCount?: number;
+  accuracy?: string;
+  createdTime?: string;
+  updatedTime?: string;
+}
+
+export const modelAPI = {
+  list: () => apiClient.get<PredictionModelDTO[]>('/models'),
+  getById: (modelId: string) => apiClient.get<PredictionModelDTO>(`/models/${modelId}`),
+  create: (dto: { name: string; description?: string; ruleConfig?: string; lockedCount?: number; accuracy?: string }) =>
+    apiClient.post<PredictionModelDTO>('/models', dto),
+  update: (modelId: string, dto: Partial<PredictionModelDTO>) =>
+    apiClient.put<PredictionModelDTO>(`/models/${modelId}`, dto),
+  delete: (modelId: string) => apiClient.delete(`/models/${modelId}`),
+  start: (modelId: string) => apiClient.post<PredictionModelDTO>(`/models/${modelId}/start`),
+  pause: (modelId: string) => apiClient.post<PredictionModelDTO>(`/models/${modelId}/pause`),
+  getRuleConfig: (modelId: string) =>
+    apiClient.get<{ ruleConfig: string }>(`/models/${modelId}/rule-config`),
+  updateRuleConfig: (modelId: string, ruleConfig: string) =>
+    apiClient.put<PredictionModelDTO>(`/models/${modelId}/rule-config`, { ruleConfig }),
+};
+
 export const archiveFusionAPI = {
   createTask: (formData: FormData) =>
     apiClient.post('/workspace/archive-fusion/tasks', formData, {
@@ -162,6 +192,15 @@ export const archiveFusionAPI = {
     apiClient.get('/workspace/archive-fusion/tasks', { params }),
   getTaskDetail: (taskId: string) =>
     apiClient.get(`/workspace/archive-fusion/tasks/${taskId}`),
+  /** 获取 OnlyOffice 预览配置（documentServerUrl、documentUrl、documentKey 等） */
+  getPreviewConfig: (taskId: string) =>
+    apiClient.get<{ data?: OnlyOfficePreviewConfigDTO }>(`/workspace/archive-fusion/tasks/${taskId}/preview-config`),
+  /** 档案文件下载地址（GET 该 URL 会返回文件流，download=1 时触发下载） */
+  getFileDownloadUrl: (taskId: string) =>
+    `/api/workspace/archive-fusion/tasks/${taskId}/file?download=1`,
+  /** 档案文件预览地址（内联打开，供 OnlyOffice 拉取） */
+  getFilePreviewUrl: (taskId: string) =>
+    `/api/workspace/archive-fusion/tasks/${taskId}/file`,
   confirmImport: (taskId: string, resultIds: string[]) =>
     apiClient.post<{ data?: string[] }>(`/workspace/archive-fusion/tasks/${taskId}/confirm-import`, { resultIds }),
 };

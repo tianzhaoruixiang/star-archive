@@ -1,30 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Card, Row, Col, Tag, Pagination, Spin, Empty, message } from 'antd';
-import { LinkOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { Row, Col, Pagination, Spin, Empty, message } from 'antd';
 import { keyPersonLibraryAPI, type KeyPersonCategory } from '@/services/api';
-import { formatDateOnly } from '@/utils/date';
+import PersonCard, { type PersonCardData } from '@/components/PersonCard';
 import './index.css';
-
-interface PersonCard {
-  personId: string;
-  chineseName?: string;
-  idCardNumber?: string;
-  birthDate?: string;
-  personTags?: string[];
-  isKeyPerson?: boolean;
-  householdAddress?: string;
-  phoneSummary?: string;
-  remark?: string;
-}
 
 const PAGE_SIZE = 30;
 
 const KeyPersonLibrary: React.FC = () => {
-  const navigate = useNavigate();
   const [categories, setCategories] = useState<KeyPersonCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
-  const [list, setList] = useState<PersonCard[]>([]);
+  const [list, setList] = useState<PersonCardData[]>([]);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, size: PAGE_SIZE, total: 0 });
@@ -49,8 +34,8 @@ const KeyPersonLibrary: React.FC = () => {
         selectedCategoryId,
         pagination.page - 1,
         pagination.size
-      )) as { data?: { content?: PersonCard[]; totalElements?: number } };
-      const raw = res?.data ?? res;
+      )) as unknown;
+      const raw = res && typeof res === 'object' && 'data' in res ? (res as { data?: { content?: PersonCardData[]; list?: PersonCardData[]; totalElements?: number; total?: number } }).data : res as { content?: PersonCardData[]; list?: PersonCardData[]; totalElements?: number; total?: number } | undefined;
       const content = raw?.content ?? raw?.list ?? [];
       const total = raw?.totalElements ?? raw?.total ?? 0;
       setList(Array.isArray(content) ? content : []);
@@ -76,13 +61,6 @@ const KeyPersonLibrary: React.FC = () => {
   const handlePageChange = useCallback((page: number, size: number) => {
     setPagination((p) => ({ ...p, page, size }));
   }, []);
-
-  const handleCardClick = useCallback(
-    (personId: string) => {
-      navigate(`/persons/${personId}`);
-    },
-    [navigate]
-  );
 
   const handleRemove = useCallback(
     async (e: React.MouseEvent, personId: string) => {
@@ -157,72 +135,14 @@ const KeyPersonLibrary: React.FC = () => {
               <Row gutter={[16, 16]} className="key-person-grid">
                 {list.map((person) => (
                   <Col xs={24} sm={12} lg={8} key={person.personId}>
-                    <Card
-                      className="key-person-card"
-                      onClick={() => handleCardClick(person.personId)}
-                    >
-                      <div className="key-person-card-avatar-wrap">
-                        <div className="key-person-card-avatar">
-                          {(person.chineseName || '?').charAt(0)}
-                        </div>
-                        <Tag className="key-person-card-status">
-                          {person.personTags?.[0] ?? '—'}
-                        </Tag>
-                      </div>
-                      <div className="key-person-card-name">
-                        {person.chineseName || '—'}
-                      </div>
-                      <div className="key-person-card-row">
-                        身份证: {person.idCardNumber || '—'}
-                      </div>
-                      <div className="key-person-card-row">
-                        籍贯: {person.householdAddress || '—'}
-                      </div>
-                      <div className="key-person-card-row">
-                        出生日期:{' '}
-                        {formatDateOnly(person.birthDate)}
-                      </div>
-                      <div className="key-person-card-row">
-                        电话: {person.phoneSummary || '—'}
-                      </div>
-                      <div className="key-person-card-tags">
-                        {(person.personTags || []).slice(0, 2).map((tag, idx) => (
-                          <Tag key={idx} className="key-person-card-tag">
-                            {tag}
-                          </Tag>
-                        ))}
-                      </div>
-                      <div className="key-person-card-actions">
-                        <span
-                          className="key-person-card-link"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCardClick(person.personId);
-                          }}
-                        >
-                          <LinkOutlined /> 已匹配本地库
-                        </span>
-                        <span
-                          className="key-person-card-link"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCardClick(person.personId);
-                          }}
-                        >
-                          查看本地库数据
-                        </span>
-                      </div>
-                      {selectedCategoryId !== 'all' && (
-                        <button
-                          type="button"
-                          className="key-person-card-remove"
-                          onClick={(e) => handleRemove(e, person.personId)}
-                          disabled={removingId === person.personId}
-                        >
-                          <DeleteOutlined /> 移除
-                        </button>
-                      )}
-                    </Card>
+                    <PersonCard
+                      person={person}
+                      showActionLink
+                      actionLinkText="查看本地库数据"
+                      showRemove={selectedCategoryId !== 'all'}
+                      onRemove={handleRemove}
+                      removing={removingId === person.personId}
+                    />
                   </Col>
                 ))}
               </Row>

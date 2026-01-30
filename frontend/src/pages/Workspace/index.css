@@ -84,3 +84,469 @@
 .workspace-page .ant-empty-description {
   color: var(--text-placeholder);
 }
+
+/* ========== 档案融合 Tab ========== */
+.workspace-fusion {
+  padding: 0 4px;
+}
+
+.workspace-fusion-header {
+  margin-bottom: 20px;
+}
+
+.workspace-fusion-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 8px;
+}
+
+.workspace-fusion-desc {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 合并上传框：拖拽区 + 已选列表 + 开始上传 */
+.workspace-fusion-upload-box {
+  margin-bottom: 24px;
+  border: 1px solid var(--card-border, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--card-bg, #fff);
+}
+
+.workspace-fusion-dragger.ant-upload-wrapper {
+  margin-bottom: 0;
+}
+
+.workspace-fusion-dragger .ant-upload-drag {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px dashed var(--input-border, #e5e7eb);
+  background: var(--input-bg, #fafafa);
+  padding: 32px 24px;
+  margin: 0;
+  transition: background 0.2s;
+}
+
+.workspace-fusion-dragger .ant-upload-drag:hover {
+  background: var(--primary-hover, #e6f4ff);
+}
+
+.workspace-fusion-dragger .ant-upload-drag.ant-upload-drag-hover {
+  background: var(--primary-hover, #e6f4ff);
+}
+
+.workspace-fusion-dragger-inner {
+  padding: 8px 0;
+}
+
+.workspace-fusion-dragger-icon {
+  font-size: 48px;
+  color: var(--primary, #1890ff);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.workspace-fusion-dragger-text {
+  font-size: 15px;
+  color: var(--text-primary, #1f2937);
+  margin: 0 0 4px;
+  font-weight: 500;
+}
+
+.workspace-fusion-dragger-hint {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+  margin: 0;
+}
+
+.workspace-fusion-dragger-count {
+  font-size: 13px;
+  color: var(--primary, #1890ff);
+  margin: 12px 0 0;
+  font-weight: 500;
+}
+
+.workspace-fusion-dragger .ant-upload-list {
+  padding: 12px 16px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--card-bg, #fff);
+}
+
+.workspace-fusion-dragger .ant-upload-list-item {
+  margin-top: 6px;
+}
+
+.workspace-fusion-dragger .ant-upload-list-item:first-child {
+  margin-top: 0;
+}
+
+.workspace-fusion-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--input-bg, #f9fafb);
+  border-top: 1px solid var(--card-border, #e5e7eb);
+}
+
+.workspace-fusion-upload-btn {
+  min-width: 140px;
+}
+
+.workspace-fusion-table-wrap {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--card-border, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.workspace-fusion-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--input-bg, #f9fafb);
+  border-bottom: 1px solid var(--card-border, #e5e7eb);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #374151);
+}
+
+.workspace-fusion-table-total {
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+  font-weight: 400;
+}
+
+.workspace-fusion-table .ant-table {
+  font-size: 13px;
+}
+
+.workspace-fusion-table .ant-table-container {
+  border-radius: 0;
+}
+
+.workspace-fusion-table .ant-table-thead > tr > th {
+  padding: 12px 16px;
+}
+
+.workspace-fusion-table .ant-table-tbody > tr > td {
+  padding: 12px 16px;
+}
+
+.workspace-fusion-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.workspace-fusion-actions .ant-btn-link {
+  padding: 0 6px;
+  font-size: 13px;
+}
+
+/* ========== 档案融合详情页 ImportDetail ========== */
+.import-detail-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.import-detail-back,
+.import-detail-loading {
+  margin-bottom: 16px;
+}
+
+.import-detail-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 320px;
+}
+
+.import-detail-empty-state {
+  margin-top: 48px;
+}
+
+.import-detail-extracting-card .ant-card-body {
+  padding: 48px 24px;
+}
+
+.import-detail-extracting {
+  text-align: center;
+}
+
+.import-detail-extracting .ant-spin {
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.import-detail-extracting-text {
+  font-size: 15px;
+  color: var(--text-primary, #1f2937);
+  margin: 0 0 8px;
+}
+
+.import-detail-extracting-hint {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+  margin: 0;
+}
+
+.import-detail-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--card-border, #e5e7eb);
+}
+
+.import-detail-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.import-detail-back-btn {
+  color: var(--text-muted, #6b7280);
+  padding-left: 0;
+}
+
+.import-detail-task-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.import-detail-task-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary, #1f2937);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-detail-task-meta {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+}
+
+.import-detail-toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--card-border, #e5e7eb);
+  margin: 0 4px;
+}
+
+.import-detail-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.import-detail-content {
+  min-height: 360px;
+}
+
+.import-detail-card {
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.import-detail-card .ant-card-head {
+  padding: 12px 16px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.import-detail-card .ant-card-body {
+  padding: 16px;
+}
+
+.import-detail-card-original .ant-card-body,
+.import-detail-card-results .ant-card-body {
+  padding: 0;
+}
+
+.import-detail-original-body {
+  max-height: 560px;
+  overflow: auto;
+  padding: 16px;
+}
+
+.import-detail-original-table {
+  font-size: 12px;
+}
+
+.import-detail-original-pre {
+  margin: 0;
+  max-height: 560px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--input-bg, #f9fafb);
+  padding: 16px;
+  border-radius: 6px;
+  color: var(--text-secondary, #4b5563);
+}
+
+.import-detail-results-body {
+  max-height: 560px;
+  overflow: auto;
+  padding: 16px;
+}
+
+.import-detail-empty {
+  margin-top: 32px;
+}
+
+.import-detail-result-card {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border, #e5e7eb);
+}
+
+.import-detail-result-card:last-child {
+  margin-bottom: 0;
+}
+
+.import-detail-result-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.import-detail-result-checked {
+  color: #52c41a;
+  margin-top: 4px;
+  font-size: 16px;
+}
+
+.import-detail-result-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.import-detail-result-title {
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.import-detail-result-tag {
+  margin-left: 4px;
+}
+
+.import-detail-result-meta {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+}
+
+.import-detail-result-meta span + span {
+  margin-left: 12px;
+}
+
+.import-detail-result-collapse {
+  margin-top: 10px;
+}
+
+.import-detail-result-collapse .ant-collapse-header {
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.import-detail-similar {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--card-border, #e5e7eb);
+}
+
+.import-detail-similar-title {
+  font-size: 12px;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 8px;
+}
+
+.import-detail-similar-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.import-detail-similar-card {
+  width: 180px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.import-detail-similar-card:hover {
+  border-color: var(--primary, #1890ff);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.import-detail-similar-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.import-detail-similar-avatar,
+.import-detail-similar-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.import-detail-similar-avatar {
+  object-fit: cover;
+}
+
+.import-detail-similar-avatar-placeholder {
+  background: var(--input-bg, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #9ca3af);
+}
+
+.import-detail-similar-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.import-detail-similar-name {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary, #1f2937);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-detail-similar-id {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
