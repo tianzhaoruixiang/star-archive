@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/littlesmall/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -12,7 +13,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': {
+      '/littlesmall/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },

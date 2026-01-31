@@ -16,6 +16,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
+
 /**
  * SeaweedFS Filer 上传/下载：档案融合文件先存 Filer，异步任务再按 path 拉取解析。
  */
@@ -23,6 +25,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class SeaweedFSService {
+
+    @Value("${server.servlet.context-path:/littlesmall/api}")
+    private String contextPath;
 
     private final SeaweedFSProperties properties;
     private final RestTemplate restTemplate = new RestTemplate();
@@ -123,14 +128,15 @@ public class SeaweedFSService {
     }
 
     /**
-     * 返回用于前端展示头像的代理 URL 路径（相对路径，如 /api/avatar?path=xxx）。
+     * 返回用于前端展示头像的代理 URL 路径（相对路径，如 /littlesmall/api/avatar?path=xxx）。
      * 前端 img src 使用该路径即可通过后端代理从 SeaweedFS 获取图片。
      */
     public String getAvatarProxyPath(String filerRelativePath) {
         if (filerRelativePath == null || filerRelativePath.isBlank()) {
             return null;
         }
-        return "/api/avatar?path=" + URLEncoder.encode(filerRelativePath, StandardCharsets.UTF_8);
+        String base = (contextPath != null && !contextPath.isBlank()) ? contextPath.replaceAll("/$", "") : "/littlesmall/api";
+        return base + "/avatar?path=" + URLEncoder.encode(filerRelativePath, StandardCharsets.UTF_8);
     }
 
     private static String sanitizeFileName(String name) {

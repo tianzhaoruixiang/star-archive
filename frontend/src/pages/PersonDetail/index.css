@@ -314,6 +314,29 @@
   color: var(--text-muted);
 }
 
+/* 完整字段展示（每行 label-value） */
+.person-detail-resume-exp-full .person-detail-resume-exp-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.person-detail-resume-exp-full .person-detail-resume-exp-row:last-child {
+  margin-bottom: 0;
+}
+.person-detail-resume-exp-full .person-detail-resume-exp-label {
+  flex: 0 0 72px;
+  color: var(--text-placeholder);
+}
+.person-detail-resume-exp-full .person-detail-resume-exp-value {
+  flex: 1;
+  color: var(--text-secondary);
+}
+.person-detail-resume-exp-multiline {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .person-detail-resume-empty {
   font-size: 13px;
   color: var(--text-placeholder);
@@ -329,6 +352,28 @@
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--text-muted);
+}
+
+/* 编辑表单 Form.List */
+.person-detail-form-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.person-detail-form-list-item {
+  position: relative;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+}
+.person-detail-form-list-remove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 
 /* 民航/社交（全宽次要） */

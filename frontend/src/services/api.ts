@@ -1,8 +1,11 @@
 import axios from 'axios';
 import type { OnlyOfficePreviewConfigDTO } from '@/types/archiveFusion';
 
+/** 前端与 API 统一前缀 */
+export const BASE_PATH = '/littlesmall';
+
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: '/littlesmall/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -227,10 +230,10 @@ export const archiveFusionAPI = {
     apiClient.get<{ data?: OnlyOfficePreviewConfigDTO }>(`/workspace/archive-fusion/tasks/${taskId}/preview-config`),
   /** 档案文件下载地址（GET 该 URL 会返回文件流，download=1 时触发下载） */
   getFileDownloadUrl: (taskId: string) =>
-    `/api/workspace/archive-fusion/tasks/${taskId}/file?download=1`,
+    `${BASE_PATH}/api/workspace/archive-fusion/tasks/${taskId}/file?download=1`,
   /** 档案文件预览地址（内联打开，供 OnlyOffice 拉取） */
   getFilePreviewUrl: (taskId: string) =>
-    `/api/workspace/archive-fusion/tasks/${taskId}/file`,
+    `${BASE_PATH}/api/workspace/archive-fusion/tasks/${taskId}/file`,
   confirmImport: (taskId: string, resultIds: string[]) =>
     apiClient.post<{ data?: string[] }>(`/workspace/archive-fusion/tasks/${taskId}/confirm-import`, { resultIds }),
 };

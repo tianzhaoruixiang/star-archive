@@ -2,7 +2,7 @@ import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, 
 import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { archiveFusionAPI } from '@/services/api';
+import { archiveFusionAPI, BASE_PATH } from '@/services/api';
 import type {
   ArchiveFusionTaskDetailDTO,
   ArchiveExtractResultDTO,
@@ -205,7 +205,7 @@ const ImportDetail: React.FC = () => {
     }
   }, [detail?.task?.taskId, detail?.extractResults, loadDetail]);
 
-  /** 从 rawJson 中取第一个头像路径，生成 /api/avatar?path= 代理 URL */
+  /** 从 rawJson 中取第一个头像路径，生成头像代理 URL */
   const getExtractAvatarUrl = useCallback((rawJson: string | undefined): string | null => {
     if (!rawJson) return null;
     try {
@@ -214,7 +214,7 @@ const ImportDetail: React.FC = () => {
       if (!Array.isArray(files) || files.length === 0) return null;
       const first = files[0];
       if (typeof first !== 'string' || !first.trim()) return null;
-      return `/api/avatar?path=${encodeURIComponent(first.trim())}`;
+      return `${BASE_PATH}/api/avatar?path=${encodeURIComponent(first.trim())}`;
     } catch {
       return null;
     }

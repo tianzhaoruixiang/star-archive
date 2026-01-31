@@ -150,7 +150,7 @@ public class ArchiveFusionController {
         String docDownloadBase = onlyOfficeProperties != null ? onlyOfficeProperties.getDocumentDownloadBase() : null;
         boolean enabled = onlyOfficeProperties == null || onlyOfficeProperties.isEnabled();
         if (docDownloadBase == null || docDownloadBase.isBlank()) {
-            docDownloadBase = "http://localhost:8000/api";
+            docDownloadBase = "http://localhost:8000/littlesmall/api";
         }
         if (docServerUrl == null || docServerUrl.isBlank()) {
             docServerUrl = "http://localhost:8081";

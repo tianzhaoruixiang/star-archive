@@ -3,24 +3,29 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Tag, Button, Spin, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonDetail } from '@/store/slices/personSlice';
 import { personAPI, type PersonUpdatePayload } from '@/services/api';
 import type { PersonTravelItem, SocialDynamicItem } from '@/types/person';
-import { formatBirthMonth, formatDateRange, formatDateTime } from '@/utils/date';
+import { formatBirthMonth, formatDateTime } from '@/utils/date';
 import './index.css';
 
-/** 教育/工作经历单项（与 ArchiveResumeView 解析一致） */
+/** 教育/工作经历单项（支持 start_time/start_date、end_time/end_date、position/job 等） */
 interface ExperienceItem {
   school_name?: string;
   organization?: string;
   major?: string;
   job?: string;
+  position?: string;
   department?: string;
+  faculty?: string;
   start_time?: string;
   end_time?: string;
+  start_date?: string;
+  end_date?: string;
   degree?: string;
+  responsibilities?: string;
   [key: string]: unknown;
 }
 
@@ -28,12 +33,39 @@ function parseExperienceJson(raw: string | undefined): ExperienceItem[] {
   if (!raw?.trim()) return [];
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (Array.isArray(parsed)) return parsed as ExperienceItem[];
-    if (parsed && typeof parsed === 'object') return [parsed as ExperienceItem];
+    const arr = Array.isArray(parsed) ? (parsed as ExperienceItem[]) : parsed && typeof parsed === 'object' ? [parsed as ExperienceItem] : [];
+    return arr;
   } catch {
-    // ignore
+    return [];
   }
-  return [];
+}
+
+/** 取开始/结束时间（兼容 start_time 与 start_date） */
+function getStartEnd(item: ExperienceItem): { start: string | undefined; end: string | undefined } {
+  return {
+    start: (item.start_time ?? item.start_date ?? '') || undefined,
+    end: (item.end_time ?? item.end_date ?? '') || undefined,
+  };
+}
+
+/** 工作经历表单项（提交时用 start_time/end_time 等） */
+interface WorkItemForm {
+  start_time?: string;
+  end_time?: string;
+  organization?: string;
+  department?: string;
+  job?: string;
+  responsibilities?: string;
+}
+
+/** 教育经历表单项 */
+interface EducationItemForm {
+  start_time?: string;
+  end_time?: string;
+  school_name?: string;
+  department?: string;
+  major?: string;
+  degree?: string;
 }
 
 /** 编辑表单字段（与 PersonUpdatePayload 对应，表单内用 string/array/dayjs） */
@@ -53,8 +85,8 @@ interface EditFormValues {
   visaType?: string;
   visaNumber?: string;
   personTags?: string[];
-  workExperience?: string;
-  educationExperience?: string;
+  workExperienceItems?: WorkItemForm[];
+  educationExperienceItems?: EducationItemForm[];
   remark?: string;
   isKeyPerson?: boolean;
 }
@@ -77,6 +109,22 @@ const PersonDetail = () => {
     const birth = detail.birthDate
       ? dayjs(detail.birthDate, ['YYYY-MM', 'YYYY-MM-DD', 'YYYY-MM-DDTHH:mm:ss'], true)
       : null;
+    const workItems = parseExperienceJson(detail.workExperience).map((item) => ({
+      start_time: (item.start_time ?? item.start_date ?? '') || undefined,
+      end_time: (item.end_time ?? item.end_date ?? '') || undefined,
+      organization: (item.organization as string) || undefined,
+      department: (item.department ?? item.faculty) as string | undefined,
+      job: (item.job ?? item.position) as string | undefined,
+      responsibilities: (item.responsibilities as string) || undefined,
+    }));
+    const eduItems = parseExperienceJson(detail.educationExperience).map((item) => ({
+      start_time: (item.start_time ?? item.start_date ?? '') || undefined,
+      end_time: (item.end_time ?? item.end_date ?? '') || undefined,
+      school_name: (item.school_name as string) || undefined,
+      department: (item.department ?? item.faculty) as string | undefined,
+      major: (item.major as string) || undefined,
+      degree: (item.degree as string) || undefined,
+    }));
     form.setFieldsValue({
       chineseName: detail.chineseName ?? '',
       originalName: detail.originalName ?? '',
@@ -93,8 +141,8 @@ const PersonDetail = () => {
       visaType: detail.visaType ?? '',
       visaNumber: detail.visaNumber ?? '',
       personTags: detail.personTags ?? [],
-      workExperience: detail.workExperience ?? '',
-      educationExperience: detail.educationExperience ?? '',
+      workExperienceItems: workItems.length ? workItems : [{ start_time: '', end_time: '', organization: '', department: '', job: '', responsibilities: '' }],
+      educationExperienceItems: eduItems.length ? eduItems : [{ start_time: '', end_time: '', school_name: '', department: '', major: '', degree: '' }],
       remark: detail.remark ?? '',
       isKeyPerson: detail.isKeyPerson ?? false,
     });
@@ -133,8 +181,16 @@ const PersonDetail = () => {
       visaType: values.visaType || undefined,
       visaNumber: values.visaNumber || undefined,
       personTags: values.personTags?.length ? values.personTags : undefined,
-      workExperience: values.workExperience || undefined,
-      educationExperience: values.educationExperience || undefined,
+      workExperience: (() => {
+        const items = values.workExperienceItems ?? [];
+        const valid = items.filter((i) => (i.organization ?? i.department ?? i.job ?? i.responsibilities ?? '').toString().trim());
+        return valid.length ? JSON.stringify(valid) : undefined;
+      })(),
+      educationExperience: (() => {
+        const items = values.educationExperienceItems ?? [];
+        const valid = items.filter((i) => (i.school_name ?? i.department ?? i.major ?? i.degree ?? '').toString().trim());
+        return valid.length ? JSON.stringify(valid) : undefined;
+      })(),
       remark: values.remark || undefined,
       isKeyPerson: values.isKeyPerson,
     };
@@ -361,19 +417,47 @@ const PersonDetail = () => {
               </div>
               {educationList.length > 0 ? (
                 <div className="person-detail-resume-exp-list">
-                  {educationList.map((item, idx) => (
-                    <div key={idx} className="person-detail-resume-exp-item">
-                      <div className="person-detail-resume-exp-time">
-                        {formatDateRange(item.start_time, item.end_time)}
+                  {educationList.map((item, idx) => {
+                    const { start, end } = getStartEnd(item);
+                    const org = item.school_name ?? item.organization;
+                    const dept = item.department ?? item.faculty;
+                    return (
+                      <div key={idx} className="person-detail-resume-exp-item person-detail-resume-exp-full">
+                        <div className="person-detail-resume-exp-row">
+                          <span className="person-detail-resume-exp-label">开始时间</span>
+                          <span className="person-detail-resume-exp-value">{start || '—'}</span>
+                        </div>
+                        <div className="person-detail-resume-exp-row">
+                          <span className="person-detail-resume-exp-label">结束时间</span>
+                          <span className="person-detail-resume-exp-value">{end || '—'}</span>
+                        </div>
+                        {org && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">学校</span>
+                            <span className="person-detail-resume-exp-value">{org}</span>
+                          </div>
+                        )}
+                        {dept && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">院系</span>
+                            <span className="person-detail-resume-exp-value">{dept}</span>
+                          </div>
+                        )}
+                        {item.major && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">专业</span>
+                            <span className="person-detail-resume-exp-value">{item.major}</span>
+                          </div>
+                        )}
+                        {item.degree && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">学历</span>
+                            <span className="person-detail-resume-exp-value">{item.degree}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="person-detail-resume-exp-org">
-                        {item.school_name || item.organization || '—'}
-                      </div>
-                      {item.major && (
-                        <div className="person-detail-resume-exp-role">{item.major}</div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="person-detail-resume-empty">
@@ -393,21 +477,46 @@ const PersonDetail = () => {
               </div>
               {workList.length > 0 ? (
                 <div className="person-detail-resume-exp-list">
-                  {workList.map((item, idx) => (
-                    <div key={idx} className="person-detail-resume-exp-item">
-                      <div className="person-detail-resume-exp-time">
-                        {formatDateRange(item.start_time, item.end_time)}
-                      </div>
-                      <div className="person-detail-resume-exp-org">
-                        {item.organization || item.school_name || '—'}
-                      </div>
-                      {(item.job || item.department) && (
-                        <div className="person-detail-resume-exp-role">
-                          {[item.job, item.department].filter(Boolean).join(' · ')}
+                  {workList.map((item, idx) => {
+                    const { start, end } = getStartEnd(item);
+                    const job = item.job ?? item.position;
+                    return (
+                      <div key={idx} className="person-detail-resume-exp-item person-detail-resume-exp-full">
+                        <div className="person-detail-resume-exp-row">
+                          <span className="person-detail-resume-exp-label">开始时间</span>
+                          <span className="person-detail-resume-exp-value">{start || '—'}</span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        <div className="person-detail-resume-exp-row">
+                          <span className="person-detail-resume-exp-label">结束时间</span>
+                          <span className="person-detail-resume-exp-value">{end || '—'}</span>
+                        </div>
+                        {item.organization && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">机构</span>
+                            <span className="person-detail-resume-exp-value">{item.organization}</span>
+                          </div>
+                        )}
+                        {item.department && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">部门</span>
+                            <span className="person-detail-resume-exp-value">{item.department}</span>
+                          </div>
+                        )}
+                        {job && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">职位</span>
+                            <span className="person-detail-resume-exp-value">{job}</span>
+                          </div>
+                        )}
+                        {item.responsibilities && (
+                          <div className="person-detail-resume-exp-row">
+                            <span className="person-detail-resume-exp-label">工作职责</span>
+                            <span className="person-detail-resume-exp-value person-detail-resume-exp-multiline">{item.responsibilities}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="person-detail-resume-empty">
@@ -521,12 +630,72 @@ const PersonDetail = () => {
           <Form.Item label="人物标签" name="personTags">
             <Select mode="tags" placeholder="输入后回车添加" allowClear />
           </Form.Item>
-          <Form.Item label="工作/实践经历" name="workExperience">
-            <Input.TextArea rows={4} placeholder="可填写 JSON 或纯文本" />
-          </Form.Item>
-          <Form.Item label="教育背景" name="educationExperience">
-            <Input.TextArea rows={4} placeholder="可填写 JSON 或纯文本" />
-          </Form.Item>
+          <Form.List name="workExperienceItems">
+            {(fields, { add, remove }) => (
+              <div>
+                <div className="person-detail-form-list-header">
+                  <span>工作/实践经历</span>
+                  <Button type="dashed" icon={<PlusOutlined />} onClick={() => add({})} size="small">添加</Button>
+                </div>
+                {fields.map(({ key, name }) => (
+                  <div key={key} className="person-detail-form-list-item">
+                    <Form.Item name={[name, 'start_time']} label="开始时间">
+                      <Input placeholder="如 2018-07" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'end_time']} label="结束时间">
+                      <Input placeholder="如 2020-12 或 至今" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'organization']} label="机构">
+                      <Input placeholder="机构名称" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'department']} label="部门">
+                      <Input placeholder="部门" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'job']} label="职位">
+                      <Input placeholder="职位/岗位" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'responsibilities']} label="工作职责">
+                      <Input.TextArea rows={2} placeholder="工作职责描述" />
+                    </Form.Item>
+                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} className="person-detail-form-list-remove">删除</Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Form.List>
+          <Form.List name="educationExperienceItems">
+            {(fields, { add, remove }) => (
+              <div>
+                <div className="person-detail-form-list-header">
+                  <span>教育背景</span>
+                  <Button type="dashed" icon={<PlusOutlined />} onClick={() => add({})} size="small">添加</Button>
+                </div>
+                {fields.map(({ key, name }) => (
+                  <div key={key} className="person-detail-form-list-item">
+                    <Form.Item name={[name, 'start_time']} label="开始时间">
+                      <Input placeholder="如 2008-09" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'end_time']} label="结束时间">
+                      <Input placeholder="如 2012-06" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'school_name']} label="学校">
+                      <Input placeholder="学校名称" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'department']} label="院系">
+                      <Input placeholder="院系" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'major']} label="专业">
+                      <Input placeholder="专业" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'degree']} label="学历">
+                      <Input placeholder="如 学士、硕士、博士" />
+                    </Form.Item>
+                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} className="person-detail-form-list-remove">删除</Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Form.List>
           <Form.Item label="自我评价" name="remark">
             <Input.TextArea rows={3} placeholder="请输入自我评价" />
           </Form.Item>

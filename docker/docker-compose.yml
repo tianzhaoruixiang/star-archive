@@ -158,6 +158,8 @@ services:
       # 使用命名卷，由容器自行创建 Data/certs 等目录，避免 bind 挂载时 certs 缺失报错
       - onlyoffice-data:/var/www/onlyoffice/Data
       - ./data/onlyoffice/logs:/var/log/onlyoffice
+      # 允许 OnlyOffice 向私有 IP（如 host.docker.internal）拉取文档，解决 "private IP address is not allowed" 报错
+      - ./data/onlyoffice/local.json:/etc/onlyoffice/documentserver/local.json
     environment:
       - JWT_ENABLED=false # Set to true and configure a secret for production use
       - LETS_ENCRYPT_ENABLED=false # Set to true to automatically obtain a Let's Encrypt SSL certificate
