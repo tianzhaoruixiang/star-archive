@@ -49,6 +49,10 @@ public class PersonDetailDTO {
     private List<PersonTravelDTO> recentTravels;
     private List<SocialDynamicDTO> recentSocialDynamics;
     private Boolean isKeyPerson;
+    /** 是否公开档案：true 所有人可见，false 仅创建人可见 */
+    private Boolean isPublic;
+    /** 创建人用户名（私有档案仅此人可见） */
+    private String createdBy;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
 }

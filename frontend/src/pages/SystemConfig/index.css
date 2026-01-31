@@ -1,5 +1,16 @@
 .system-config-page {
+  width: 100%;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.system-config-page > * {
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
 }
 
 .system-config-loading {
@@ -10,7 +21,15 @@
 }
 
 .system-config-card {
-  max-width: 640px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.system-config-card .ant-card-body {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .system-config-nav-switches {
@@ -29,4 +48,23 @@
 .system-config-nav-label {
   flex: 0 0 auto;
   width: 80px;
+}
+
+.system-config-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.system-config-logo-row .system-config-logo-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.system-config-users-toolbar {
+  margin-bottom: 16px;
+}
+
+.system-config-users-card .ant-table {
+  font-size: 13px;
 }

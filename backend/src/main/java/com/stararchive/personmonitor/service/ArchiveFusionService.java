@@ -275,7 +275,7 @@ public class ArchiveFusionService {
                         .build();
                 extractResultRepository.save(result);
 
-                List<Person> similar = findSimilarPersons(originalName, birthDate, gender, nationality);
+                List<Person> similar = findSimilarPersons(originalName, birthDate, gender, nationality, task.getCreatorUsername());
                 for (Person person : similar) {
                     ArchiveSimilarMatch match = ArchiveSimilarMatch.builder()
                             .matchId(matchIdGenerator.incrementAndGet())
@@ -754,23 +754,39 @@ public class ArchiveFusionService {
         }
     }
 
-    /** 相似档案条件：原始姓名+出生日期+性别+国籍 均非空时才查询 */
-    private List<Person> findSimilarPersons(String originalName, LocalDate birthDate, String gender, String nationality) {
+    /**
+     * 相似档案条件：原始姓名+出生日期+性别+国籍 均非空时才查询。
+     * 比对范围仅限当前用户可见的档案：公开档案 或 创建人为 currentUsername 的私有档案。
+     *
+     * @param currentUsername 当前用户（任务创建人或查看详情的用户），为空时仅返回公开档案
+     */
+    private List<Person> findSimilarPersons(String originalName, LocalDate birthDate, String gender, String nationality, String currentUsername) {
         if (originalName == null || originalName.isBlank()
                 || birthDate == null
                 || gender == null || gender.isBlank()
                 || nationality == null || nationality.isBlank()) {
             return Collections.emptyList();
         }
-        return personRepository.findSimilarByOriginalNameAndBirthDateAndGenderAndNationality(
+        List<Person> all = personRepository.findSimilarByOriginalNameAndBirthDateAndGenderAndNationality(
                 originalName, birthDate, gender, nationality);
+        String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
+        return all.stream()
+                .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
+                .collect(Collectors.toList());
     }
 
-    public PageResponse<ArchiveImportTaskDTO> listTasks(Integer creatorUserId, int page, int size) {
+    /**
+     * 分页查询导入任务列表。仅返回当前用户创建的任务；未传当前用户时返回空列表。
+     *
+     * @param currentUsername 当前登录用户名（X-Username），为空时返回空列表
+     */
+    public PageResponse<ArchiveImportTaskDTO> listTasks(String currentUsername, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdTime"));
-        Page<ArchiveImportTask> taskPage = creatorUserId != null
-                ? taskRepository.findByCreatorUserIdOrderByCreatedTimeDesc(creatorUserId, pageable)
-                : taskRepository.findAllByOrderByCreatedTimeDesc(pageable);
+        if (currentUsername == null || currentUsername.isBlank()) {
+            return PageResponse.of(List.of(), page, size, 0L);
+        }
+        String username = currentUsername.trim();
+        Page<ArchiveImportTask> taskPage = taskRepository.findByCreatorUsernameOrderByCreatedTimeDesc(username, pageable);
         List<ArchiveImportTaskDTO> list = taskPage.getContent().stream().map(this::toTaskDTO).collect(Collectors.toList());
         return PageResponse.of(list, page, size, taskPage.getTotalElements());
     }
@@ -782,12 +798,18 @@ public class ArchiveFusionService {
         return taskRepository.findById(taskId);
     }
 
-    public ArchiveFusionTaskDetailDTO getTaskDetail(String taskId) {
+    /**
+     * 获取任务详情（提取结果及每条结果的库内相似档案）。相似档案比对范围仅限 currentUsername 可见的档案。
+     *
+     * @param currentUsername 当前用户（X-Username），为空时相似档案仅包含公开档案
+     */
+    public ArchiveFusionTaskDetailDTO getTaskDetail(String taskId, String currentUsername) {
         ArchiveImportTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new NoSuchElementException("任务不存在: " + taskId));
         List<ArchiveExtractResult> results = extractResultRepository.findByTaskIdOrderByExtractIndexAsc(taskId);
+        String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
         List<ArchiveExtractResultDTO> resultDTOs = results.stream().map(r -> {
-            List<Person> similar = findSimilarPersons(r.getOriginalName(), r.getBirthDate(), r.getGender(), r.getNationality());
+            List<Person> similar = findSimilarPersons(r.getOriginalName(), r.getBirthDate(), r.getGender(), r.getNationality(), user);
             List<PersonCardDTO> cards = similar.stream().map(personService::toCardDTO).collect(Collectors.toList());
             return ArchiveExtractResultDTO.builder()
                     .resultId(r.getResultId())
@@ -827,13 +849,20 @@ public class ArchiveFusionService {
     }
 
     /**
-     * 人工确认后导入：将选中的提取结果写入 person 表
+     * 人工确认后导入：将选中的提取结果写入 person 表；batchTags 不为空时为本批每个人物追加这些标签。
+     *
+     * @param importAsPublic true=导入为公开档案（所有人可见），false=导入为私有档案（仅创建人可见）
      */
     @Transactional(rollbackFor = Exception.class)
-    public List<String> confirmImport(String taskId, List<String> resultIds) {
+    public List<String> confirmImport(String taskId, List<String> resultIds, List<String> batchTags, boolean importAsPublic) {
         if (resultIds == null || resultIds.isEmpty()) {
             return Collections.emptyList();
         }
+        List<String> tagsToAdd = (batchTags != null && !batchTags.isEmpty())
+                ? batchTags.stream().map(String::trim).filter(s -> !s.isEmpty()).distinct().toList()
+                : List.<String>of();
+        ArchiveImportTask task = taskRepository.findById(taskId).orElse(null);
+        String creatorUsername = task != null ? task.getCreatorUsername() : null;
         List<String> importedPersonIds = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
         for (String resultId : resultIds) {
@@ -847,6 +876,14 @@ public class ArchiveFusionService {
                 Map<String, Object> map = objectMapper.readValue(result.getRawJson(), Map.class);
                 Person person = mapFromRawJsonToPerson(map);
                 if (person == null) continue;
+                if (!tagsToAdd.isEmpty()) {
+                    List<String> existing = person.getPersonTags() != null ? new ArrayList<>(person.getPersonTags()) : new ArrayList<>();
+                    java.util.Set<String> set = new java.util.LinkedHashSet<>(existing);
+                    set.addAll(tagsToAdd);
+                    person.setPersonTags(new ArrayList<>(set));
+                }
+                person.setIsPublic(importAsPublic);
+                person.setCreatedBy(creatorUsername);
                 person.setCreatedTime(now);
                 person.setUpdatedTime(now);
                 personRepository.save(person);
@@ -884,6 +921,8 @@ public class ArchiveFusionService {
         person.setIdCardNumber(stringOrNull(map.get("id_card_number")));
         person.setRemark(stringOrNull(map.get("remark")));
         person.setIsKeyPerson(false);
+        person.setIsPublic(true);
+        person.setCreatedBy(null);
         person.setAliasNames(listFromMap(map, "alias_names"));
         person.setIdNumbers(listFromMap(map, "id_numbers"));
         person.setPhoneNumbers(listFromMap(map, "phone_numbers"));

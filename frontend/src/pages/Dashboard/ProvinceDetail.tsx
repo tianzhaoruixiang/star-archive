@@ -1,12 +1,30 @@
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Card, Button, Row, Col, Statistic, Spin } from 'antd';
+import { Card, Button, Row, Col, Statistic, Spin, Modal, Pagination, Empty } from 'antd';
 import { ArrowLeftOutlined, TeamOutlined, CarOutlined } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
-import { dashboardAPI, type ProvinceStatsDTO } from '@/services/api';
+import { dashboardAPI, personAPI, type ProvinceStatsDTO, type PersonListFilter } from '@/services/api';
+import PersonCard from '@/components/PersonCard';
+import type { PersonCardData } from '@/components/PersonCard';
 import { getProvinceAdcode, fetchProvinceGeoJson } from '@/utils/provinceGeo';
 import './index.css';
+
+const PERSON_LIST_PAGE_SIZE = 12;
+
+/** 为 map 数据匹配 GeoJSON 中的城市名（杭州/杭州市） */
+function normalizeCityNameForMap(
+  cityName: string,
+  geoFeatures: { properties?: { name?: string } }[]
+): string {
+  const t = cityName.trim();
+  if (!t) return t;
+  const names = new Set(geoFeatures.map((f) => (f.properties?.name as string) ?? '').filter(Boolean));
+  if (names.has(t)) return t;
+  if (names.has(`${t}市`)) return `${t}市`;
+  if (t.endsWith('市') && names.has(t.slice(0, -1))) return t.slice(0, -1);
+  return t;
+}
 
 const ProvinceDetail: FC = () => {
   const { provinceName } = useParams<{ provinceName: string }>();
@@ -15,6 +33,37 @@ const ProvinceDetail: FC = () => {
   const [loading, setLoading] = useState(true);
   const [provinceGeoLoaded, setProvinceGeoLoaded] = useState(false);
   const [provinceMapKey, setProvinceMapKey] = useState<string>('');
+  const [geoJson, setGeoJson] = useState<Record<string, unknown> | null>(null);
+
+  const [personListModalOpen, setPersonListModalOpen] = useState(false);
+  const [personListModalTitle, setPersonListModalTitle] = useState('');
+  const [personListFilter, setPersonListFilter] = useState<PersonListFilter | undefined>(undefined);
+  const [personListPage, setPersonListPage] = useState(0);
+  const [personListData, setPersonListData] = useState<{ content: PersonCardData[]; totalElements: number }>({ content: [], totalElements: 0 });
+  const [personListLoading, setPersonListLoading] = useState(false);
+
+  const openPersonListModal = useCallback((title: string, filter?: PersonListFilter) => {
+    setPersonListModalTitle(title);
+    setPersonListFilter(filter);
+    setPersonListPage(0);
+    setPersonListModalOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (!personListModalOpen) return;
+    setPersonListLoading(true);
+    personAPI
+      .getPersonList(personListPage, PERSON_LIST_PAGE_SIZE, personListFilter)
+      .then((res: unknown) => {
+        const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { content?: PersonCardData[]; totalElements?: number } }).data : res as { content?: PersonCardData[]; totalElements?: number };
+        setPersonListData({
+          content: Array.isArray(data?.content) ? data.content : [],
+          totalElements: typeof data?.totalElements === 'number' ? data.totalElements : 0,
+        });
+      })
+      .catch(() => setPersonListData({ content: [], totalElements: 0 }))
+      .finally(() => setPersonListLoading(false));
+  }, [personListModalOpen, personListPage, personListFilter]);
 
   useEffect(() => {
     if (!name) {
@@ -39,108 +88,125 @@ const ProvinceDetail: FC = () => {
     if (!adcode) {
       setProvinceGeoLoaded(false);
       setProvinceMapKey('');
+      setGeoJson(null);
       return;
     }
     const mapKey = `province_${adcode}`;
     fetchProvinceGeoJson(adcode)
-      .then((geoJson: unknown) => {
-        if (geoJson && typeof geoJson === 'object') {
-          echarts.registerMap(mapKey, geoJson as Parameters<typeof echarts.registerMap>[1]);
+      .then((raw: unknown) => {
+        if (raw && typeof raw === 'object') {
+          const gj = raw as Record<string, unknown>;
+          echarts.registerMap(mapKey, gj as unknown as Parameters<typeof echarts.registerMap>[1]);
           setProvinceMapKey(mapKey);
+          setGeoJson(gj);
           setProvinceGeoLoaded(true);
         } else {
           setProvinceGeoLoaded(false);
           setProvinceMapKey('');
+          setGeoJson(null);
         }
       })
       .catch(() => {
         setProvinceGeoLoaded(false);
         setProvinceMapKey('');
+        setGeoJson(null);
       });
   }, [adcode]);
 
-  /** 省份地图：与中国地图样式一致，按城市人数渐变着色 */
+  /** 省份地图：区域着色 + 城市散点分布 */
   const provinceMapOption = useCallback(() => {
     if (!provinceGeoLoaded || !provinceMapKey) return { backgroundColor: 'transparent' };
     const cityList = stats?.cityRank ?? [];
+    const features = (Array.isArray((geoJson as { features?: unknown[] })?.features)
+      ? (geoJson as { features: { properties?: { name?: string } }[] }).features
+      : []) as { properties?: { name?: string } }[];
+
     const countMap = new Map(cityList.map((c) => [c.name, c.value]));
-    const values = cityList.map((c) => c.value);
+    /** 从 API 城市名到归一化后的 GeoJSON 名称，用于按区域匹配数量 */
+    const normalizedToValue = new Map(
+      cityList.map((c) => [normalizeCityNameForMap(c.name, features), c.value])
+    );
+    /** 按 GeoJSON 所有区域构建 mapData，确保每块区域都有 value，visualMap 才能按数量着色 */
+    const mapData = features
+      .map((f) => {
+        const featName = (f.properties?.name as string) ?? '';
+        const value = normalizedToValue.get(featName) ?? 0;
+        return { name: featName, value };
+      })
+      .filter((d) => d.name !== '');
+
+    const values = mapData.map((d) => d.value);
     const minVal = values.length ? Math.min(...values) : 0;
     let maxVal = values.length ? Math.max(...values) : 1;
     if (maxVal <= minVal) maxVal = minVal + 1;
 
-    /* 与中国地图一致的 16 级冷暖渐变：浅蓝（少）→ 深红（多） */
     const visualMapColors = [
-      '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981',
+      '#d4d4d8', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#22c55e', '#10b981', '#14b8a6',
       '#34d399', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#991b1b',
     ];
+
+    const mapSeries: Record<string, unknown> = {
+      name: '人员数量',
+      type: 'map',
+      map: provinceMapKey,
+      roam: true,
+      layoutCenter: ['50%', '50%'],
+      layoutSize: '120%',
+      itemStyle: {
+        borderColor: 'rgba(148, 163, 184, 0.6)',
+        borderWidth: 1.2,
+        shadowBlur: 4,
+        shadowColor: 'rgba(0, 0, 0, 0.12)',
+      },
+      label: {
+        show: true,
+        fontSize: 13,
+        fontWeight: 600,
+        color: '#0f172a',
+        fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
+        textBorderColor: 'rgba(255, 255, 255, 0.95)',
+        textBorderWidth: 1.5,
+        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+        textShadowBlur: 3,
+        padding: [1, 3],
+      },
+      emphasis: {
+        label: { show: true, fontWeight: 700, color: '#020617', fontSize: 14 },
+        itemStyle: {
+          areaColor: '#007aff',
+          borderColor: 'rgba(102, 126, 234, 0.9)',
+          borderWidth: 2.5,
+          shadowBlur: 12,
+          shadowColor: 'rgba(59, 130, 246, 0.35)',
+        },
+      },
+      data: mapData,
+    };
+
+    /** 与中国地图一致：悬浮显示「名称: 数量」，仅由 tooltip 展示 */
+    const tooltipFormatter = (params: { name?: string; value?: unknown }) => {
+      const n = params.name ?? '';
+      const rawValue = params.value;
+      const v = typeof rawValue === 'number' ? rawValue : countMap.get(n) ?? 0;
+      return n ? `${n}: ${v}` : `${v}`;
+    };
 
     const baseOption = {
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
-        formatter: (params: { name: string }) => {
-          const v = countMap.get(params.name) ?? 0;
-          return `${params.name}: ${v}`;
-        },
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        borderColor: 'rgba(102, 126, 234, 0.5)',
+        formatter: tooltipFormatter,
+        backgroundColor: 'rgba(255, 255, 255, 0.96)',
+        borderColor: 'rgba(0, 0, 0, 0.08)',
         borderWidth: 1,
         borderRadius: 8,
-        textStyle: { color: '#e2e8f0', fontSize: 13, fontWeight: 500 },
+        textStyle: { color: '#1d1d1f', fontSize: 13, fontWeight: 500 },
         padding: [10, 14],
       },
-      series: [
-        {
-          name: '人员数量',
-          type: 'map',
-          map: provinceMapKey,
-          roam: true,
-          layoutCenter: ['50%', '50%'],
-          layoutSize: '120%',
-          itemStyle: {
-            borderColor: 'rgba(148, 163, 184, 0.6)',
-            borderWidth: 1.2,
-            shadowBlur: 4,
-            shadowColor: 'rgba(0, 0, 0, 0.12)',
-          },
-          label: {
-            show: true,
-            fontSize: 13,
-            fontWeight: 600,
-            color: '#0f172a',
-            fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
-            textBorderColor: 'rgba(255, 255, 255, 0.95)',
-            textBorderWidth: 1.5,
-            textShadowColor: 'rgba(0, 0, 0, 0.2)',
-            textShadowBlur: 3,
-            padding: [1, 3],
-          },
-          emphasis: {
-            label: {
-              show: true,
-              fontWeight: 700,
-              color: '#020617',
-              fontSize: 14,
-              textBorderColor: '#fff',
-              textBorderWidth: 2,
-              textShadowColor: 'rgba(0, 0, 0, 0.25)',
-              textShadowBlur: 4,
-            },
-            itemStyle: {
-              areaColor: '#818cf8',
-              borderColor: 'rgba(102, 126, 234, 0.9)',
-              borderWidth: 2.5,
-              shadowBlur: 12,
-              shadowColor: 'rgba(59, 130, 246, 0.35)',
-            },
-          },
-          data: cityList.map((c) => ({ name: c.name, value: c.value })),
-        },
-      ],
+      series: [mapSeries],
     };
 
-    if (cityList.length > 0) {
+    if (mapData.length > 0) {
       return {
         ...baseOption,
         visualMap: {
@@ -153,30 +219,21 @@ const ProvinceDetail: FC = () => {
           right: 14,
           bottom: 8,
           textStyle: { color: '#94a3b8', fontSize: 11, fontWeight: 500 },
+          seriesIndex: 0,
         },
       };
     }
 
-    /* 无城市数据时：单色底图，样式仍与中国地图一致 */
-    const seriesBase = baseOption.series[0] as Record<string, unknown>;
-    return {
-      ...baseOption,
-      series: [
-        {
-          ...seriesBase,
-          itemStyle: {
-            borderColor: 'rgba(148, 163, 184, 0.6)',
-            borderWidth: 1.2,
-            areaColor: 'rgba(30, 64, 175, 0.4)',
-            shadowBlur: 4,
-            shadowColor: 'rgba(0, 0, 0, 0.12)',
-          },
-        },
-      ],
-    };
-  }, [provinceGeoLoaded, provinceMapKey, stats?.cityRank]);
+    mapSeries.data = [];
+    (mapSeries.itemStyle as Record<string, unknown>).areaColor = 'rgba(30, 64, 175, 0.4)';
+    return { ...baseOption, series: [mapSeries] };
+  }, [provinceGeoLoaded, provinceMapKey, stats?.cityRank, geoJson]);
 
-  const renderRankList = (list: ProvinceStatsDTO['visaTypeRank'], emptyText: string) => {
+  const renderRankList = (
+    list: ProvinceStatsDTO['visaTypeRank'],
+    emptyText: string,
+    getClickFilter?: (item: { name: string; value: number }) => { title: string; filter: PersonListFilter } | undefined
+  ) => {
     if (!list || list.length === 0) {
       return (
         <div className="dashboard-province-detail-empty">
@@ -187,19 +244,34 @@ const ProvinceDetail: FC = () => {
     const maxVal = Math.max(...list.map((o) => o.value), 1);
     return (
       <div className="rank-list rank-list-scroll">
-        {list.map((item, index) => (
-          <div key={`${item.name}-${index}`} className="rank-item">
-            <span className="rank-num">{index + 1}</span>
-            <span className="rank-name" title={item.name}>{item.name}</span>
-            <span className="rank-value">{item.value}</span>
-            <div className="rank-bar-wrap">
-              <div
-                className="rank-bar"
-                style={{ width: `${(Number(item.value) / maxVal) * 100}%` }}
-              />
+        {list.map((item, index) => {
+          const clickOpts = name && getClickFilter?.(item);
+          return (
+            <div key={`${item.name}-${index}`} className="rank-item">
+              <span className="rank-num">{index + 1}</span>
+              <span className="rank-name" title={item.name}>{item.name}</span>
+              {clickOpts ? (
+                <span
+                  className="rank-value dashboard-rank-value-clickable"
+                  onClick={() => openPersonListModal(clickOpts.title, clickOpts.filter)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && openPersonListModal(clickOpts.title, clickOpts.filter)}
+                >
+                  {item.value}
+                </span>
+              ) : (
+                <span className="rank-value">{item.value}</span>
+              )}
+              <div className="rank-bar-wrap">
+                <div
+                  className="rank-bar"
+                  style={{ width: `${(Number(item.value) / maxVal) * 100}%` }}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -246,6 +318,17 @@ const ProvinceDetail: FC = () => {
                     value={stats?.totalPersonCount ?? 0}
                     prefix={<TeamOutlined />}
                     valueStyle={{ color: 'var(--primary)' }}
+                    valueRender={(node) => (
+                      <span
+                        className="dashboard-stat-value-clickable"
+                        onClick={() => name && openPersonListModal(`${name} 涉及人员`, { destinationProvince: name })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && name && openPersonListModal(`${name} 涉及人员`, { destinationProvince: name })}
+                      >
+                        {node}
+                      </span>
+                    )}
                   />
                 </Col>
                 <Col xs={24} sm={12}>
@@ -254,6 +337,17 @@ const ProvinceDetail: FC = () => {
                     value={stats?.travelRecordCount ?? 0}
                     prefix={<CarOutlined />}
                     valueStyle={{ color: 'var(--primary)' }}
+                    valueRender={(node) => (
+                      <span
+                        className="dashboard-stat-value-clickable"
+                        onClick={() => name && openPersonListModal(`${name} 涉及人员`, { destinationProvince: name })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && name && openPersonListModal(`${name} 涉及人员`, { destinationProvince: name })}
+                      >
+                        {node}
+                      </span>
+                    )}
                   />
                 </Col>
               </Row>
@@ -262,24 +356,40 @@ const ProvinceDetail: FC = () => {
             <Row gutter={16} className="dashboard-province-detail-cards">
               <Col xs={24} md={12}>
                 <Card className="dashboard-panel" title="城市分布" size="small">
-                  {renderRankList(stats?.cityRank ?? [], '暂无城市分布数据')}
+                  {renderRankList(
+                    stats?.cityRank ?? [],
+                    '暂无城市分布数据',
+                    (item) => ({ title: `${name} - ${item.name}`, filter: { destinationProvince: name, destinationCity: item.name } })
+                  )}
                 </Card>
               </Col>
               <Col xs={24} md={12}>
                 <Card className="dashboard-panel" title="签证类型分布" size="small">
-                  {renderRankList(stats?.visaTypeRank ?? [], '暂无签证类型数据')}
+                  {renderRankList(
+                    stats?.visaTypeRank ?? [],
+                    '暂无签证类型数据',
+                    (item) => ({ title: `${name} - 签证类型 ${item.name}`, filter: { destinationProvince: name, visaType: item.name } })
+                  )}
                 </Card>
               </Col>
             </Row>
             <Row gutter={16} className="dashboard-province-detail-cards">
               <Col xs={24} md={12}>
                 <Card className="dashboard-panel" title="机构分布" size="small">
-                  {renderRankList(stats?.organizationRank ?? [], '暂无机构数据')}
+                  {renderRankList(
+                    stats?.organizationRank ?? [],
+                    '暂无机构数据',
+                    (item) => ({ title: `${name} - 机构 ${item.name}`, filter: { destinationProvince: name, organization: item.name } })
+                  )}
                 </Card>
               </Col>
               <Col xs={24} md={12}>
                 <Card className="dashboard-panel" title="所属群体分布" size="small">
-                  {renderRankList(stats?.belongingGroupRank ?? [], '暂无群体数据')}
+                  {renderRankList(
+                    stats?.belongingGroupRank ?? [],
+                    '暂无群体数据',
+                    (item) => ({ title: `${name} - 群体 ${item.name}`, filter: { destinationProvince: name, belongingGroup: item.name } })
+                  )}
                 </Card>
               </Col>
             </Row>
@@ -306,6 +416,46 @@ const ProvinceDetail: FC = () => {
           </Col>
         </Row>
       )}
+
+      <Modal
+        title={personListModalTitle}
+        open={personListModalOpen}
+        onCancel={() => setPersonListModalOpen(false)}
+        footer={null}
+        width="85%"
+        destroyOnClose
+        className="dashboard-person-list-modal"
+      >
+        {personListLoading ? (
+          <div className="dashboard-person-list-loading">
+            <Spin tip="加载中..." />
+          </div>
+        ) : personListData.content.length === 0 ? (
+          <Empty description="暂无人员" />
+        ) : (
+          <>
+            <Row gutter={[12, 12]} className="dashboard-person-list-grid">
+              {personListData.content.map((person) => (
+                <Col xs={24} sm={12} md={8} key={person.personId}>
+                  <PersonCard person={person} showActionLink />
+                </Col>
+              ))}
+            </Row>
+            {personListData.totalElements > PERSON_LIST_PAGE_SIZE && (
+              <div className="dashboard-person-list-pagination">
+                <Pagination
+                  current={personListPage + 1}
+                  total={personListData.totalElements}
+                  pageSize={PERSON_LIST_PAGE_SIZE}
+                  showSizeChanger={false}
+                  showTotal={(total) => `共 ${total} 人`}
+                  onChange={(page) => setPersonListPage(page - 1)}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 };

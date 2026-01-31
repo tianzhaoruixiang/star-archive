@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 
 /** 从结构化档案 JSON（snake_case）中取值的键 */
 const pick = (obj: Record<string, unknown>, ...keys: string[]): unknown => {
@@ -57,6 +57,8 @@ export interface ArchiveResumeViewProps {
   /** 与 person 表一致的结构化档案对象（snake_case） */
   data: Record<string, unknown>;
   className?: string;
+  /** 在「基本信息」标题下方、人物姓名上方渲染的内容（如照片） */
+  renderAfterBasicInfoTitle?: ReactNode;
 }
 
 const resumeSectionStyle: React.CSSProperties = {
@@ -90,7 +92,7 @@ const resumeBlockStyle: React.CSSProperties = {
   color: '#595959',
 };
 
-const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className }) => {
+const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, renderAfterBasicInfoTitle }) => {
   const chineseName = str(pick(data, 'chinese_name', 'chineseName'));
   const originalName = str(pick(data, 'original_name', 'originalName'));
   const gender = str(pick(data, 'gender'));
@@ -162,6 +164,7 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className }) => {
       {hasBasic && (
         <div style={resumeSectionStyle}>
           <div style={resumeTitleStyle}>基本信息</div>
+          {renderAfterBasicInfoTitle}
           {(chineseName || originalName) && (
             <div style={{ ...resumeRowStyle, fontSize: 15, fontWeight: 600, color: '#262626', marginBottom: 8 }}>
               {displayName}

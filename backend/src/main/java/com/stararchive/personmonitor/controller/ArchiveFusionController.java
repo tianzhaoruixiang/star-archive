@@ -8,8 +8,10 @@ import com.stararchive.personmonitor.dto.ArchiveFusionTaskDetailDTO;
 import com.stararchive.personmonitor.dto.ArchiveImportTaskDTO;
 import com.stararchive.personmonitor.dto.OnlyOfficePreviewConfigDTO;
 import com.stararchive.personmonitor.entity.ArchiveImportTask;
+import com.stararchive.personmonitor.entity.SysUser;
 import com.stararchive.personmonitor.service.ArchiveFusionService;
 import com.stararchive.personmonitor.service.SeaweedFSService;
+import com.stararchive.personmonitor.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +36,7 @@ public class ArchiveFusionController {
 
     private final ArchiveFusionService archiveFusionService;
     private final SeaweedFSService seaweedFSService;
+    private final SysUserService sysUserService;
     private final OnlyOfficeProperties onlyOfficeProperties;
 
     /**
@@ -80,31 +83,44 @@ public class ArchiveFusionController {
     }
 
     /**
-     * 分页查询当前用户的档案融合任务列表
+     * 分页查询当前用户的档案融合任务列表（仅返回 X-Username 对应用户创建的任务）
      */
     @GetMapping("/tasks")
     public ResponseEntity<ApiResponse<PageResponse<ArchiveImportTaskDTO>>> listTasks(
-            @RequestParam(value = "creatorUserId", required = false) Integer creatorUserId,
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size) {
-        PageResponse<ArchiveImportTaskDTO> result = archiveFusionService.listTasks(creatorUserId, page, size);
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
+        PageResponse<ArchiveImportTaskDTO> result = archiveFusionService.listTasks(currentUsername, page, size);
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /** 仅任务创建人可访问详情/文件/预览；无创建人的旧任务视为可访问 */
+    private static boolean isTaskCreator(ArchiveImportTask task, String currentUsername) {
+        if (task.getCreatorUsername() == null || task.getCreatorUsername().isBlank()) {
+            return true;
+        }
+        return currentUsername != null && currentUsername.trim().equals(task.getCreatorUsername().trim());
     }
 
     /**
      * 获取任务对应档案文件的下载/预览流。
-     * download=1 时设置 Content-Disposition: attachment 触发下载；否则为内联预览。
+     * download=1 时设置 Content-Disposition: attachment 触发下载；否则为内联预览。仅任务创建人可访问。
      */
     @GetMapping("/tasks/{taskId}/file")
     public ResponseEntity<byte[]> getTaskFile(
             @PathVariable String taskId,
-            @RequestParam(value = "download", defaultValue = "0") int download) {
+            @RequestParam(value = "download", defaultValue = "0") int download,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
         Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
         if (taskOpt.isEmpty()) {
             log.warn("档案文件下载: 任务不存在 taskId={}", taskId);
             return ResponseEntity.notFound().build();
         }
         ArchiveImportTask task = taskOpt.get();
+        if (!isTaskCreator(task, currentUsername)) {
+            log.warn("档案文件下载: 非任务创建人拒绝访问 taskId={}", taskId);
+            return ResponseEntity.notFound().build();
+        }
         String path = task.getFilePathId();
         if (path == null || path.isBlank()) {
             log.warn("档案文件下载: 任务未关联文件 taskId={}", taskId);
@@ -130,17 +146,23 @@ public class ArchiveFusionController {
     }
 
     /**
-     * 获取 OnlyOffice 预览配置：前端用此配置加载 OnlyOffice 并打开文档。
+     * 获取 OnlyOffice 预览配置：前端用此配置加载 OnlyOffice 并打开文档。仅任务创建人可访问。
      * documentUrl 为 OnlyOffice 服务端可访问的文档地址（需与 onlyoffice.document-download-base 同网可达）。
      */
     @GetMapping("/tasks/{taskId}/preview-config")
-    public ResponseEntity<ApiResponse<OnlyOfficePreviewConfigDTO>> getPreviewConfig(@PathVariable String taskId) {
+    public ResponseEntity<ApiResponse<OnlyOfficePreviewConfigDTO>> getPreviewConfig(
+            @PathVariable String taskId,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
         Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
         if (taskOpt.isEmpty()) {
             log.warn("预览配置: 任务不存在 taskId={}", taskId);
             return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
         }
         ArchiveImportTask task = taskOpt.get();
+        if (!isTaskCreator(task, currentUsername)) {
+            log.warn("预览配置: 非任务创建人拒绝访问 taskId={}", taskId);
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
         String path = task.getFilePathId();
         if (path == null || path.isBlank()) {
             log.warn("预览配置: 任务未关联文件 taskId={}, filePathId=null", taskId);
@@ -157,11 +179,11 @@ public class ArchiveFusionController {
         }
         String base = docDownloadBase.replaceAll("/$", "");
         String documentUrl = base + "/workspace/archive-fusion/tasks/" + taskId + "/file";
-        String fileType = task.getFileType() != null ? task.getFileType().toLowerCase() : "docx";
+        String fileType = task.getFileType() != null ? task.getFileType().toLowerCase().replaceAll("^\\.", "") : "docx";
         String title = task.getFileName() != null ? task.getFileName() : "document." + fileType;
         String documentType = isCellType(fileType) ? "cell" : "word";
 
-        log.info("OnlyOffice 预览配置: taskId={}, documentUrl={} (OnlyOffice 需能访问该地址)", taskId, documentUrl);
+        log.info("OnlyOffice 预览配置: taskId={}, documentUrl={}, fileType={} (OnlyOffice 服务端需能访问 documentUrl)", taskId, documentUrl, fileType);
         OnlyOfficePreviewConfigDTO config = OnlyOfficePreviewConfigDTO.builder()
                 .documentServerUrl(docServerUrl)
                 .documentUrl(documentUrl)
@@ -191,12 +213,21 @@ public class ArchiveFusionController {
     }
 
     /**
-     * 查询任务详情：原始文档全文、提取结果列表及每条结果对应的库内相似档案（支持对比阅读与确认导入）
+     * 查询任务详情：原始文档全文、提取结果列表及每条结果对应的库内相似档案。仅任务创建人可访问。
      */
     @GetMapping("/tasks/{taskId}")
-    public ResponseEntity<ApiResponse<ArchiveFusionTaskDetailDTO>> getTaskDetail(@PathVariable String taskId) {
+    public ResponseEntity<ApiResponse<ArchiveFusionTaskDetailDTO>> getTaskDetail(
+            @PathVariable String taskId,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        if (!isTaskCreator(taskOpt.get(), currentUsername)) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
         try {
-            ArchiveFusionTaskDetailDTO detail = archiveFusionService.getTaskDetail(taskId);
+            ArchiveFusionTaskDetailDTO detail = archiveFusionService.getTaskDetail(taskId, currentUsername);
             return ResponseEntity.ok(ApiResponse.success(detail));
         } catch (java.util.NoSuchElementException e) {
             return ResponseEntity.status(404).body(ApiResponse.error(e.getMessage()));
@@ -204,16 +235,37 @@ public class ArchiveFusionController {
     }
 
     /**
-     * 人工确认后导入：将选中的提取结果写入 person 表
+     * 人工确认后导入：将选中的提取结果写入 person 表。
+     * importAsPublic=true 时仅系统管理员可调用；非管理员传入 true 将返回 403。
      */
     @PostMapping("/tasks/{taskId}/confirm-import")
     public ResponseEntity<ApiResponse<java.util.List<String>>> confirmImport(
             @PathVariable String taskId,
-            @RequestBody ConfirmImportRequest request) {
+            @RequestBody ConfirmImportRequest request,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
         if (request == null || request.getResultIds() == null || request.getResultIds().isEmpty()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("请选择要导入的提取结果"));
         }
-        java.util.List<String> importedPersonIds = archiveFusionService.confirmImport(taskId, request.getResultIds());
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        if (!isTaskCreator(taskOpt.get(), currentUsername)) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("仅任务创建人可确认导入"));
+        }
+        boolean importAsPublic = Boolean.TRUE.equals(request.getImportAsPublic());
+        if (importAsPublic) {
+            SysUser user = currentUsername != null && !currentUsername.isBlank()
+                    ? sysUserService.findByUsername(currentUsername.trim()) : null;
+            if (user == null || !"admin".equals(user.getRole())) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("仅系统管理员可导入为公开档案"));
+            }
+        }
+        java.util.List<String> batchTags = request.getTags() != null ? request.getTags() : java.util.Collections.emptyList();
+        java.util.List<String> importedPersonIds = archiveFusionService.confirmImport(
+                taskId, request.getResultIds(), batchTags, importAsPublic);
         return ResponseEntity.ok(ApiResponse.success(importedPersonIds));
     }
 
@@ -222,5 +274,9 @@ public class ArchiveFusionController {
     @lombok.AllArgsConstructor
     public static class ConfirmImportRequest {
         private java.util.List<String> resultIds;
+        /** 本批导入为人物统一增加的自定义标签（可选） */
+        private java.util.List<String> tags;
+        /** 是否以公开档案导入：true=所有人可见，false=仅创建人可见。仅系统管理员可传 true */
+        private Boolean importAsPublic;
     }
 }

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Row, Col, Pagination, Spin, Empty, message } from 'antd';
-import { keyPersonLibraryAPI, type KeyPersonCategory } from '@/services/api';
+import { StarFilled, FolderOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { keyPersonLibraryAPI, type KeyPersonCategory, type KeyPersonCategoriesResponse } from '@/services/api';
 import PersonCard, { type PersonCardData } from '@/components/PersonCard';
 import './index.css';
 
 const PAGE_SIZE = 30;
 
 const KeyPersonLibrary: React.FC = () => {
+  const [allCount, setAllCount] = useState<number>(0);
   const [categories, setCategories] = useState<KeyPersonCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [list, setList] = useState<PersonCardData[]>([]);
@@ -18,9 +20,15 @@ const KeyPersonLibrary: React.FC = () => {
   const loadCategories = useCallback(async () => {
     setCategoriesLoading(true);
     try {
-      const res = (await keyPersonLibraryAPI.getCategories()) as { data?: KeyPersonCategory[] };
+      const res = (await keyPersonLibraryAPI.getCategories()) as { data?: KeyPersonCategoriesResponse };
       const data = res?.data ?? res;
-      setCategories(Array.isArray(data) ? data : []);
+      if (data && typeof data === 'object' && 'categories' in data) {
+        setAllCount(Number((data as KeyPersonCategoriesResponse).allCount) || 0);
+        setCategories(Array.isArray((data as KeyPersonCategoriesResponse).categories) ? (data as KeyPersonCategoriesResponse).categories : []);
+      } else {
+        setAllCount(0);
+        setCategories([]);
+      }
     } finally {
       setCategoriesLoading(false);
     }
@@ -83,30 +91,53 @@ const KeyPersonLibrary: React.FC = () => {
     [selectedCategoryId, loadPersons, loadCategories]
   );
 
-  const currentCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name ?? '全部重点人员';
+  const currentCategoryName = selectedCategoryId === 'all' ? '全部重点人员' : (categories.find((c) => c.id === selectedCategoryId)?.name ?? '全部重点人员');
   const totalPages = Math.max(1, Math.ceil(pagination.total / pagination.size));
+  const displayCategories: { id: string; name: string; count?: number }[] = [
+    { id: 'all', name: '全部', count: allCount },
+    ...categories,
+  ];
 
   return (
     <div className="page-wrapper key-person-page">
-      <h1 className="page-title page-title-accent key-person-title">重点人员管理</h1>
+      <div className="key-person-header">
+        <div className="key-person-header-icon">
+          <StarFilled />
+        </div>
+        <div>
+          <h1 className="key-person-title">重点人员</h1>
+          <p className="key-person-subtitle">管理并查看重点监测人员档案</p>
+        </div>
+      </div>
 
       <div className="key-person-body">
         <aside className="key-person-sidebar">
-          <div className="key-person-sidebar-title">重点人员类别</div>
+          <div className="key-person-sidebar-title">
+            <FolderOutlined className="key-person-sidebar-title-icon" />
+            类别
+          </div>
           {categoriesLoading ? (
             <div className="key-person-sidebar-loading">
               <Spin size="small" />
             </div>
           ) : (
             <ul className="key-person-category-list">
-              {categories.map((cat) => (
+              {displayCategories.map((cat) => (
                 <li
                   key={cat.id}
+                  role="button"
+                  tabIndex={0}
                   className={`key-person-category-item ${selectedCategoryId === cat.id ? 'key-person-category-item-active' : ''}`}
                   onClick={() => handleCategoryClick(cat.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCategoryClick(cat.id)}
                 >
+                  {cat.id === 'all' ? (
+                    <AppstoreOutlined className="key-person-category-icon" />
+                  ) : (
+                    <FolderOutlined className="key-person-category-icon" />
+                  )}
                   <span className="key-person-category-name">{cat.name}</span>
-                  <span className="key-person-category-count">{cat.count}</span>
+                  <span className="key-person-category-count">{cat.count ?? '—'}</span>
                 </li>
               ))}
             </ul>
@@ -116,7 +147,7 @@ const KeyPersonLibrary: React.FC = () => {
         <main className="key-person-main">
           <div className="key-person-main-header">
             <span className="key-person-main-title">{currentCategoryName}</span>
-            <span className="key-person-main-total">共{pagination.total}人</span>
+            <span className="key-person-main-total">{pagination.total} 人</span>
           </div>
           <div className="key-person-pagination-info">
             共{pagination.total} 条记录, 第 {pagination.page}/{totalPages} 页
@@ -134,7 +165,7 @@ const KeyPersonLibrary: React.FC = () => {
             <>
               <Row gutter={[16, 16]} className="key-person-grid">
                 {list.map((person) => (
-                  <Col xs={24} sm={12} lg={8} key={person.personId}>
+                  <Col xs={24} sm={12} lg={8} xl={8} key={person.personId} className="key-person-grid-col">
                     <PersonCard
                       person={person}
                       showActionLink

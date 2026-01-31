@@ -2,18 +2,88 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(245, 245, 247, 0.92) 50%, rgba(255, 255, 255, 0.88) 100%),
+    var(--bg-login) center/cover no-repeat fixed;
 }
 
 .login-card {
-  width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: var(--card-radius);
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--card-radius-lg);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.login-card .ant-card-head {
+  border-bottom: 1px solid var(--card-border);
 }
 
 .login-card .ant-card-head-title {
   text-align: center;
-  font-size: var(--font-subtitle);
-  font-weight: var(--font-weight-subtitle);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 24px 0;
+}
+
+.login-card .ant-card-body {
+  padding: 32px 40px;
+}
+
+.login-card .ant-input-affix-wrapper,
+.login-card .ant-input-password {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  border-radius: var(--radius-md) !important;
+  transition: all var(--transition-fast);
+}
+
+.login-card .ant-input-affix-wrapper:hover,
+.login-card .ant-input-password:hover {
+  border-color: var(--input-hover-border) !important;
+}
+
+.login-card .ant-input-affix-wrapper-focused,
+.login-card .ant-input-password:focus-within {
+  border-color: var(--input-focus-border) !important;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2) !important;
+}
+
+.login-card .ant-input {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.login-card .ant-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.login-card .ant-input-prefix {
+  color: var(--text-placeholder);
+}
+
+.login-card .ant-btn-primary {
+  height: 48px;
+  font-size: 17px;
+  font-weight: 500;
+  background: var(--primary) !important;
+  border: none !important;
+  border-radius: var(--radius-md);
+}
+
+.login-card .ant-btn-primary:hover {
+  background: var(--accent-btn-hover) !important;
+}
+
+.login-card .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.login-card .ant-form-item:last-of-type {
+  margin-bottom: 0;
+  margin-top: 12px;
 }

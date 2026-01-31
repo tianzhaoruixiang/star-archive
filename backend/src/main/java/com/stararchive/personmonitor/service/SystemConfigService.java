@@ -31,6 +31,7 @@ public class SystemConfigService {
     private static final String KEY_NAV_MODEL_MANAGEMENT = "nav_model_management";
     private static final String KEY_NAV_SITUATION = "nav_situation";
     private static final String KEY_NAV_SYSTEM_CONFIG = "nav_system_config";
+    private static final String KEY_SHOW_PERSON_DETAIL_EDIT = "show_person_detail_edit";
 
     private final SystemConfigRepository systemConfigRepository;
 
@@ -65,6 +66,7 @@ public class SystemConfigService {
         map.put(KEY_NAV_MODEL_MANAGEMENT, Boolean.TRUE.equals(dto.getNavModelManagement()) ? "true" : "false");
         map.put(KEY_NAV_SITUATION, Boolean.TRUE.equals(dto.getNavSituation()) ? "true" : "false");
         map.put(KEY_NAV_SYSTEM_CONFIG, Boolean.TRUE.equals(dto.getNavSystemConfig()) ? "true" : "false");
+        map.put(KEY_SHOW_PERSON_DETAIL_EDIT, Boolean.TRUE.equals(dto.getShowPersonDetailEdit()) ? "true" : "false");
 
         LocalDateTime now = LocalDateTime.now();
         for (Map.Entry<String, String> e : map.entrySet()) {
@@ -101,6 +103,7 @@ public class SystemConfigService {
         dto.setNavModelManagement("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_MODEL_MANAGEMENT, "true")));
         dto.setNavSituation("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SITUATION, "true")));
         dto.setNavSystemConfig("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SYSTEM_CONFIG, "true")));
+        dto.setShowPersonDetailEdit("true".equalsIgnoreCase(map.getOrDefault(KEY_SHOW_PERSON_DETAIL_EDIT, "true")));
         return dto;
     }
 }

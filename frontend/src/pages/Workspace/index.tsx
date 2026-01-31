@@ -48,7 +48,6 @@ const Workspace = () => {
     setTaskLoading(true);
     try {
       const res = await archiveFusionAPI.listTasks({
-        creatorUserId: user ? undefined : undefined,
         page: taskPage,
         size: taskSize,
       }) as { data?: PageResponse<ArchiveImportTaskDTO> };
@@ -67,6 +66,16 @@ const Workspace = () => {
   useEffect(() => {
     if (activeTab === 'fusion') loadTasks();
   }, [activeTab, loadTasks]);
+
+  /** 存在待提取/提取中/匹配中的任务时轮询任务列表，用于展示处理进度 */
+  const hasInProgressTasks = taskList.some((t) =>
+    ['PENDING', 'EXTRACTING', 'MATCHING'].includes(t.status ?? '')
+  );
+  useEffect(() => {
+    if (activeTab !== 'fusion' || !hasInProgressTasks) return;
+    const timer = setInterval(() => loadTasks(), 2500);
+    return () => clearInterval(timer);
+  }, [activeTab, hasInProgressTasks, loadTasks]);
 
   const handleBatchUpload = useCallback(async () => {
     const files = fileList
@@ -89,7 +98,7 @@ const Workspace = () => {
       if (data && 'successCount' in data) {
         const { successCount, failedCount, errors } = data;
         if (successCount > 0) {
-          message.success(`已上传 ${successCount} 个文件，任务已创建。大模型提取在后台执行，状态更新后可查看结果`);
+          message.success(`已上传 ${successCount} 个文件，任务已创建。大模型在后台异步提取，任务列表将自动刷新处理进度`);
           setFileList([]);
           loadTasks();
         }
@@ -259,6 +268,11 @@ const Workspace = () => {
                     <span className="workspace-fusion-table-total">共 {taskTotal} 条</span>
                   )}
                 </div>
+                {hasInProgressTasks && (
+                  <p className="workspace-fusion-progress-hint">
+                    有任务正在处理，列表将自动刷新
+                  </p>
+                )}
                 <Table
                   rowKey="taskId"
                   columns={taskColumns}

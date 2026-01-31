@@ -36,7 +36,7 @@
 }
 
 .model-management-subnav-item-active {
-  background: var(--accent-purple) !important;
+  background: var(--primary) !important;
   color: #fff !important;
 }
 
@@ -203,7 +203,7 @@
   height: 44px;
   font-size: var(--font-body);
   font-weight: 500;
-  background: var(--accent-purple) !important;
+  background: var(--primary) !important;
   border: none !important;
   color: #fff !important;
   border-radius: var(--radius-md);

@@ -1,7 +1,8 @@
-import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, Table, Modal } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, Table, Modal, Select, Radio, Tooltip } from 'antd';
+import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined, LockOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAppSelector } from '@/store/hooks';
 import { archiveFusionAPI, BASE_PATH } from '@/services/api';
 import type {
   ArchiveFusionTaskDetailDTO,
@@ -65,11 +66,16 @@ const ImportDetail: React.FC = () => {
   const [detail, setDetail] = useState<ArchiveFusionTaskDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedResultIds, setSelectedResultIds] = useState<string[]>([]);
+  const [batchTags, setBatchTags] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [previewConfig, setPreviewConfig] = useState<OnlyOfficePreviewConfigDTO | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  /** 导入档案可见性：公开=所有人可见，私有=仅创建人可见；仅系统管理员可选公开 */
+  const [importAsPublic, setImportAsPublic] = useState<boolean>(false);
   /** 原始文档区 OnlyOffice 配置（页面加载时拉取，用于左侧对比阅读） */
   const [documentPreviewConfig, setDocumentPreviewConfig] = useState<OnlyOfficePreviewConfigDTO | null>(null);
+  const user = useAppSelector((state) => state.auth?.user);
+  const isAdmin = user?.role === 'admin';
 
   const loadDetail = useCallback(async (id: string) => {
     setLoading(true);
@@ -120,7 +126,12 @@ const ImportDetail: React.FC = () => {
     }
     setImporting(true);
     try {
-      const res = await archiveFusionAPI.confirmImport(detail.task.taskId, selectedResultIds) as unknown as { data?: string[] };
+      const res = await archiveFusionAPI.confirmImport(
+        detail.task.taskId,
+        selectedResultIds,
+        batchTags,
+        isAdmin ? importAsPublic : false
+      ) as unknown as { data?: string[] };
       const ids = res?.data ?? res;
       if (Array.isArray(ids) && ids.length > 0) {
         message.success(`已导入 ${ids.length} 条人物档案`);
@@ -135,7 +146,7 @@ const ImportDetail: React.FC = () => {
     } finally {
       setImporting(false);
     }
-  }, [detail?.task?.taskId, selectedResultIds, loadDetail]);
+  }, [detail?.task?.taskId, selectedResultIds, batchTags, importAsPublic, isAdmin, loadDetail]);
 
   const toggleResultSelection = useCallback((resultId: string, checked: boolean) => {
     setSelectedResultIds((prev) =>
@@ -188,7 +199,12 @@ const ImportDetail: React.FC = () => {
     }
     setImporting(true);
     try {
-      const res = await archiveFusionAPI.confirmImport(detail.task.taskId, idsToImport) as unknown as { data?: string[] };
+      const res = await archiveFusionAPI.confirmImport(
+        detail.task.taskId,
+        idsToImport,
+        batchTags,
+        isAdmin ? importAsPublic : false
+      ) as unknown as { data?: string[] };
       const ids = res?.data ?? res;
       if (Array.isArray(ids) && ids.length > 0) {
         message.success(`已批量导入 ${ids.length} 条人物档案`);
@@ -203,7 +219,7 @@ const ImportDetail: React.FC = () => {
     } finally {
       setImporting(false);
     }
-  }, [detail?.task?.taskId, detail?.extractResults, loadDetail]);
+  }, [detail?.task?.taskId, detail?.extractResults, batchTags, importAsPublic, isAdmin, loadDetail]);
 
   /** 从 rawJson 中取第一个头像路径，生成头像代理 URL */
   const getExtractAvatarUrl = useCallback((rawJson: string | undefined): string | null => {
@@ -232,11 +248,6 @@ const ImportDetail: React.FC = () => {
     return (
       <Card key={r.resultId} size="small" className="import-detail-result-card">
         <div className="import-detail-result-head">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="import-detail-result-avatar" />
-          ) : (
-            <div className="import-detail-result-avatar-placeholder"><UserOutlined /></div>
-          )}
           {canSelect ? (
             <Checkbox
               checked={selectedResultIds.includes(r.resultId)}
@@ -257,7 +268,28 @@ const ImportDetail: React.FC = () => {
               {r.nationality && <span style={{ marginLeft: 12 }}>国籍：{r.nationality}</span>}
             </span>
             <Collapse size="small" className="import-detail-result-collapse" defaultActiveKey={['resume']} items={[
-              { key: 'resume', label: '人物简历（结构化档案）', children: <ArchiveResumeView data={rawObj} /> },
+              {
+                key: 'resume',
+                label: '人物简历（结构化档案）',
+                children: (
+                  <div className="import-detail-resume-inner">
+                    <div className="import-detail-resume-content">
+                      <ArchiveResumeView
+                        data={rawObj}
+                        renderAfterBasicInfoTitle={
+                          <div className="import-detail-resume-avatar-wrap">
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="" className="import-detail-resume-avatar" />
+                            ) : (
+                              <div className="import-detail-resume-avatar-placeholder"><UserOutlined /></div>
+                            )}
+                          </div>
+                        }
+                      />
+                    </div>
+                  </div>
+                ),
+              },
             ]} />
             {r.similarPersons && r.similarPersons.length > 0 && (
               <div className="import-detail-similar">
@@ -352,6 +384,33 @@ const ImportDetail: React.FC = () => {
         </div>
         {canCompareAndImport && showImportBtn && (
           <div className="import-detail-toolbar-right">
+            <span className="import-detail-batch-tags-label">导入可见性：</span>
+            <Radio.Group
+              value={importAsPublic}
+              onChange={(e) => setImportAsPublic(e.target.value)}
+              optionType="button"
+              buttonStyle="solid"
+              size="small"
+              className="import-detail-visibility-radio"
+            >
+              <Tooltip title={!isAdmin ? '仅系统管理员可导入为公开档案' : undefined}>
+                <Radio.Button value={true} disabled={!isAdmin}>
+                  {!isAdmin && <LockOutlined style={{ marginRight: 4 }} />}
+                  公开
+                </Radio.Button>
+              </Tooltip>
+              <Radio.Button value={false}>私有</Radio.Button>
+            </Radio.Group>
+            <span className="import-detail-batch-tags-label">本批标签：</span>
+            <Select
+              mode="tags"
+              placeholder="输入后回车添加，本批导入的人物将带上这些标签"
+              value={batchTags}
+              onChange={(v) => setBatchTags(v ?? [])}
+              style={{ minWidth: 220 }}
+              maxTagCount={5}
+              className="import-detail-batch-tags"
+            />
             <Button type="primary" loading={importing} onClick={handleImportAll}>
               全部导入（{unimportedResultIds.length}）
             </Button>
@@ -371,7 +430,7 @@ const ImportDetail: React.FC = () => {
                 <div className="import-detail-original-onlyoffice">
                   <OnlyOfficeViewer
                     config={documentPreviewConfig}
-                    height="60vh"
+                    height="100%"
                     onError={(msg) => message.warning(msg)}
                   />
                 </div>

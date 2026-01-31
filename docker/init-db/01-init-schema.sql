@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS person
     `work_experience` STRING COMMENT '[{"start_time":"","end_time":"","organization":"","department":"","job":""}, ...]',
     `education_experience` STRING COMMENT '[{"start_time":"","end_time":"","school_name":"","department":"","major":""}, ...]',
     `remark` STRING COMMENT '备注信息',
+    `is_public` BOOLEAN DEFAULT 1 COMMENT '是否公开档案：1-所有人可见，0-仅创建人可见',
+    `created_by` VARCHAR(100) COMMENT '创建人用户名（私有档案仅此人可见）',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )
@@ -71,6 +73,8 @@ ALTER TABLE person ADD INDEX idx_visa_type (visa_type) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_phone (phone_numbers) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_email (emails) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_belonging_group (belonging_group) USING INVERTED;
+ALTER TABLE person ADD INDEX idx_is_public (is_public) USING INVERTED;
+ALTER TABLE person ADD INDEX idx_created_by (created_by) USING INVERTED;
 
 -- 2. 人物行为活动数据人物行程表 (Unique Key 模型)
 CREATE TABLE IF NOT EXISTS person_travel
@@ -266,6 +270,26 @@ PROPERTIES (
 );
 
 ALTER TABLE person_directory ADD INDEX idx_person_id (person_id) USING INVERTED;
+
+-- 6.2 人物档案编辑历史表 (Unique Key 模型)
+CREATE TABLE IF NOT EXISTS person_edit_history
+(
+    `history_id` VARCHAR(64) NOT NULL COMMENT '历史记录编号：personId_timestamp',
+    `person_id` VARCHAR(200) NOT NULL COMMENT '人物编号',
+    `edit_time` DATETIME NOT NULL COMMENT '编辑时间',
+    `editor` VARCHAR(100) COMMENT '编辑人',
+    `change_summary` STRING COMMENT '变更摘要JSON: [{"field":"chineseName","label":"中文姓名","old":"x","new":"y"},...]'
+)
+UNIQUE KEY(`history_id`)
+COMMENT "人物档案编辑历史"
+DISTRIBUTED BY HASH(history_id) BUCKETS 8
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+ALTER TABLE person_edit_history ADD INDEX idx_person_id (person_id) USING INVERTED;
+ALTER TABLE person_edit_history ADD INDEX idx_edit_time (edit_time) USING INVERTED;
 
 -- 7. 上传文档表 (Unique Key 模型)
 CREATE TABLE IF NOT EXISTS uploaded_document
@@ -528,3 +552,37 @@ ALTER TABLE prediction_model_locked_person ADD INDEX idx_person_id (person_id) U
 -- WHERE p.is_key_person = true AND (ARRAY_CONTAINS(p.person_tags, '重点关注') OR p.nationality = '目标国家')
 -- GROUP BY p.person_id, p.chinese_name, p.original_name, p.nationality, p.person_tags
 -- ORDER BY travel_count DESC, social_count DESC LIMIT 100;
+
+-- ==========================================
+-- 用户表（系统配置-用户管理）
+-- 与 01-init-schema.sql 同库 person_monitor，Doris / MySQL 兼容
+-- ==========================================
+USE `person_monitor`;
+
+-- Doris 建表（UNIQUE KEY，无 AUTO_INCREMENT，ID 由应用生成）
+CREATE TABLE IF NOT EXISTS sys_user
+(
+    `user_id`      BIGINT       NOT NULL COMMENT '用户ID',
+    `username`     VARCHAR(64)  NOT NULL COMMENT '登录名',
+    `password_hash` VARCHAR(255) NOT NULL COMMENT '密码哈希(BCrypt)',
+    `user_role`    VARCHAR(20)  NOT NULL DEFAULT 'user' COMMENT '角色: admin-管理员, user-普通用户',
+    `created_time` DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+)
+UNIQUE KEY(`user_id`)
+COMMENT "系统用户表"
+DISTRIBUTED BY HASH(user_id) BUCKETS 1
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+-- 唯一索引：用户名
+ALTER TABLE sys_user ADD INDEX idx_username (username) USING INVERTED;
+
+-- 初始管理员：admin / admin123（BCrypt 强度 10，与后端 PasswordEncoderConfig 一致）
+-- 若执行本 INSERT 后登录仍失败，可删除本 INSERT 后重启应用，应用将自动创建 admin/admin123；
+-- 或本地执行 mvn test -Dtest=BCryptHashPrintTest#printAdmin123Hash 打印新哈希后替换下方 password_hash
+INSERT INTO sys_user (user_id, username, password_hash, user_role) VALUES
+(1, 'admin', '$2a$10$ruCzNRlzKSVaHcUNgxomsOZrqnHox2DTgIEDHcrBOKmbrMP4F0Wn.', 'admin');
+

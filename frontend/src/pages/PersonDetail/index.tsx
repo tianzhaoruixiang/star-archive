@@ -3,12 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Tag, Button, Spin, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined, ShareAltOutlined, HistoryOutlined, SendOutlined, CarOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonDetail } from '@/store/slices/personSlice';
-import { personAPI, type PersonUpdatePayload } from '@/services/api';
+import { personAPI, systemConfigAPI, type PersonUpdatePayload, type PersonEditHistoryItem, type SystemConfigDTO } from '@/services/api';
 import type { PersonTravelItem, SocialDynamicItem } from '@/types/person';
-import { formatBirthMonth, formatDateTime } from '@/utils/date';
+import { formatDateOnly, formatDateTime } from '@/utils/date';
 import './index.css';
 
 /** 教育/工作经历单项（支持 start_time/start_date、end_time/end_date、position/job 等） */
@@ -89,6 +89,7 @@ interface EditFormValues {
   educationExperienceItems?: EducationItemForm[];
   remark?: string;
   isKeyPerson?: boolean;
+  isPublic?: boolean;
 }
 
 const PersonDetail = () => {
@@ -98,11 +99,44 @@ const PersonDetail = () => {
   const { detail, loading } = useAppSelector((state) => state.person);
   const [editOpen, setEditOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editHistory, setEditHistory] = useState<PersonEditHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [systemConfig, setSystemConfig] = useState<SystemConfigDTO | null>(null);
   const [form] = Form.useForm<EditFormValues>();
+  const user = useAppSelector((state) => state.auth?.user);
+  const showPersonDetailEdit = systemConfig?.showPersonDetailEdit !== false;
 
   useEffect(() => {
     if (personId) dispatch(fetchPersonDetail(personId));
   }, [dispatch, personId]);
+
+  useEffect(() => {
+    const loadConfig = () => {
+      systemConfigAPI
+        .getPublicConfig()
+        .then((res: { data?: SystemConfigDTO }) => {
+          const data = res?.data ?? res;
+          setSystemConfig(data && typeof data === 'object' ? (data as SystemConfigDTO) : null);
+        })
+        .catch(() => setSystemConfig(null));
+    };
+    loadConfig();
+    window.addEventListener('system-config-updated', loadConfig);
+    return () => window.removeEventListener('system-config-updated', loadConfig);
+  }, []);
+
+  useEffect(() => {
+    if (!personId) return;
+    setHistoryLoading(true);
+    personAPI
+      .getEditHistory(personId)
+      .then((res: { data?: PersonEditHistoryItem[] }) => {
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        setEditHistory(list);
+      })
+      .catch(() => setEditHistory([]))
+      .finally(() => setHistoryLoading(false));
+  }, [personId]);
 
   const openEdit = useCallback(() => {
     if (!detail) return;
@@ -145,6 +179,7 @@ const PersonDetail = () => {
       educationExperienceItems: eduItems.length ? eduItems : [{ start_time: '', end_time: '', school_name: '', department: '', major: '', degree: '' }],
       remark: detail.remark ?? '',
       isKeyPerson: detail.isKeyPerson ?? false,
+      isPublic: detail.isPublic !== false,
     });
     setEditOpen(true);
   }, [detail, form]);
@@ -193,19 +228,24 @@ const PersonDetail = () => {
       })(),
       remark: values.remark || undefined,
       isKeyPerson: values.isKeyPerson,
+      isPublic: values.isPublic,
     };
     setSubmitting(true);
     try {
-      await personAPI.updatePerson(personId, payload);
+      await personAPI.updatePerson(personId, payload, user?.username);
       message.success('保存成功');
       closeEdit();
       dispatch(fetchPersonDetail(personId));
+      personAPI.getEditHistory(personId).then((res: { data?: PersonEditHistoryItem[] }) => {
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+        setEditHistory(list);
+      });
     } catch (e) {
       message.error((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '保存失败');
     } finally {
       setSubmitting(false);
     }
-  }, [form, personId, closeEdit, dispatch]);
+  }, [form, personId, closeEdit, dispatch, user?.username]);
 
   const educationList = useMemo(
     () => parseExperienceJson(detail?.educationExperience),
@@ -221,6 +261,21 @@ const PersonDetail = () => {
     : '—';
   const emailStr = detail?.emails?.length
     ? detail.emails.join('、')
+    : '—';
+  const aliasStr = detail?.aliasNames?.length
+    ? detail.aliasNames.join('、')
+    : '—';
+  const passportStr = detail?.passportNumbers?.length
+    ? detail.passportNumbers.join('、')
+    : '—';
+  const twitterStr = detail?.twitterAccounts?.length
+    ? detail.twitterAccounts.join('、')
+    : '—';
+  const linkedinStr = detail?.linkedinAccounts?.length
+    ? detail.linkedinAccounts.join('、')
+    : '—';
+  const facebookStr = detail?.facebookAccounts?.length
+    ? detail.facebookAccounts.join('、')
     : '—';
   const tags = detail?.personTags ?? [];
   const occupationOrOrg = detail?.organization || tags[0] || detail?.highestEducation || '—';
@@ -254,21 +309,23 @@ const PersonDetail = () => {
     <div className="page-wrapper person-detail-page">
       <div className="person-detail-header">
         <Button
-          type="primary"
+          type="default"
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/persons')}
-          className="person-detail-back"
+          className="person-detail-header-btn"
         >
           返回
         </Button>
-        <Button
-          type="default"
-          icon={<EditOutlined />}
-          onClick={openEdit}
-          className="person-detail-edit-btn"
-        >
-          编辑
-        </Button>
+        {showPersonDetailEdit && (
+          <Button
+            type="default"
+            icon={<EditOutlined />}
+            onClick={openEdit}
+            className="person-detail-header-btn"
+          >
+            编辑
+          </Button>
+        )}
       </div>
 
       {/* 简历式主体：顶带 + 双栏 */}
@@ -283,7 +340,7 @@ const PersonDetail = () => {
         </div>
 
         <div className="person-detail-resume-body">
-          {/* 左栏：多头像（一大图 + 下方小图）、自我评价、技能标签等 */}
+          {/* 左栏：多头像（一大图 + 下方小图）、人物备注、技能标签等 */}
           <aside className="person-detail-resume-left">
             <div className="person-detail-resume-avatars">
               {(detail.avatarUrls && detail.avatarUrls.length > 0) || detail.avatarUrl ? (
@@ -316,7 +373,7 @@ const PersonDetail = () => {
               <div className="person-detail-resume-block">
                 <div className="person-detail-resume-block-title">
                   <UserOutlined />
-                  <span>自我评价</span>
+                  <span>人物备注</span>
                 </div>
                 <p className="person-detail-resume-remark">{detail.remark}</p>
               </div>
@@ -351,6 +408,25 @@ const PersonDetail = () => {
                 )}
               </div>
             </div>
+
+            <div className="person-detail-resume-block">
+              <div className="person-detail-resume-block-title">
+                <ReadOutlined />
+                <span>档案可见性</span>
+              </div>
+              <div className="person-detail-resume-info-grid" style={{ display: 'block' }}>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">是否公开档案</span>
+                  <span className="info-value">{detail.isPublic !== false ? '公开（所有人可见）' : '私有（仅创建人可见）'}</span>
+                </div>
+                {detail.createdBy && (
+                  <div className="person-detail-resume-info-item">
+                    <span className="info-label">创建人</span>
+                    <span className="info-value">{detail.createdBy}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </aside>
 
           {/* 右栏：个人信息、教育背景、工作/实践经历 */}
@@ -362,16 +438,52 @@ const PersonDetail = () => {
               </div>
               <div className="person-detail-resume-info-grid">
                 <div className="person-detail-resume-info-item">
-                  <span className="info-label">出生年月</span>
-                  <span className="info-value">{formatBirthMonth(detail.birthDate)}</span>
+                  <span className="info-label">人物编号</span>
+                  <span className="info-value">{detail.personId || '—'}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
-                  <span className="info-label">现居/籍贯</span>
-                  <span className="info-value">{detail.householdAddress || detail.nationality || '—'}</span>
+                  <span className="info-label">中文姓名</span>
+                  <span className="info-value">{detail.chineseName || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">外文姓名</span>
+                  <span className="info-value">{detail.originalName || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">别名</span>
+                  <span className="info-value">{aliasStr}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">性别</span>
+                  <span className="info-value">{detail.gender || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">出生日期</span>
+                  <span className="info-value">{formatDateOnly(detail.birthDate)}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">国籍</span>
+                  <span className="info-value">{detail.nationality || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">国籍代码</span>
+                  <span className="info-value">{detail.nationalityCode || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">户籍地址</span>
+                  <span className="info-value">{detail.householdAddress || '—'}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
                   <span className="info-label">最高学历</span>
                   <span className="info-value">{detail.highestEducation || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">所属机构</span>
+                  <span className="info-value">{detail.organization || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">所属群体</span>
+                  <span className="info-value">{detail.belongingGroup || '—'}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
                   <span className="info-label">联系电话</span>
@@ -382,12 +494,12 @@ const PersonDetail = () => {
                   <span className="info-value">{emailStr}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
-                  <span className="info-label">性别</span>
-                  <span className="info-value">{detail.gender || '—'}</span>
-                </div>
-                <div className="person-detail-resume-info-item">
                   <span className="info-label">身份证号</span>
                   <span className="info-value">{detail.idCardNumber || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">护照号</span>
+                  <span className="info-value">{passportStr}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
                   <span className="info-label">签证类型</span>
@@ -397,25 +509,44 @@ const PersonDetail = () => {
                   <span className="info-label">签证号码</span>
                   <span className="info-value">{detail.visaNumber || '—'}</span>
                 </div>
-                <div className="person-detail-resume-info-item">
-                  <span className="info-label">国籍</span>
-                  <span className="info-value">{detail.nationality || '—'}</span>
-                </div>
-                {detail.organization && (
-                  <div className="person-detail-resume-info-item">
-                    <span className="info-label">所属机构</span>
-                    <span className="info-value">{detail.organization}</span>
-                  </div>
-                )}
               </div>
             </div>
 
-            <div className="person-detail-resume-block">
-              <div className="person-detail-resume-block-title">
-                <ReadOutlined />
-                <span>教育背景</span>
+            {(twitterStr !== '—' || linkedinStr !== '—' || facebookStr !== '—') && (
+              <div className="person-detail-resume-block">
+                <div className="person-detail-resume-block-title">
+                  <ShareAltOutlined />
+                  <span>社交账号</span>
+                </div>
+                <div className="person-detail-resume-social-list">
+                  {twitterStr !== '—' && (
+                    <div className="person-detail-resume-social-item">
+                      <span className="person-detail-resume-social-label">Twitter / X</span>
+                      <span className="person-detail-resume-social-value">{twitterStr}</span>
+                    </div>
+                  )}
+                  {linkedinStr !== '—' && (
+                    <div className="person-detail-resume-social-item">
+                      <span className="person-detail-resume-social-label">领英</span>
+                      <span className="person-detail-resume-social-value">{linkedinStr}</span>
+                    </div>
+                  )}
+                  {facebookStr !== '—' && (
+                    <div className="person-detail-resume-social-item">
+                      <span className="person-detail-resume-social-label">Facebook</span>
+                      <span className="person-detail-resume-social-value">{facebookStr}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              {educationList.length > 0 ? (
+            )}
+
+            {educationList.length > 0 && (
+              <div className="person-detail-resume-block">
+                <div className="person-detail-resume-block-title">
+                  <ReadOutlined />
+                  <span>教育背景</span>
+                </div>
                 <div className="person-detail-resume-exp-list">
                   {educationList.map((item, idx) => {
                     const { start, end } = getStartEnd(item);
@@ -459,23 +590,15 @@ const PersonDetail = () => {
                     );
                   })}
                 </div>
-              ) : (
-                <div className="person-detail-resume-empty">
-                  {detail.educationExperience?.trim() ? (
-                    <pre className="person-detail-resume-raw">{detail.educationExperience}</pre>
-                  ) : (
-                    <span>暂无教育经历</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="person-detail-resume-block">
-              <div className="person-detail-resume-block-title">
-                <BankOutlined />
-                <span>工作/实践经历</span>
               </div>
-              {workList.length > 0 ? (
+            )}
+
+            {workList.length > 0 && (
+              <div className="person-detail-resume-block">
+                <div className="person-detail-resume-block-title">
+                  <BankOutlined />
+                  <span>工作/实践经历</span>
+                </div>
                 <div className="person-detail-resume-exp-list">
                   {workList.map((item, idx) => {
                     const { start, end } = getStartEnd(item);
@@ -518,13 +641,46 @@ const PersonDetail = () => {
                     );
                   })}
                 </div>
-              ) : (
+              </div>
+            )}
+
+            <div className="person-detail-resume-block">
+              <div className="person-detail-resume-block-title">
+                <HistoryOutlined />
+                <span>编辑历史</span>
+              </div>
+              {historyLoading ? (
+                <div className="person-detail-history-loading">
+                  <Spin size="small" />
+                </div>
+              ) : editHistory.length === 0 ? (
                 <div className="person-detail-resume-empty">
-                  {detail.workExperience?.trim() ? (
-                    <pre className="person-detail-resume-raw">{detail.workExperience}</pre>
-                  ) : (
-                    <span>暂无工作经历</span>
-                  )}
+                  <span>暂无编辑记录</span>
+                </div>
+              ) : (
+                <div className="person-detail-history-list">
+                  {editHistory.map((h) => (
+                    <div key={h.historyId} className="person-detail-history-item">
+                      <div className="person-detail-history-meta">
+                        <span className="person-detail-history-time">
+                          {formatDateTime(h.editTime, '')}
+                        </span>
+                        {h.editor && (
+                          <span className="person-detail-history-editor">{h.editor}</span>
+                        )}
+                      </div>
+                      <ul className="person-detail-history-changes">
+                        {(h.changes ?? []).map((c, i) => (
+                          <li key={i}>
+                            <span className="person-detail-history-label">{c.label}</span>
+                            <span className="person-detail-history-old">{c.oldVal}</span>
+                            <span className="person-detail-history-arrow">→</span>
+                            <span className="person-detail-history-new">{c.newVal}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -543,7 +699,11 @@ const PersonDetail = () => {
                     <span className="time">
                       {formatDateTime(t.eventTime, '')}
                     </span>
-                    {t.travelType === 'FLIGHT' ? '航班' : '火车'}：{(t.departureCity && t.destinationCity) ? `${t.departureCity} → ${t.destinationCity}` : `${t.departure ?? ''} → ${t.destination ?? ''}`}
+                    {t.travelType === 'FLIGHT' ? (
+                      <><SendOutlined className="person-detail-travel-icon person-detail-travel-icon-flight" /> 航班</>
+                    ) : (
+                      <><CarOutlined className="person-detail-travel-icon person-detail-travel-icon-train" /> 火车</>
+                    )}：{(t.departureCity && t.destinationCity) ? `${t.departureCity} → ${t.destinationCity}` : `${t.departure ?? ''} → ${t.destination ?? ''}`}
                     {t.ticketNumber && ` · 票号 ${t.ticketNumber}`}
                     {t.visaType && ` · 签证 ${t.visaType}`}
                   </li>
@@ -696,11 +856,14 @@ const PersonDetail = () => {
               </div>
             )}
           </Form.List>
-          <Form.Item label="自我评价" name="remark">
-            <Input.TextArea rows={3} placeholder="请输入自我评价" />
+          <Form.Item label="人物备注" name="remark">
+            <Input.TextArea rows={3} placeholder="请输入人物备注" />
           </Form.Item>
           <Form.Item label="重点人员" name="isKeyPerson" valuePropName="checked">
             <Switch checkedChildren="是" unCheckedChildren="否" />
+          </Form.Item>
+          <Form.Item label="是否公开档案" name="isPublic" valuePropName="checked" extra="公开：所有人可见；私有：仅创建人可见">
+            <Switch checkedChildren="公开" unCheckedChildren="私有" />
           </Form.Item>
         </Form>
       </Drawer>

@@ -78,7 +78,8 @@ seaweedfs:
 #   - Linux 下也可直接填宿主机 IP，如 http://172.17.0.1:8000/littlesmall/api
 #   - 后端与 OnlyOffice 同机且非 Docker 时，可填 http://localhost:8000/littlesmall/api
 onlyoffice:
-  document-server-url: http://localhost:8081
+  # 须与 docker-compose 中 OnlyOffice 宿主机端口一致（默认 45678）
+  document-server-url: http://localhost:45678
   document-download-base: http://host.docker.internal:8000/littlesmall/api
   enabled: true
 

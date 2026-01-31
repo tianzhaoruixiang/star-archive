@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Card, Row, Col, Tag, Pagination, Spin, Empty, Input } from 'antd';
-import { SearchOutlined, BellOutlined, AppstoreOutlined } from '@ant-design/icons';
+import { SearchOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchPersonList, fetchTags, fetchPersonListByTag } from '@/store/slices/personSlice';
+import { fetchPersonList, fetchTags, fetchPersonListByTags } from '@/store/slices/personSlice';
 import PersonCard, { type PersonCardData } from '@/components/PersonCard';
 import './index.css';
 
@@ -33,7 +33,7 @@ function buildTagTree(tags: TagItem[] | null): Record<string, Record<string, Tag
 const PersonList = () => {
   const dispatch = useAppDispatch();
   const { list, pagination, loading, tags, tagsLoading } = useAppSelector((state) => state.person);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   /** 当前展开的二级分类 key：firstLevelName-secondLevelName，用于展示三级标签 */
   const [expandedSecondKey, setExpandedSecondKey] = useState<string | null>(null);
@@ -43,26 +43,36 @@ const PersonList = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (selectedTag) {
-      dispatch(fetchPersonListByTag({ tag: selectedTag, page: 0, size: 20 }));
+    if (selectedTags.length > 0) {
+      dispatch(fetchPersonListByTags({ tags: selectedTags, page: 0, size: 20 }));
     } else {
       dispatch(fetchPersonList({ page: 0, size: 20 }));
     }
-  }, [dispatch, selectedTag]);
+  }, [dispatch, selectedTags]);
 
   const handlePageChange = useCallback(
     (page: number, size: number) => {
-      if (selectedTag) {
-        dispatch(fetchPersonListByTag({ tag: selectedTag, page: page - 1, size }));
+      if (selectedTags.length > 0) {
+        dispatch(fetchPersonListByTags({ tags: selectedTags, page: page - 1, size }));
       } else {
         dispatch(fetchPersonList({ page: page - 1, size }));
       }
     },
-    [dispatch, selectedTag]
+    [dispatch, selectedTags]
   );
 
   const handleTagClick = useCallback((tagName: string) => {
-    setSelectedTag((prev) => (prev === tagName ? null : tagName));
+    setSelectedTags((prev) =>
+      prev.includes(tagName) ? prev.filter((t) => t !== tagName) : [...prev, tagName]
+    );
+  }, []);
+
+  const handleRemoveSelectedTag = useCallback((tagName: string) => {
+    setSelectedTags((prev) => prev.filter((t) => t !== tagName));
+  }, []);
+
+  const handleClearSelectedTags = useCallback(() => {
+    setSelectedTags([]);
   }, []);
 
   const handleSecondLevelClick = useCallback((key: string) => {
@@ -134,10 +144,10 @@ const PersonList = () => {
                   </div>
                   {isExpanded && (
                     <div className="person-list-filter-tags person-list-filter-tags-third">
-                      {items.map((t) => (
+                      {                      items.map((t) => (
                         <Tag
                           key={t.tagId}
-                          className={`person-list-tag ${selectedTag === t.tagName ? 'person-list-tag-selected' : ''}`}
+                          className={`person-list-tag ${selectedTags.includes(t.tagName) ? 'person-list-tag-selected' : ''}`}
                           onClick={() => handleTagClick(t.tagName)}
                         >
                           {t.tagName}
@@ -157,6 +167,32 @@ const PersonList = () => {
         </>
         )}
       </div>
+
+      {/* 当前已选标签 */}
+      {selectedTags.length > 0 && (
+        <div className="person-list-selected">
+          <span className="person-list-selected-label">当前已选：</span>
+          <div className="person-list-selected-tags">
+            {selectedTags.map((tag) => (
+              <Tag
+                key={tag}
+                closable
+                onClose={() => handleRemoveSelectedTag(tag)}
+                className="person-list-selected-tag"
+              >
+                {tag}
+              </Tag>
+            ))}
+            <button
+              type="button"
+              className="person-list-selected-clear"
+              onClick={handleClearSelectedTags}
+            >
+              清除全部
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 分割线 */}
       <div className="person-list-divider" />

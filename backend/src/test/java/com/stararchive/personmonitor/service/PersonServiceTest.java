@@ -78,7 +78,7 @@ class PersonServiceTest {
                 .thenReturn(Page.empty());
         when(socialDynamicRepository.findByPersonId(any())).thenReturn(Collections.emptyList());
         
-        PersonDetailDTO detail = personService.getPersonDetail("test-id");
+        PersonDetailDTO detail = personService.getPersonDetail("test-id", null);
         
         assertNotNull(detail);
         assertEquals("测试人员", detail.getChineseName());
@@ -89,7 +89,7 @@ class PersonServiceTest {
         when(personRepository.findById("not-exist")).thenReturn(Optional.empty());
         
         assertThrows(EntityNotFoundException.class, () -> {
-            personService.getPersonDetail("not-exist");
+            personService.getPersonDetail("not-exist", null);
         });
     }
 }

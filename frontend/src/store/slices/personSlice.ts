@@ -54,7 +54,15 @@ export const fetchTags = createAsyncThunk('person/fetchTags', async () => {
 export const fetchPersonListByTag = createAsyncThunk(
   'person/fetchListByTag',
   async ({ tag, page, size }: { tag: string; page: number; size: number }) => {
-    const response = await personAPI.getPersonListByTag(tag, page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
+    const response = await personAPI.getPersonListByTags([tag], page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
+    return response?.data ?? response;
+  }
+);
+
+export const fetchPersonListByTags = createAsyncThunk(
+  'person/fetchListByTags',
+  async ({ tags, page, size }: { tags: string[]; page: number; size: number }) => {
+    const response = await personAPI.getPersonListByTags(tags, page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
     return response?.data ?? response;
   }
 );
@@ -119,6 +127,23 @@ const personSlice = createSlice({
         };
       })
       .addCase(fetchPersonListByTag.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || '加载失败';
+      })
+      .addCase(fetchPersonListByTags.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPersonListByTags.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = action.payload.content;
+        state.pagination = {
+          page: action.payload.page,
+          size: action.payload.size,
+          total: action.payload.totalElements,
+        };
+      })
+      .addCase(fetchPersonListByTags.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || '加载失败';
       });

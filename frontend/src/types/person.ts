@@ -33,6 +33,10 @@ export interface PersonDetailData {
   recentTravels?: PersonTravelItem[];
   recentSocialDynamics?: SocialDynamicItem[];
   isKeyPerson?: boolean;
+  /** 是否公开档案：true 所有人可见，false 仅创建人可见 */
+  isPublic?: boolean;
+  /** 创建人用户名（私有档案仅此人可见） */
+  createdBy?: string;
   createdTime?: string;
   updatedTime?: string;
 }

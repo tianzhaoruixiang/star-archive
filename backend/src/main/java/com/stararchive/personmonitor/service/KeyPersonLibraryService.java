@@ -2,6 +2,7 @@ package com.stararchive.personmonitor.service;
 
 import com.stararchive.personmonitor.common.PageResponse;
 import com.stararchive.personmonitor.dto.DirectoryDTO;
+import com.stararchive.personmonitor.dto.KeyPersonCategoriesResponse;
 import com.stararchive.personmonitor.dto.KeyPersonCategoryDTO;
 import com.stararchive.personmonitor.dto.PersonCardDTO;
 import com.stararchive.personmonitor.entity.Directory;
@@ -50,79 +51,78 @@ public class KeyPersonLibraryService {
     }
 
     /**
-     * 获取重点人员类别列表（全部 + 各目录），用于左侧筛选。
-     * 若 person_directory 无数据，则「全部」使用 person 表中 is_key_person=true 的人数，保证页面有数据。
+     * 获取重点人员类别数据：全部人数 + 各目录列表（不含「全部」项，由前端单独展示，避免重复）。
+     * 若 person_directory 无数据，则 allCount 使用 person 表中 is_key_person=true 的人数。
      */
-    public List<KeyPersonCategoryDTO> listCategories() {
+    public KeyPersonCategoriesResponse listCategories() {
         log.info("查询重点人员类别列表");
         long allCount = personDirectoryRepository.countDistinctPersonIds();
         if (allCount == 0) {
             allCount = personRepository.countByIsKeyPerson(true);
         }
-        List<KeyPersonCategoryDTO> list = new ArrayList<>();
-        list.add(new KeyPersonCategoryDTO("all", "全部", allCount));
+        List<KeyPersonCategoryDTO> categories = new ArrayList<>();
         List<Directory> dirs = directoryRepository.findByParentDirectoryIdIsNullOrderByDirectoryId();
         for (Directory d : dirs) {
             long count = personDirectoryRepository.countById_DirectoryId(d.getDirectoryId());
-            list.add(new KeyPersonCategoryDTO(String.valueOf(d.getDirectoryId()), d.getDirectoryName(), count));
+            categories.add(new KeyPersonCategoryDTO(String.valueOf(d.getDirectoryId()), d.getDirectoryName(), count));
         }
-        return list;
+        return new KeyPersonCategoriesResponse(allCount, categories);
     }
 
     /**
-     * 按目录分页查询人员卡片（每页 16 条）
+     * 按目录分页查询人员卡片（按可见性过滤：公开或当前用户为创建人）
      */
-    public PageResponse<PersonCardDTO> getPersonsByDirectory(Integer directoryId, int page, int size) {
+    public PageResponse<PersonCardDTO> getPersonsByDirectory(Integer directoryId, int page, int size, String currentUser) {
         log.info("按目录查询人员: directoryId={}, page={}, size={}", directoryId, page, size);
         Pageable pageable = PageRequest.of(page, size);
         Page<PersonDirectory> pdPage = personDirectoryRepository.findById_DirectoryId(directoryId, pageable);
         List<String> personIds = pdPage.getContent().stream()
                 .map(pd -> pd.getId().getPersonId())
                 .collect(Collectors.toList());
-        List<PersonCardDTO> cards = toCardList(personIds);
+        List<PersonCardDTO> cards = toCardList(personIds, currentUser);
         return PageResponse.of(cards, page, size, pdPage.getTotalElements());
     }
 
     /**
-     * 按类别分页查询人员：categoryId 为 "all" 时返回全部重点人员，否则按目录 ID 查询。
-     * 若 person_directory 无数据，则「全部」回退为 person 表中 is_key_person=true 的分页列表。
+     * 按类别分页查询人员：categoryId 为 "all" 时返回全部重点人员，否则按目录 ID 查询；按可见性过滤。
+     *
+     * @param currentUser 当前登录用户名，为空时仅返回公开档案
      */
-    public PageResponse<PersonCardDTO> getPersonsByCategory(String categoryId, int page, int size) {
+    public PageResponse<PersonCardDTO> getPersonsByCategory(String categoryId, int page, int size, String currentUser) {
+        String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
         if ("all".equalsIgnoreCase(categoryId)) {
             Pageable pageable = PageRequest.of(page, size);
             Page<String> idPage = personDirectoryRepository.findDistinctPersonIds(pageable);
             long total = idPage.getTotalElements();
             List<PersonCardDTO> cards;
             if (total == 0) {
-                Page<Person> personPage = personRepository.findByIsKeyPerson(true, pageable);
+                Page<Person> personPage = personRepository.findByIsKeyPersonAndVisible(true, pageable, user);
                 cards = personPage.getContent().stream()
                         .map(personService::toCardDTO)
                         .collect(Collectors.toList());
                 total = personPage.getTotalElements();
             } else {
-                cards = toCardList(idPage.getContent());
+                cards = toCardList(idPage.getContent(), user);
             }
             return PageResponse.of(cards, page, size, total);
         }
         try {
             int directoryId = Integer.parseInt(categoryId);
-            return getPersonsByDirectory(directoryId, page, size);
+            return getPersonsByDirectory(directoryId, page, size, currentUser);
         } catch (NumberFormatException e) {
             log.warn("无效的类别 ID: {}", categoryId);
             return PageResponse.of(List.of(), page, size, 0L);
         }
     }
 
-    private List<PersonCardDTO> toCardList(List<String> personIds) {
+    private List<PersonCardDTO> toCardList(List<String> personIds, String currentUser) {
         if (personIds.isEmpty()) {
             return List.of();
         }
         List<Person> persons = personRepository.findAllById(personIds);
-        java.util.Map<String, Person> personMap = persons.stream()
-                .collect(Collectors.toMap(Person::getPersonId, p -> p));
-        return personIds.stream()
-                .map(personMap::get)
-                .filter(p -> p != null)
+        String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
+        return persons.stream()
+                .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
                 .map(personService::toCardDTO)
                 .collect(Collectors.toList());
     }

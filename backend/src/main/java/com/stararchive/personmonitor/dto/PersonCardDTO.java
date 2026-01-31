@@ -34,4 +34,6 @@ public class PersonCardDTO {
     private String remark;
     /** 所属群体（用于群体类别统计与展示） */
     private String belongingGroup;
+    /** 是否公开档案（列表仅展示，详情可编辑） */
+    private Boolean isPublic;
 }

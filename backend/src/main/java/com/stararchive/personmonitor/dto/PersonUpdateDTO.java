@@ -40,4 +40,6 @@ public class PersonUpdateDTO {
     private String educationExperience;
     private String remark;
     private Boolean isKeyPerson;
+    /** 是否公开档案：true 所有人可见，false 仅创建人可见 */
+    private Boolean isPublic;
 }

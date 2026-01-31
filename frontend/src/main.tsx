@@ -12,7 +12,19 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
       <BrowserRouter basename="/littlesmall">
-        <ConfigProvider locale={zhCN}>
+        <ConfigProvider
+          locale={zhCN}
+          theme={{
+            token: {
+              colorPrimary: '#007aff',
+              borderRadius: 10,
+              colorBgContainer: '#ffffff',
+              colorBorder: 'rgba(0, 0, 0, 0.08)',
+              colorText: '#1d1d1f',
+              colorTextPlaceholder: '#86868b',
+            },
+          }}
+        >
           <App />
         </ConfigProvider>
       </BrowserRouter>

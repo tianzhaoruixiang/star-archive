@@ -32,4 +32,6 @@ public class SystemConfigDTO {
     private Boolean navSituation;
     /** 导航-系统配置 是否显示 */
     private Boolean navSystemConfig;
+    /** 人物详情页 是否展示编辑功能 */
+    private Boolean showPersonDetailEdit;
 }

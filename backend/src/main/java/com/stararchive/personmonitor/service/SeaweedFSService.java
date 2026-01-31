@@ -110,6 +110,45 @@ public class SeaweedFSService {
     }
 
     /**
+     * 上传系统 Logo 到 Filer 固定路径 {pathPrefix}/system/logo.{ext}，返回 Filer 相对路径。
+     * 每次上传会覆盖已有 Logo。
+     */
+    public String uploadSystemLogo(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("请选择要上传的图片");
+        }
+        String originalName = file.getOriginalFilename();
+        String ext = "png";
+        if (originalName != null && originalName.contains(".")) {
+            String e = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
+            if (e.matches("png|jpg|jpeg|gif|webp")) {
+                ext = "jpeg".equals(e) ? "jpg" : e;
+            }
+        }
+        String path = properties.getPathPrefix() + "/system/logo." + ext;
+        String base = properties.getFilerUrl().replaceAll("/$", "");
+        URI uri = URI.create(base + "/" + path);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        final String filenameExt = ext;
+        body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return "logo." + filenameExt;
+            }
+        });
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, entity, String.class);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IOException("SeaweedFS upload failed: " + response.getStatusCode() + " " + response.getBody());
+        }
+        log.info("SeaweedFS uploaded system logo: {}", path);
+        return path;
+    }
+
+    /**
      * 根据 Filer 相对路径下载文件，返回字节数组；失败返回 null。
      */
     public byte[] download(String path) {

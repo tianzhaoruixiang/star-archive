@@ -118,6 +118,14 @@ public class Person {
     
     @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
+
+    /** 是否公开档案：true 所有人可见，false 仅创建人可见 */
+    @Column(name = "is_public", nullable = false)
+    private Boolean isPublic = true;
+
+    /** 创建人用户名（私有档案仅此人可见） */
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
     
     @Column(name = "created_time")
     private LocalDateTime createdTime;

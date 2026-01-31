@@ -12,6 +12,19 @@ const apiClient = axios.create({
   },
 });
 
+/** 当前登录用户名，用于档案可见性（公开档案所有人可见，私有档案仅创建人可见） */
+let apiUsername: string | null = null;
+export function setApiUsername(username: string | null) {
+  apiUsername = username ?? null;
+}
+
+apiClient.interceptors.request.use((config) => {
+  if (apiUsername) {
+    config.headers['X-Username'] = apiUsername;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => {
     return response.data;
@@ -114,25 +127,79 @@ export interface PersonUpdatePayload {
   educationExperience?: string;
   remark?: string;
   isKeyPerson?: boolean;
+  /** 是否公开档案：true 所有人可见，false 仅创建人可见 */
+  isPublic?: boolean;
+}
+
+/** 编辑历史变更项 */
+export interface PersonEditHistoryChangeItem {
+  field: string;
+  label: string;
+  oldVal: string;
+  newVal: string;
+}
+
+/** 编辑历史记录 */
+export interface PersonEditHistoryItem {
+  historyId: string;
+  personId: string;
+  editTime: string;
+  editor?: string;
+  changes: PersonEditHistoryChangeItem[];
+}
+
+/** 人员列表筛选（可选；目的地省份可与 destinationCity/visaType/organization/belongingGroup 组合） */
+export interface PersonListFilter {
+  isKeyPerson?: boolean;
+  organization?: string;
+  visaType?: string;
+  belongingGroup?: string;
+  /** 目的地省份（有该省行程的人员） */
+  destinationProvince?: string;
+  /** 目的地城市（须与 destinationProvince 同时使用） */
+  destinationCity?: string;
 }
 
 export const personAPI = {
-  getPersonList: (page: number, size: number) =>
-    apiClient.get('/persons', { params: { page, size } }),
+  getPersonList: (page: number, size: number, filter?: PersonListFilter) =>
+    apiClient.get('/persons', {
+      params: {
+        page,
+        size,
+        ...(filter?.isKeyPerson !== undefined && { isKeyPerson: filter.isKeyPerson }),
+        ...(filter?.organization && { organization: filter.organization }),
+        ...(filter?.visaType && { visaType: filter.visaType }),
+        ...(filter?.belongingGroup && { belongingGroup: filter.belongingGroup }),
+        ...(filter?.destinationProvince && { destinationProvince: filter.destinationProvince }),
+        ...(filter?.destinationCity && { destinationCity: filter.destinationCity }),
+      },
+    }),
   getPersonDetail: (personId: string) =>
     apiClient.get(`/persons/${personId}`),
-  updatePerson: (personId: string, data: PersonUpdatePayload) =>
-    apiClient.put(`/persons/${personId}`, data),
+  updatePerson: (personId: string, data: PersonUpdatePayload, editor?: string) =>
+    apiClient.put(`/persons/${personId}`, data, {
+      headers: editor ? { 'X-Editor': editor } : undefined,
+    }),
+  getEditHistory: (personId: string) =>
+    apiClient.get<PersonEditHistoryItem[]>(`/persons/${personId}/edit-history`),
   getTags: () => apiClient.get('/persons/tags'),
   getPersonListByTag: (tag: string, page: number, size: number) =>
     apiClient.get('/persons/by-tag', { params: { tag, page, size } }),
+  getPersonListByTags: (tags: string[], page: number, size: number) =>
+    apiClient.get('/persons/by-tags', { params: { tags: tags.join(','), page, size } }),
 };
 
-/** 重点人员类别（全部 + 目录） */
+/** 重点人员类别（单个目录项） */
 export interface KeyPersonCategory {
   id: string;
   name: string;
   count: number;
+}
+
+/** 重点人员类别接口响应：allCount + 目录列表（不含「全部」，由前端单独展示） */
+export interface KeyPersonCategoriesResponse {
+  allCount: number;
+  categories: KeyPersonCategory[];
 }
 
 export const keyPersonLibraryAPI = {
@@ -171,12 +238,39 @@ export interface SystemConfigDTO {
   navModelManagement?: boolean;
   navSituation?: boolean;
   navSystemConfig?: boolean;
+  showPersonDetailEdit?: boolean;
 }
 
 export const systemConfigAPI = {
   getPublicConfig: () => apiClient.get<SystemConfigDTO>('/system-config/public'),
   getConfig: () => apiClient.get<SystemConfigDTO>('/system-config'),
   updateConfig: (dto: SystemConfigDTO) => apiClient.put<SystemConfigDTO>('/system-config', dto),
+  uploadLogo: (formData: FormData) =>
+    apiClient.post<{ logoUrl: string }>('/system-config/logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 15000,
+    }),
+};
+
+/** 系统用户（用户管理） */
+export interface SysUserDTO {
+  userId: number;
+  username: string;
+  role: string;
+  createdTime?: string;
+  updatedTime?: string;
+}
+
+export interface SysUserCreateDTO {
+  username: string;
+  password: string;
+  role: string;
+}
+
+export const sysUserAPI = {
+  list: () => apiClient.get<SysUserDTO[]>('/sys/users'),
+  create: (dto: SysUserCreateDTO) => apiClient.post<SysUserDTO>('/sys/users', dto),
+  delete: (userId: number) => apiClient.delete(`/sys/users/${userId}`),
 };
 
 /** 人员档案导入融合：上传、任务列表、任务详情、确认导入 */
@@ -221,7 +315,8 @@ export const archiveFusionAPI = {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 600000,
     }),
-  listTasks: (params: { creatorUserId?: number; page?: number; size?: number }) =>
+  /** 任务列表按当前登录用户过滤（X-Username），仅返回该用户创建的导入任务 */
+  listTasks: (params: { page?: number; size?: number }) =>
     apiClient.get('/workspace/archive-fusion/tasks', { params }),
   getTaskDetail: (taskId: string) =>
     apiClient.get(`/workspace/archive-fusion/tasks/${taskId}`),
@@ -234,8 +329,13 @@ export const archiveFusionAPI = {
   /** 档案文件预览地址（内联打开，供 OnlyOffice 拉取） */
   getFilePreviewUrl: (taskId: string) =>
     `${BASE_PATH}/api/workspace/archive-fusion/tasks/${taskId}/file`,
-  confirmImport: (taskId: string, resultIds: string[]) =>
-    apiClient.post<{ data?: string[] }>(`/workspace/archive-fusion/tasks/${taskId}/confirm-import`, { resultIds }),
+  /** 导入档案：importAsPublic 仅系统管理员可传 true（公开档案所有人可见，私有仅创建人可见） */
+  confirmImport: (taskId: string, resultIds: string[], tags?: string[], importAsPublic?: boolean) =>
+    apiClient.post<{ data?: string[] }>(`/workspace/archive-fusion/tasks/${taskId}/confirm-import`, {
+      resultIds,
+      tags: tags?.filter(Boolean) ?? [],
+      importAsPublic: importAsPublic === true,
+    }),
 };
 
 export default apiClient;

@@ -1,70 +1,79 @@
 /**
- * 统一页面与组件样式 - 深色主题
+ * 统一页面与组件样式 - Apple Design
  */
 @import './variables.css';
 
-/* 页面通用包裹层（抵消 Layout content 的 padding，铺满背景） */
 .page-wrapper {
   margin: calc(-1 * var(--page-padding)) calc(-1 * var(--page-padding)) 0;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 52px);
   padding: var(--page-padding);
-  background: var(--page-bg);
+  background: var(--bg-pattern), var(--page-bg);
+  background-size: 60px 60px, auto;
   color: var(--text-secondary);
 }
 
-/* 页面标题 */
 .page-title {
   margin: 0 0 var(--spacing-xl);
   font-size: var(--font-title);
   font-weight: var(--font-weight-title);
   color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .page-title-accent {
   color: var(--primary);
 }
 
-/* 通用卡片（深色） */
 .page-card {
-  border-radius: var(--card-radius);
+  border-radius: var(--card-radius-lg);
   border: 1px solid var(--card-border);
   background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  transition: box-shadow var(--transition-normal);
+}
+
+.page-card:hover {
+  box-shadow: var(--card-shadow-hover);
 }
 
 .page-card .ant-card-body {
   padding: var(--card-padding);
 }
 
-/* 加载/空状态 */
 .page-loading,
 .page-empty {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 320px;
-  color: var(--text-placeholder);
+  min-height: 280px;
+  color: var(--text-muted);
 }
 
 .page-empty .ant-empty-description {
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
-/* 搜索框（深色） */
 .page-search .ant-input-affix-wrapper {
   background: var(--input-bg) !important;
   border: 1px solid var(--input-border) !important;
-  border-radius: var(--radius-md) !important;
-  color: var(--text-secondary) !important;
+  border-radius: var(--radius-lg) !important;
+  color: var(--text-primary) !important;
+  transition: all var(--transition-fast);
 }
 
-.page-search .ant-input-affix-wrapper:hover,
+.page-search .ant-input-affix-wrapper:hover {
+  border-color: var(--input-hover-border) !important;
+}
+
 .page-search .ant-input-affix-wrapper-focused {
   border-color: var(--input-focus-border) !important;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
 }
 
 .page-search .ant-input {
   background: transparent !important;
-  color: var(--text-secondary) !important;
+  color: var(--text-primary) !important;
 }
 
 .page-search .ant-input::placeholder {
@@ -73,13 +82,6 @@
 
 .page-search .ant-input-prefix {
   color: var(--text-placeholder);
-}
-
-/* 分页（深色） */
-.page-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--page-gap);
 }
 
 .page-pagination .ant-pagination-item a,
@@ -92,7 +94,7 @@
 }
 
 .page-pagination .ant-pagination-total-text {
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
 .page-pagination .ant-select-selector {
@@ -101,36 +103,35 @@
   color: var(--text-secondary) !important;
 }
 
-/* 主按钮（紫色渐变，与头部风格一致） */
 .page-btn-primary {
-  background: var(--accent-purple) !important;
+  background: var(--accent-btn) !important;
   border: none !important;
   color: #fff !important;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
 }
 
 .page-btn-primary:hover {
-  opacity: 0.9;
+  background: var(--accent-btn-hover) !important;
   color: #fff !important;
 }
 
-/* 标签（深色） */
 .page-tag {
   margin: 0 !important;
-  padding: 2px 8px !important;
+  padding: 4px 12px !important;
   font-size: var(--font-caption) !important;
-  border-radius: var(--radius-sm) !important;
-  background: var(--input-bg) !important;
-  border: 1px solid var(--input-border) !important;
-  color: var(--text-muted) !important;
+  border-radius: 20px !important;
+  background: var(--primary-light) !important;
+  border: none !important;
+  color: var(--primary) !important;
+  transition: all var(--transition-fast);
 }
 
 .page-tag:hover {
-  border-color: var(--primary) !important;
-  color: var(--text-secondary) !important;
+  background: var(--primary-hover) !important;
 }
 
 .page-tag-selected {
-  border-color: var(--primary) !important;
-  background: var(--primary-hover) !important;
-  color: var(--primary) !important;
+  background: var(--primary) !important;
+  color: #fff !important;
 }

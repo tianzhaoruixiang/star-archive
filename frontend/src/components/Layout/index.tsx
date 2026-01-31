@@ -9,13 +9,12 @@ import {
   RadarChartOutlined,
   FolderOutlined,
   AppstoreOutlined,
-  LineChartOutlined,
   RobotOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
-import { systemConfigAPI, type SystemConfigDTO } from '@/services/api';
+import { systemConfigAPI, setApiUsername, type SystemConfigDTO } from '@/services/api';
 import './index.css';
 
 const { Header, Content } = AntLayout;
@@ -40,6 +39,10 @@ const Layout = () => {
   const [systemConfig, setSystemConfig] = useState<SystemConfigDTO | null>(null);
 
   useEffect(() => {
+    setApiUsername(user?.username ?? null);
+  }, [user?.username]);
+
+  useEffect(() => {
     const load = () => {
       systemConfigAPI
         .getPublicConfig()
@@ -58,9 +61,11 @@ const Layout = () => {
   const menuItems = useMemo(() => {
     return ALL_MENU_ENTRIES.filter((item) => {
       const value = systemConfig?.[item.configKey];
-      return value !== false;
+      if (value === false) return false;
+      if (item.key === '/system-config' && user?.role !== 'admin') return false;
+      return true;
     }).map(({ key, icon, label }) => ({ key, icon, label }));
-  }, [systemConfig]);
+  }, [systemConfig, user?.role]);
 
   const appName = systemConfig?.systemName?.trim() || DEFAULT_APP_NAME;
   const logoUrl = systemConfig?.systemLogoUrl?.trim();
@@ -104,14 +109,12 @@ const Layout = () => {
           {logoUrl ? (
             <img src={logoUrl} alt="" className="logo-img" />
           ) : (
-            <span className="logo-icon">
-              <LineChartOutlined />
-            </span>
+            <img src="/littlesmall/logo.svg" alt="" className="logo-img" />
           )}
           <span className="logo-text">{appName}</span>
         </div>
         <Menu
-          theme="dark"
+          theme="light"
           mode="horizontal"
           selectedKeys={[
             menuItems.find(
@@ -124,7 +127,13 @@ const Layout = () => {
           className="menu"
         />
         <div className="user-section">
-          <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
+          <Dropdown
+            menu={{ items: userMenuItems }}
+            trigger={['click']}
+            placement="bottomRight"
+            overlayStyle={{ minWidth: 120, width: 140 }}
+            overlayClassName="header-user-dropdown"
+          >
             <div className="user-trigger">
               <Avatar
                 size="small"

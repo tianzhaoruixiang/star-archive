@@ -1,4 +1,3 @@
-/* 统一设计变量引用（若未在全局加载则此处生效） */
 .layout {
   height: 100vh;
 }
@@ -6,88 +5,87 @@
 .header {
   display: flex;
   align-items: center;
-  padding: 0 20px 0 16px;
-  background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  height: 64px;
+  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  height: 52px;
 }
 
-/* Logo */
 .logo {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-right: 32px;
+  margin-right: 40px;
   cursor: pointer;
   transition: opacity 0.2s;
   flex-shrink: 0;
 }
 
 .logo:hover {
-  opacity: 0.95;
+  opacity: 0.8;
 }
 
 .logo-icon {
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 14px;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .logo-img {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   border-radius: 8px;
 }
 
 .logo-text {
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
 
-/* 导航菜单 */
 .menu {
   flex: 1;
   min-width: 0;
-  border-bottom: none;
+  border-bottom: none !important;
   background: transparent !important;
-  line-height: 62px !important;
+  line-height: 50px !important;
 }
 
 .menu .ant-menu-item {
   margin: 0 4px;
   padding: 0 16px;
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  transition: all var(--transition-fast);
 }
 
 .menu .ant-menu-item:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12) !important;
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.04) !important;
 }
 
 .menu .ant-menu-item-selected {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.2) !important;
+  color: var(--primary);
+  background: var(--primary-light) !important;
 }
 
 .menu .ant-menu-item .anticon {
   font-size: 16px;
-  margin-right: 6px;
+  margin-right: 8px;
 }
 
-/* 用户区 */
 .user-section {
   display: flex;
   align-items: center;
@@ -100,78 +98,90 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .user-trigger:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .user-avatar {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: #fff !important;
+  background: var(--primary-light) !important;
+  color: var(--primary) !important;
 }
 
 .username {
   font-size: 14px;
   font-weight: 500;
-  max-width: 140px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .logout-btn {
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
-  padding: 6px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  padding: 4px 10px;
   border-radius: 6px;
-  color: #fff;
-  transition: background 0.2s, border-color 0.2s;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: all 0.2s;
 }
 
-.logout-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.6);
-}
 
-/* 用户下拉内容 */
 .header-user-dropdown-info {
   padding: 4px 0;
-  min-width: 160px;
+  min-width: 0;
 }
 
 .header-user-dropdown-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.88);
+  color: var(--text-primary);
 }
 
 .header-user-dropdown-role {
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
+  font-size: 11px;
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
-/* 下拉菜单样式覆盖 */
 .header .ant-dropdown-menu-item-disabled {
   cursor: default;
   opacity: 1;
 }
 
-.content {
-  padding: 24px;
-  background: #0a1628;
-  overflow: auto;
-  min-height: calc(100vh - 64px);
+.header-user-dropdown.ant-dropdown .ant-dropdown-menu {
+  min-width: 120px;
+  padding: 4px 0;
 }
 
-/* 首页时 main 底部不预留 24px */
+.header-user-dropdown.ant-dropdown .ant-dropdown-menu-item {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.content {
+  padding: 24px;
+  background: var(--page-bg);
+  overflow: auto;
+  min-height: calc(100vh - 52px);
+}
+
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+}
+
 .content.content--dashboard {
   padding-bottom: 0;
 }

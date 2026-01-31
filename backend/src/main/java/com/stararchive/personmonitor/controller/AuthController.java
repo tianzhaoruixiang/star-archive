@@ -25,16 +25,17 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody Map<String, String> loginRequest) {
-        String username = loginRequest.get("username");
-        String password = loginRequest.get("password");
-        
-        boolean success = authService.login(username, password);
-        if (success) {
-            Map<String, Object> userInfo = authService.getCurrentUser(username);
-            return ResponseEntity.ok(ApiResponse.success("登录成功", userInfo));
-        } else {
-            return ResponseEntity.ok(ApiResponse.error("用户名或密码错误"));
+        String username = loginRequest != null ? loginRequest.get("username") : null;
+        String password = loginRequest != null ? loginRequest.get("password") : null;
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.ok(ApiResponse.error("请输入用户名和密码"));
         }
+        boolean success = authService.login(username.trim(), password);
+        if (success) {
+            Map<String, Object> userInfo = authService.getCurrentUser(username.trim());
+            return ResponseEntity.ok(ApiResponse.success("登录成功", userInfo));
+        }
+        return ResponseEntity.ok(ApiResponse.error("用户名或密码错误"));
     }
     
     /**

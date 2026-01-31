@@ -1,58 +1,74 @@
 /**
- * 统一设计变量 - 流感监测系统深色主题
+ * Apple Design 风格 - 设计变量
+ * 简洁、留白、柔和阴影、圆润
  */
 :root {
-  /* 主背景 */
-  --page-bg-start: #0d1629;
-  --page-bg-mid: #131f35;
-  --page-bg-end: #0a1628;
-  --page-bg: linear-gradient(180deg, var(--page-bg-start) 0%, var(--page-bg-mid) 50%, var(--page-bg-end) 100%);
+  /* 主背景 - 浅灰白 */
+  --page-bg: #f5f5f7;
+  --page-bg-alt: #ffffff;
 
-  /* 卡片/区块 */
-  --card-bg: rgba(14, 28, 52, 0.6);
-  --card-border: #1e3354;
+  /* 背景图 - 使用 base 路径适配 /littlesmall */
+  --bg-pattern: url('/littlesmall/bg-pattern-light.svg');
+  --bg-login: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80');
+
+  /* 卡片/区块 - 纯白 + 柔和阴影 */
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.06);
   --card-radius: 12px;
+  --card-radius-lg: 16px;
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  --card-shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.08);
 
-  /* 输入/按钮边框 */
-  --input-bg: rgba(30, 51, 84, 0.6);
-  --input-border: #2a4a6f;
-  --input-focus-border: #1890ff;
+  /* 输入/表单 */
+  --input-bg: #f5f5f7;
+  --input-border: rgba(0, 0, 0, 0.08);
+  --input-focus-border: #007aff;
+  --input-hover-border: rgba(0, 0, 0, 0.15);
 
-  /* 文字 */
-  --text-primary: #fff;
-  --text-secondary: #e8e8e8;
-  --text-muted: #b0b0b0;
-  --text-placeholder: #8b9dc3;
-  --text-disabled: #8b9dc3;
+  /* 文字层级 */
+  --text-primary: #1d1d1f;
+  --text-secondary: #424245;
+  --text-muted: #86868b;
+  --text-placeholder: #86868b;
+  --text-disabled: #c7c7cc;
 
-  /* 主色/强调 */
-  --primary: #1890ff;
-  --primary-hover: rgba(24, 144, 255, 0.2);
-  --accent-purple: linear-gradient(135deg, #5c6bc0 0%, #7986cb 100%);
-  --accent-green: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
-  --accent-red: #ff4d4f;
-  --accent-blue: linear-gradient(135deg, #1e88e5 0%, #42a5f5 100%);
+  /* 主色 - Apple Blue */
+  --primary: #007aff;
+  --primary-hover: rgba(0, 122, 255, 0.12);
+  --primary-light: rgba(0, 122, 255, 0.08);
+  --accent-btn: #007aff;
+  --accent-btn-hover: #0051d5;
+  --accent-purple: #007aff;
+  --accent-green: #34c759;
+  --accent-red: #ff3b30;
+  --accent-amber: #ff9500;
 
-  /* 间距 */
+  /* 间距 - 8pt 基准 */
   --page-padding: 24px;
   --page-gap: 24px;
-  --card-padding: 20px;
+  --card-padding: 24px;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 12px;
   --spacing-lg: 16px;
-  --spacing-xl: 20px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
 
-  /* 圆角 */
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  /* 圆角 - Apple 风格 */
+  --radius-sm: 8px;
+  --radius-md: 10px;
   --radius-lg: 12px;
+  --radius-xl: 16px;
 
   /* 字号 */
-  --font-title: 24px;
-  --font-subtitle: 18px;
-  --font-body: 14px;
-  --font-caption: 12px;
-  --font-weight-title: 700;
+  --font-title: 28px;
+  --font-subtitle: 17px;
+  --font-body: 15px;
+  --font-caption: 13px;
+  --font-weight-title: 600;
   --font-weight-subtitle: 600;
+
+  /* 过渡 - Apple 0.3s */
+  --transition-fast: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-normal: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }

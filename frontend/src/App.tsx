@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAppSelector } from '@/store/hooks';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ProvinceDetail from './pages/Dashboard/ProvinceDetail';
@@ -11,6 +12,14 @@ import WorkspaceImportDetail from './pages/Workspace/ImportDetail';
 import ModelManagement from './pages/ModelManagement';
 import SystemConfig from './pages/SystemConfig';
 import Login from './pages/Login';
+
+function AdminOnlyRoute({ children }: { children: React.ReactNode }) {
+  const user = useAppSelector((state) => state.auth?.user);
+  if (user?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
 
 function App() {
   return (
@@ -27,7 +36,7 @@ function App() {
         <Route path="workspace" element={<Workspace />} />
         <Route path="workspace/fusion/:taskId" element={<WorkspaceImportDetail />} />
         <Route path="model-management" element={<ModelManagement />} />
-        <Route path="system-config" element={<SystemConfig />} />
+        <Route path="system-config" element={<AdminOnlyRoute><SystemConfig /></AdminOnlyRoute>} />
       </Route>
     </Routes>
   );

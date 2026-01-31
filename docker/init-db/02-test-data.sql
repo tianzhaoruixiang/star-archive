@@ -518,7 +518,8 @@ INSERT INTO system_config (config_key, config_value, updated_time) VALUES
 ('nav_workspace', 'true', NOW()),
 ('nav_model_management', 'true', NOW()),
 ('nav_situation', 'true', NOW()),
-('nav_system_config', 'true', NOW());
+('nav_system_config', 'true', NOW()),
+('show_person_detail_edit', 'true', NOW());
 
 -- 预测模型测试数据（智能化模型管理，语义规则为自然语言）
 INSERT INTO prediction_model (model_id, name, description, status, rule_config, locked_count, accuracy, created_time, updated_time) VALUES

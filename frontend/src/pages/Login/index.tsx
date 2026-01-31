@@ -17,8 +17,8 @@ const Login = () => {
       await dispatch(login(values)).unwrap();
       message.success('登录成功');
       navigate('/dashboard');
-    } catch (error) {
-      message.error('登录失败,请检查用户名和密码');
+    } catch {
+      message.error('登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);
     }

@@ -92,6 +92,16 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
     long countDistinctPersonIdByDestinationProvince(@Param("province") String province);
 
     /**
+     * 指定省份涉及人员 ID 分页（有目的地为该省行程的人员，按人员更新时间降序）
+     */
+    @Query(
+            value = "SELECT p.person_id FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province",
+            nativeQuery = true
+    )
+    Page<Object[]> findPersonIdsByDestinationProvince(@Param("province") String province, Pageable pageable);
+
+    /**
      * 指定省份行程记录总数（目的地为该省）
      */
     @Query(value = "SELECT COUNT(*) FROM person_travel WHERE destination_province = :province", nativeQuery = true)
@@ -120,4 +130,44 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      */
     @Query(value = "SELECT destination_city, COUNT(*) AS cnt FROM person_travel WHERE destination_province = :province AND destination_city IS NOT NULL AND destination_city != '' GROUP BY destination_city ORDER BY cnt DESC LIMIT 15", nativeQuery = true)
     List<Object[]> findDestinationCityCountsByDestinationProvince(@Param("province") String province);
+
+    /**
+     * 指定省份+城市涉及人员 ID 分页（目的地为该省该城市）
+     */
+    @Query(
+            value = "SELECT p.person_id FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.destination_city = :city GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.destination_city = :city",
+            nativeQuery = true
+    )
+    Page<Object[]> findPersonIdsByDestinationProvinceAndCity(@Param("province") String province, @Param("city") String city, Pageable pageable);
+
+    /**
+     * 指定省份+签证类型涉及人员 ID 分页（联表 person 的 visa_type，行程表为省份维度）
+     */
+    @Query(
+            value = "SELECT p.person_id FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.visa_type = :visaType GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.visa_type = :visaType",
+            nativeQuery = true
+    )
+    Page<Object[]> findPersonIdsByDestinationProvinceAndVisaType(@Param("province") String province, @Param("visaType") String visaType, Pageable pageable);
+
+    /**
+     * 指定省份+机构涉及人员 ID 分页
+     */
+    @Query(
+            value = "SELECT p.person_id FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.organization = :organization GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.organization = :organization",
+            nativeQuery = true
+    )
+    Page<Object[]> findPersonIdsByDestinationProvinceAndOrganization(@Param("province") String province, @Param("organization") String organization, Pageable pageable);
+
+    /**
+     * 指定省份+所属群体涉及人员 ID 分页
+     */
+    @Query(
+            value = "SELECT p.person_id FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.belonging_group = :belongingGroup GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.belonging_group = :belongingGroup",
+            nativeQuery = true
+    )
+    Page<Object[]> findPersonIdsByDestinationProvinceAndBelongingGroup(@Param("province") String province, @Param("belongingGroup") String belongingGroup, Pageable pageable);
 }

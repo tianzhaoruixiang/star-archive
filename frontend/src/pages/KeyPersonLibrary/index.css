@@ -1,36 +1,87 @@
-/* 重点人员管理 - 使用统一深色主题变量 */
+/* 重点人员 - Apple Design 风格 */
 
-.key-person-page .key-person-title {
-  margin: 0 0 var(--spacing-xl);
+.key-person-page {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
+/* 顶部：图标 + 标题 + 副标题 */
+.key-person-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: var(--spacing-xl);
+}
+
+.key-person-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.key-person-title {
+  margin: 0 0 4px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.key-person-subtitle {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* 主体：侧边栏 + 主内容 */
 .key-person-body {
   display: flex;
   gap: var(--page-gap);
-  min-height: 500px;
+  min-height: 480px;
 }
 
-/* 左侧：重点人员类别 */
+/* 左侧：Apple 风格分组列表 */
 .key-person-sidebar {
-  width: 220px;
+  width: 240px;
   flex-shrink: 0;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: var(--card-radius);
+  border-radius: var(--card-radius-lg);
+  box-shadow: var(--card-shadow);
 }
 
 .key-person-sidebar-title {
-  font-size: 16px;
-  font-weight: var(--font-weight-subtitle);
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+}
+
+.key-person-sidebar-title-icon {
+  font-size: 14px;
+  color: var(--primary);
 }
 
 .key-person-sidebar-loading {
   display: flex;
   justify-content: center;
-  padding: 24px;
+  padding: 32px;
 }
 
 .key-person-category-list {
@@ -42,36 +93,50 @@
 .key-person-category-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  margin-bottom: 6px;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 2px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  background: transparent;
-  color: #e8e8e8;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  color: var(--text-primary);
+  font-size: 15px;
 }
 
 .key-person-category-item:hover {
-  background: var(--input-bg);
+  background: var(--primary-light);
 }
 
 .key-person-category-item-active {
-  background: var(--accent-purple);
-  color: #fff;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.key-person-category-item-active .key-person-category-icon {
+  color: var(--primary);
 }
 
 .key-person-category-item-active .key-person-category-count {
-  color: #fff;
+  color: var(--primary);
+}
+
+.key-person-category-icon {
+  font-size: 16px;
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .key-person-category-name {
-  font-size: var(--font-body);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .key-person-category-count {
-  font-size: var(--font-body);
-  color: var(--text-placeholder);
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 右侧主内容 */
@@ -82,26 +147,26 @@
 
 .key-person-main-header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 8px;
+  gap: 16px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .key-person-main-title {
-  font-size: var(--font-subtitle);
-  font-weight: var(--font-weight-subtitle);
+  font-size: 20px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .key-person-main-total {
-  font-size: var(--font-body);
-  color: var(--text-placeholder);
+  font-size: 15px;
+  color: var(--text-muted);
 }
 
 .key-person-pagination-info {
-  text-align: center;
   font-size: 13px;
-  color: var(--text-placeholder);
+  color: var(--text-muted);
   margin-bottom: var(--spacing-lg);
 }
 
@@ -114,9 +179,24 @@
 }
 
 .key-person-empty .ant-empty-description {
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
 .key-person-grid {
   margin-bottom: var(--page-gap);
+}
+
+/* 大屏每行 5 张人物卡片 */
+@media (min-width: 1200px) {
+  .key-person-grid .key-person-grid-col {
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+  .key-person-grid .key-person-grid-col {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
 }

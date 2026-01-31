@@ -77,4 +77,37 @@ public interface PersonRepository extends JpaRepository<Person, String> {
      */
     @Query(value = "SELECT visa_type, COUNT(*) FROM person WHERE visa_type IS NOT NULL AND visa_type != '' GROUP BY visa_type ORDER BY COUNT(*) DESC LIMIT 15", nativeQuery = true)
     List<Object[]> findVisaTypeCountsTop15();
+
+    /**
+     * 按机构分页查询人员
+     */
+    Page<Person> findByOrganization(String organization, Pageable pageable);
+
+    /**
+     * 按签证类型分页查询人员
+     */
+    Page<Person> findByVisaType(String visaType, Pageable pageable);
+
+    /**
+     * 按所属群体分页查询人员
+     */
+    Page<Person> findByBelongingGroup(String belongingGroup, Pageable pageable);
+
+    /** 可见性条件：公开档案 或 当前用户为创建人（username 为空时仅公开） */
+    String VISIBILITY_JPQL = "(p.isPublic = true OR (:currentUser IS NOT NULL AND p.createdBy = :currentUser))";
+
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL)
+    Page<Person> findAllVisible(Pageable pageable, @Param("currentUser") String currentUser);
+
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.isKeyPerson = :isKeyPerson")
+    Page<Person> findByIsKeyPersonAndVisible(@Param("isKeyPerson") Boolean isKeyPerson, Pageable pageable, @Param("currentUser") String currentUser);
+
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.organization = :organization")
+    Page<Person> findByOrganizationAndVisible(@Param("organization") String organization, Pageable pageable, @Param("currentUser") String currentUser);
+
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.visaType = :visaType")
+    Page<Person> findByVisaTypeAndVisible(@Param("visaType") String visaType, Pageable pageable, @Param("currentUser") String currentUser);
+
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.belongingGroup = :belongingGroup")
+    Page<Person> findByBelongingGroupAndVisible(@Param("belongingGroup") String belongingGroup, Pageable pageable, @Param("currentUser") String currentUser);
 }

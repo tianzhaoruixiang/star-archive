@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Card, Row, Col, Statistic, Spin, Tabs } from 'antd';
+import { Card, Row, Col, Statistic, Spin, Tabs, Tooltip, Modal, Pagination, Empty } from 'antd';
 import {
   TeamOutlined,
   StarOutlined,
@@ -11,8 +11,12 @@ import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchStatistics } from '@/store/slices/dashboardSlice';
-import { dashboardAPI, type OrganizationRankItem, type VisaTypeRankItem, type ProvinceRanksDTO, type TravelTrendDTO } from '@/services/api';
+import { dashboardAPI, personAPI, type OrganizationRankItem, type VisaTypeRankItem, type ProvinceRanksDTO, type TravelTrendDTO, type PersonListFilter } from '@/services/api';
+import PersonCard from '@/components/PersonCard';
+import type { PersonCardData } from '@/components/PersonCard';
 import './index.css';
+
+const PERSON_LIST_PAGE_SIZE = 12;
 
 const CHINA_GEO_JSON_URL = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
 
@@ -23,9 +27,9 @@ interface RankItem {
   value: number;
 }
 
-const TREND_COLORS = ['#1890ff', '#52c41a', '#fa8c16', '#722ed1'];
+const TREND_COLORS = ['#71717a', '#22c55e', '#f59e0b', '#a1a1aa'];
 
-const Dashboard = () => {
+function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -38,6 +42,37 @@ const Dashboard = () => {
   const [travelTrend, setTravelTrend] = useState<TravelTrendDTO | null>(null);
   const [groupCategoryStats, setGroupCategoryStats] = useState<OrganizationRankItem[]>([]);
   const [chinaGeoLoaded, setChinaGeoLoaded] = useState(false);
+
+  /** 人物列表弹框 */
+  const [personListModalOpen, setPersonListModalOpen] = useState(false);
+  const [personListModalTitle, setPersonListModalTitle] = useState('');
+  const [personListFilter, setPersonListFilter] = useState<PersonListFilter | undefined>(undefined);
+  const [personListPage, setPersonListPage] = useState(0);
+  const [personListData, setPersonListData] = useState<{ content: PersonCardData[]; totalElements: number }>({ content: [], totalElements: 0 });
+  const [personListLoading, setPersonListLoading] = useState(false);
+
+  const openPersonListModal = useCallback((title: string, filter?: PersonListFilter) => {
+    setPersonListModalTitle(title);
+    setPersonListFilter(filter);
+    setPersonListPage(0);
+    setPersonListModalOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (!personListModalOpen) return;
+    setPersonListLoading(true);
+    personAPI
+      .getPersonList(personListPage, PERSON_LIST_PAGE_SIZE, personListFilter)
+      .then((res: unknown) => {
+        const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { content?: PersonCardData[]; totalElements?: number } }).data : res as { content?: PersonCardData[]; totalElements?: number };
+        setPersonListData({
+          content: Array.isArray(data?.content) ? data.content : [],
+          totalElements: typeof data?.totalElements === 'number' ? data.totalElements : 0,
+        });
+      })
+      .catch(() => setPersonListData({ content: [], totalElements: 0 }))
+      .finally(() => setPersonListLoading(false));
+  }, [personListModalOpen, personListPage, personListFilter]);
 
   useEffect(() => {
     dispatch(fetchStatistics());
@@ -110,21 +145,21 @@ const Dashboard = () => {
       legend: {
         data: series.map((s) => s.name),
         bottom: 0,
-        textStyle: { color: '#b0b0b0', fontSize: 12 },
+        textStyle: { color: '#71717a', fontSize: 12 },
         itemWidth: 14,
         itemHeight: 14,
       },
       xAxis: {
         type: 'category',
         data: xData,
-        axisLine: { lineStyle: { color: '#2a3f5f' } },
-        axisLabel: { color: '#8b9dc3' },
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
+        axisLabel: { color: '#71717a' },
       },
       yAxis: {
         type: 'value',
         axisLine: { show: false },
-        splitLine: { lineStyle: { color: '#1e3354', type: 'dashed' } },
-        axisLabel: { color: '#8b9dc3' },
+        splitLine: { lineStyle: { color: 'rgba(0,0,0,0.06)', type: 'dashed' } },
+        axisLabel: { color: '#71717a' },
       },
       series: series.map((s, i) => ({
         name: s.name,
@@ -133,7 +168,7 @@ const Dashboard = () => {
         smooth: true,
         itemStyle: { color: TREND_COLORS[i % TREND_COLORS.length] },
         lineStyle: { color: TREND_COLORS[i % TREND_COLORS.length], width: 2 },
-        areaStyle: isBar ? undefined : { color: `rgba(24, 144, 255, 0.1)` },
+        areaStyle: isBar ? undefined : { color: 'rgba(0, 122, 255, 0.08)' },
       })),
     };
   }, [chartType, travelTrend]);
@@ -150,7 +185,7 @@ const Dashboard = () => {
     if (chinaGeoLoaded) {
       /* 16 级冷暖渐变：浅蓝（少）→ 深红（多），专业数据可视化 */
       const visualMapColors = [
-        '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981',
+        '#d4d4d8', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#22c55e', '#10b981', '#14b8a6',
         '#34d399', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#991b1b',
       ];
       return {
@@ -161,11 +196,11 @@ const Dashboard = () => {
             const v = countMap.get(params.name) ?? 0;
             return `${params.name}: ${v}`;
           },
-          backgroundColor: 'rgba(15, 23, 42, 0.95)',
-          borderColor: 'rgba(102, 126, 234, 0.5)',
+          backgroundColor: 'rgba(255, 255, 255, 0.96)',
+          borderColor: 'rgba(0, 0, 0, 0.08)',
           borderWidth: 1,
           borderRadius: 8,
-          textStyle: { color: '#e2e8f0', fontSize: 13, fontWeight: 500 },
+          textStyle: { color: '#1d1d1f', fontSize: 13, fontWeight: 500 },
           padding: [10, 14],
         },
         visualMap: {
@@ -217,7 +252,7 @@ const Dashboard = () => {
                 textShadowBlur: 4,
               },
               itemStyle: {
-                areaColor: '#818cf8',
+                areaColor: '#52525b',
                 borderColor: 'rgba(102, 126, 234, 0.9)',
                 borderWidth: 2.5,
                 shadowBlur: 12,
@@ -251,7 +286,7 @@ const Dashboard = () => {
             [117.2, 31.82, 42],
             [106.58, 29.56, 38],
           ].map(([lng, lat, v]) => ({ value: [lng, lat, v], name: `区域${v}` })),
-          itemStyle: { color: '#1890ff', borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1 },
+          itemStyle: { color: '#71717a', borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1 },
           emphasis: { scale: 1.2 },
         },
       ],
@@ -278,7 +313,18 @@ const Dashboard = () => {
             <Statistic
               title="监测人员总数"
               value={totalPerson}
-              valueStyle={{ color: '#fff', fontSize: 18 }}
+              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
+              valueRender={(node) => (
+                <span
+                  className="dashboard-stat-value-clickable"
+                  onClick={() => openPersonListModal('监测人员总数')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && openPersonListModal('监测人员总数')}
+                >
+                  {node}
+                </span>
+              )}
             />
           </Card>
         </Col>
@@ -290,7 +336,18 @@ const Dashboard = () => {
             <Statistic
               title="重点人员"
               value={keyPerson}
-              valueStyle={{ color: '#fff', fontSize: 18 }}
+              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
+              valueRender={(node) => (
+                <span
+                  className="dashboard-stat-value-clickable"
+                  onClick={() => openPersonListModal('重点人员', { isKeyPerson: true })}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && openPersonListModal('重点人员', { isKeyPerson: true })}
+                >
+                  {node}
+                </span>
+              )}
             />
           </Card>
         </Col>
@@ -302,7 +359,7 @@ const Dashboard = () => {
             <Statistic
               title="活跃区域"
               value={activeRegions}
-              valueStyle={{ color: '#fff', fontSize: 18 }}
+              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
             />
           </Card>
         </Col>
@@ -314,7 +371,7 @@ const Dashboard = () => {
             <Statistic
               title="今日流动记录"
               value={todayMovement}
-              valueStyle={{ color: '#fff', fontSize: 18 }}
+              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
             />
           </Card>
         </Col>
@@ -335,7 +392,15 @@ const Dashboard = () => {
                     <div key={`${item.name}-${index}`} className="rank-item">
                       <span className="rank-num">{index + 1}</span>
                       <span className="rank-name" title={item.name}>{item.name}</span>
-                      <span className="rank-value">{item.value}</span>
+                      <span
+                        className="rank-value dashboard-rank-value-clickable"
+                        onClick={() => openPersonListModal(`机构：${item.name}`, { organization: item.name })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && openPersonListModal(`机构：${item.name}`, { organization: item.name })}
+                      >
+                        {item.value}
+                      </span>
                       <div className="rank-bar-wrap">
                         <div
                           className="rank-bar"
@@ -359,7 +424,15 @@ const Dashboard = () => {
                     <div key={`${item.name}-${index}`} className="rank-item">
                       <span className="rank-num">{index + 1}</span>
                       <span className="rank-name" title={item.name}>{item.name}</span>
-                      <span className="rank-value">{item.value}</span>
+                      <span
+                        className="rank-value dashboard-rank-value-clickable"
+                        onClick={() => openPersonListModal(`签证类型：${item.name}`, { visaType: item.name })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && openPersonListModal(`签证类型：${item.name}`, { visaType: item.name })}
+                      >
+                        {item.value}
+                      </span>
                       <div className="rank-bar-wrap">
                         <div
                           className="rank-bar"
@@ -450,17 +523,40 @@ const Dashboard = () => {
                 }
                 const maxVal = Math.max(...list.map((o) => o.value), 1);
                 return list.map((item, index) => (
-                  <div key={`${item.name}-${index}`} className="rank-item">
-                    <span className="rank-num">{index + 1}</span>
-                    <span className="rank-name" title={item.name}>{item.name}</span>
-                    <span className="rank-value">{item.value}</span>
-                    <div className="rank-bar-wrap">
-                      <div
-                        className="rank-bar"
-                        style={{ width: `${(Number(item.value) / maxVal) * 100}%` }}
-                      />
+                  <Tooltip
+                    key={`${item.name}-${index}`}
+                    title={`${item.name}: ${item.value}`}
+                    placement="left"
+                    overlayInnerStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.96)',
+                      border: '1px solid rgba(0, 0, 0, 0.08)',
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: '#1d1d1f',
+                    }}
+                  >
+                    <div className="rank-item">
+                      <span className="rank-num">{index + 1}</span>
+                      <span className="rank-name" title={item.name}>{item.name}</span>
+                      <span
+                        className="rank-value dashboard-rank-value-clickable"
+                        onClick={() => openPersonListModal(`${item.name} 涉及人员`, { destinationProvince: item.name })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && openPersonListModal(`${item.name} 涉及人员`, { destinationProvince: item.name })}
+                      >
+                        {item.value}
+                      </span>
+                      <div className="rank-bar-wrap">
+                        <div
+                          className="rank-bar"
+                          style={{ width: `${(Number(item.value) / maxVal) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </Tooltip>
                 ));
               })()}
             </div>
@@ -476,7 +572,15 @@ const Dashboard = () => {
                     <div key={`${item.name}-${index}`} className="rank-item">
                       <span className="rank-num">{index + 1}</span>
                       <span className="rank-name" title={item.name}>{item.name}</span>
-                      <span className="rank-value">{item.value}</span>
+                      <span
+                        className="rank-value dashboard-rank-value-clickable"
+                        onClick={() => openPersonListModal(`群体：${item.name}`, { belongingGroup: item.name })}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && openPersonListModal(`群体：${item.name}`, { belongingGroup: item.name })}
+                      >
+                        {item.value}
+                      </span>
                       <div className="rank-bar-wrap">
                         <div
                           className="rank-bar"
@@ -491,8 +595,48 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      <Modal
+        title={personListModalTitle}
+        open={personListModalOpen}
+        onCancel={() => setPersonListModalOpen(false)}
+        footer={null}
+        width="85%"
+        destroyOnClose
+        className="dashboard-person-list-modal"
+      >
+        {personListLoading ? (
+          <div className="dashboard-person-list-loading">
+            <Spin tip="加载中..." />
+          </div>
+        ) : personListData.content.length === 0 ? (
+          <Empty description="暂无人员" />
+        ) : (
+          <>
+            <Row gutter={[12, 12]} className="dashboard-person-list-grid">
+              {personListData.content.map((person) => (
+                <Col xs={24} sm={12} md={8} key={person.personId}>
+                  <PersonCard person={person} showActionLink />
+                </Col>
+              ))}
+            </Row>
+            {personListData.totalElements > PERSON_LIST_PAGE_SIZE && (
+              <div className="dashboard-person-list-pagination">
+                <Pagination
+                  current={personListPage + 1}
+                  total={personListData.totalElements}
+                  pageSize={PERSON_LIST_PAGE_SIZE}
+                  showSizeChanger={false}
+                  showTotal={(total) => `共 ${total} 人`}
+                  onChange={(page) => setPersonListPage(page - 1)}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
     </div>
   );
-};
+}
 
 export default Dashboard;

@@ -150,12 +150,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--input-border);
   background: var(--input-bg);
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -222,25 +222,23 @@
 
 .person-list-tag {
   margin: 0 !important;
-  padding: 2px 8px !important;
-  font-size: 12px !important;
-  border-radius: 4px !important;
-  border: 1px solid var(--input-border) !important;
-  background: var(--input-bg) !important;
-  color: var(--text-muted) !important;
+  padding: 4px 12px !important;
+  font-size: 13px !important;
+  border-radius: 20px !important;
+  border: none !important;
+  background: var(--primary-light) !important;
+  color: var(--primary) !important;
   cursor: pointer !important;
-  transition: border-color 0.2s, background 0.2s, color 0.2s !important;
+  transition: all var(--transition-fast) !important;
 }
 
 .person-list-tag:hover {
-  border-color: var(--primary) !important;
-  color: var(--text-secondary) !important;
+  background: var(--primary-hover) !important;
 }
 
 .person-list-tag-selected {
-  border-color: var(--primary) !important;
-  background: var(--primary-hover) !important;
-  color: var(--primary) !important;
+  background: var(--primary) !important;
+  color: #fff !important;
 }
 
 .person-list-tag-count {
@@ -251,6 +249,62 @@
 
 .person-list-tag-selected .person-list-tag-count {
   color: var(--primary);
+}
+
+/* 当前已选标签 */
+.person-list-selected {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: var(--spacing-md);
+  padding: 12px 16px;
+  background: var(--primary-light);
+  border-radius: var(--radius-md);
+}
+
+.person-list-selected-label {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.person-list-selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.person-list-selected-tag {
+  margin: 0 !important;
+  padding: 4px 10px !important;
+  font-size: 13px !important;
+  border-radius: 20px !important;
+  background: var(--primary) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.person-list-selected-tag .anticon-close {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 10px;
+}
+
+.person-list-selected-clear {
+  padding: 4px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--input-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.person-list-selected-clear:hover {
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 /* 分割线 */
@@ -274,6 +328,7 @@
   border-radius: var(--card-radius);
   border: 1px solid var(--card-border);
   background: var(--card-bg);
+  box-shadow: var(--card-shadow);
 }
 
 .person-list-result-card .ant-card-body {
@@ -309,12 +364,12 @@
 }
 
 .person-list-pagination-inner .ant-pagination-item-active {
-  background: var(--primary-hover) !important;
+  background: var(--primary) !important;
   border-color: var(--primary) !important;
 }
 
 .person-list-pagination-inner .ant-pagination-item-active a {
-  color: var(--primary) !important;
+  color: #fff !important;
 }
 
 .person-list-pagination-inner .ant-select-selector {

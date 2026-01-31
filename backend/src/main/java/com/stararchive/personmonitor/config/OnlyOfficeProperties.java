@@ -19,9 +19,10 @@ public class OnlyOfficeProperties {
 
     /**
      * 文档下载基地址：OnlyOffice 服务端通过该基地址 + 路径拉取文档。
-     * 必须为 OnlyOffice 可访问的绝对 URL，如 http://host.docker.internal:8000/api 或 http://backend:8000/api。
+     * 必须为 OnlyOffice 可访问的绝对 URL，且需包含后端 context-path（如 /littlesmall/api）。
+     * 示例：http://host.docker.internal:8000/littlesmall/api 或 http://localhost:8000/littlesmall/api。
      */
-    private String documentDownloadBase = "http://localhost:8000/api";
+    private String documentDownloadBase = "http://localhost:8000/littlesmall/api";
 
     /** 是否启用 OnlyOffice 预览（未配置或基地址不可达时可设为 false 仅保留下载） */
     private boolean enabled = true;

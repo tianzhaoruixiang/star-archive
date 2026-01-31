@@ -76,19 +76,6 @@ const PersonCard: FC<PersonCardProps> = ({
           </Tag>
         ))}
       </div>
-      {showRemove && onRemove && (
-        <button
-          type="button"
-          className="person-card-remove"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(e, person.personId);
-          }}
-          disabled={removing}
-        >
-          <DeleteOutlined /> 移除
-        </button>
-      )}
     </Card>
   );
 };

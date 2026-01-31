@@ -142,27 +142,44 @@ services:
       - seaweedfs-volume
     restart: unless-stopped
   # OnlyOffice Document Server（档案融合文件预览）
+  # 当后端运行在宿主机时：OnlyOffice 需通过 host.docker.internal 拉取文档。
+  # 1) extra_hosts 将 host.docker.internal 解析为宿主机 IP（Windows/Mac 自带，Linux 必须加此项否则 Download failed）
+  # 2) 后端 application.yml 中 onlyoffice.document-download-base 填 http://host.docker.internal:8000/littlesmall/api
+  # 3) 后端须监听 0.0.0.0:8000，不能只监听 127.0.0.1，否则容器访问不到
+  #
+  # 默认宿主机端口 45678（映射到容器 80）；application.yml 中 document-server-url 填 http://localhost:45678
   onlyoffice:
     image: onlyoffice/documentserver:9.2
     container_name: archive-onlyoffice
-    # 使 OnlyOffice 能访问宿主机上的后端（document-download-base 使用 host.docker.internal 时）
-    # Windows/Mac 自带；Linux 需加 extra_hosts 否则会报 Download failed
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       archive-network:
         ipv4_address: 172.20.80.20
     ports:
-      - "8081:80"
+      - "45678:80"
+      - "45679:443"
     volumes:
       # 使用命名卷，由容器自行创建 Data/certs 等目录，避免 bind 挂载时 certs 缺失报错
       - onlyoffice-data:/var/www/onlyoffice/Data
       - ./data/onlyoffice/logs:/var/log/onlyoffice
-      # 允许 OnlyOffice 向私有 IP（如 host.docker.internal）拉取文档，解决 "private IP address is not allowed" 报错
-      - ./data/onlyoffice/local.json:/etc/onlyoffice/documentserver/local.json
+      # 不挂载 local.json：Windows 下挂载单文件会导致容器内 rename 报 EBUSY；改用环境变量 ALLOW_PRIVATE_IP_ADDRESS=true 等由入口脚本写入配置
     environment:
       - JWT_ENABLED=false # Set to true and configure a secret for production use
       - LETS_ENCRYPT_ENABLED=false # Set to true to automatically obtain a Let's Encrypt SSL certificate
+      # 单容器镜像内置 PostgreSQL/RabbitMQ，须显式指定 host/port 避免入口脚本解析 JSON 得到空端口（nc: port number invalid）
+      - ONLYOFFICE_DATA_CONTAINER=false
+      - ONLYOFFICE_DATA_CONTAINER_HOST=localhost
+      - ONLYOFFICE_DATA_CONTAINER_PORT=80
+      - DB_TYPE=postgres
+      - DB_HOST=localhost
+      - DB_PORT=5432
+      - DB_NAME=onlyoffice
+      - DB_USER=onlyoffice
+      - DB_PWD=onlyoffice
+      - AMQP_URI=amqp://guest:guest@localhost:5672
+      - ALLOW_PRIVATE_IP_ADDRESS=true
+      - ALLOW_META_IP_ADDRESS=true
     restart: unless-stopped
     deploy:
       resources:

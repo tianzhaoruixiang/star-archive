@@ -17,8 +17,18 @@ const initialState: AuthState = {
 
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ username, password }: { username: string; password: string }) => {
-    const response = await authAPI.login(username, password);
+  async (
+    { username, password }: { username: string; password: string },
+    { rejectWithValue }
+  ) => {
+    const response = (await authAPI.login(username, password)) as {
+      result?: string;
+      message?: string;
+      data?: { username: string; role: string; userId?: number };
+    };
+    if (response?.result !== 'SUCCESS' || !response?.data) {
+      return rejectWithValue(response?.message ?? '用户名或密码错误');
+    }
     return response.data;
   }
 );
@@ -44,7 +54,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || '登录失败';
+        state.error = (action.payload as string) || action.error.message || '登录失败';
       })
       .addCase(logout.fulfilled, (state) => {
         state.isAuthenticated = false;
