@@ -76,18 +76,6 @@ const PersonCard: FC<PersonCardProps> = ({
           </Tag>
         ))}
       </div>
-      {person.isKeyPerson && (
-        <Tag color="red" className="person-card-key">
-          重点人员
-        </Tag>
-      )}
-      {showActionLink && (
-        <div className="person-card-actions">
-          <span className="person-card-link" onClick={handleLinkClick}>
-            <LinkOutlined /> {actionLinkText}
-          </span>
-        </div>
-      )}
       {showRemove && onRemove && (
         <button
           type="button"

@@ -37,6 +37,6 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     /**
      * 查询所有标签(按层级排序)
      */
-    @Query("SELECT t FROM Tag t ORDER BY t.firstLevelName, t.secondLevelName, t.tagName")
+    @Query("SELECT t FROM Tag t ORDER BY COALESCE(t.firstLevelSortOrder, 999), t.firstLevelName, t.secondLevelName, t.tagName")
     List<Tag> findAllOrderByHierarchy();
 }

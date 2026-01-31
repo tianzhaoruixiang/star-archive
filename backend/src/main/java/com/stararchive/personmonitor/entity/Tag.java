@@ -39,6 +39,9 @@ public class Tag {
     @Column(name = "parent_tag_id")
     private Long parentTagId;
     
+    @Column(name = "first_level_sort_order")
+    private Integer firstLevelSortOrder;
+    
     @Column(name = "created_time")
     private LocalDateTime createdTime;
     

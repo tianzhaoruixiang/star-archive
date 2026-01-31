@@ -6,6 +6,7 @@ interface PersonState {
   list: any[];
   detail: PersonDetailData | null;
   tags: any[];
+  tagsLoading: boolean;
   pagination: {
     page: number;
     size: number;
@@ -19,6 +20,7 @@ const initialState: PersonState = {
   list: [],
   detail: null,
   tags: [],
+  tagsLoading: false,
   pagination: {
     page: 0,
     size: 20,
@@ -93,8 +95,15 @@ const personSlice = createSlice({
         state.detail = null;
         state.error = action.error.message || '加载失败';
       })
+      .addCase(fetchTags.pending, (state) => {
+        state.tagsLoading = true;
+      })
       .addCase(fetchTags.fulfilled, (state, action) => {
+        state.tagsLoading = false;
         state.tags = action.payload;
+      })
+      .addCase(fetchTags.rejected, (state) => {
+        state.tagsLoading = false;
       })
       .addCase(fetchPersonListByTag.pending, (state) => {
         state.loading = true;

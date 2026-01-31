@@ -208,6 +208,7 @@ CREATE TABLE IF NOT EXISTS tag
     `tag_description` STRING COMMENT '标签描述',
     `calculation_rules` STRING COMMENT '标签计算规则',
     `parent_tag_id` BIGINT COMMENT '父标签编号',
+    `first_level_sort_order` INT DEFAULT 0 COMMENT '一级标签展示顺序：1基本属性 2身份属性 3关系属性 4组织架构 5行为规律 6异常行为',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )

@@ -185,8 +185,8 @@ const Dashboard = () => {
             type: 'map',
             map: 'china',
             roam: true,
-            layoutCenter: ['50%', '70%'],
-            layoutSize: '130%',
+            layoutCenter: ['50%', '60%'],
+            layoutSize: '110%',
             itemStyle: {
               borderColor: 'rgba(148, 163, 184, 0.6)',
               borderWidth: 1.2,

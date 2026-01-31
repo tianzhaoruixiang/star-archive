@@ -1,10 +1,11 @@
 package com.stararchive.personmonitor.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -21,7 +22,9 @@ public class PersonUpdateDTO {
     private String organization;
     private String belongingGroup;
     private String gender;
-    private LocalDateTime birthDate;
+    /** 出生日期，前端传 yyyy-MM-dd */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthDate;
     private String nationality;
     private String nationalityCode;
     private String householdAddress;

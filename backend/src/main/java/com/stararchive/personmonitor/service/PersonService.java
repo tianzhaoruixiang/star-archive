@@ -111,7 +111,7 @@ public class PersonService {
         if (dto.getOrganization() != null) person.setOrganization(dto.getOrganization());
         if (dto.getBelongingGroup() != null) person.setBelongingGroup(dto.getBelongingGroup());
         if (dto.getGender() != null) person.setGender(dto.getGender());
-        if (dto.getBirthDate() != null) person.setBirthDate(dto.getBirthDate());
+        if (dto.getBirthDate() != null) person.setBirthDate(dto.getBirthDate().atStartOfDay());
         if (dto.getNationality() != null) person.setNationality(dto.getNationality());
         if (dto.getNationalityCode() != null) person.setNationalityCode(dto.getNationalityCode());
         if (dto.getHouseholdAddress() != null) person.setHouseholdAddress(dto.getHouseholdAddress());
@@ -146,6 +146,7 @@ public class PersonService {
                     dto.setTagName(tag.getTagName());
                     dto.setTagDescription(tag.getTagDescription());
                     dto.setParentTagId(tag.getParentTagId());
+                    dto.setFirstLevelSortOrder(tag.getFirstLevelSortOrder());
                     try {
                         dto.setPersonCount(personRepository.countByPersonTagsContaining(tag.getTagName()));
                     } catch (Exception e) {

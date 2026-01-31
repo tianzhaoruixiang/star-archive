@@ -20,6 +20,8 @@ public class TagDTO {
     private String tagName;
     private String tagDescription;
     private Long parentTagId;
+    /** 一级标签展示顺序：1基本属性 2身份属性 3关系属性 4组织架构 5行为规律 6异常行为 */
+    private Integer firstLevelSortOrder;
     private Long personCount;
     private List<TagDTO> children;
 }

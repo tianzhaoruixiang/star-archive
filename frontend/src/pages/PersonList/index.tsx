@@ -32,9 +32,11 @@ function buildTagTree(tags: TagItem[] | null): Record<string, Record<string, Tag
 
 const PersonList = () => {
   const dispatch = useAppDispatch();
-  const { list, pagination, loading, tags } = useAppSelector((state) => state.person);
+  const { list, pagination, loading, tags, tagsLoading } = useAppSelector((state) => state.person);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  /** 当前展开的二级分类 key：firstLevelName-secondLevelName，用于展示三级标签 */
+  const [expandedSecondKey, setExpandedSecondKey] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchTags());
@@ -61,6 +63,10 @@ const PersonList = () => {
 
   const handleTagClick = useCallback((tagName: string) => {
     setSelectedTag((prev) => (prev === tagName ? null : tagName));
+  }, []);
+
+  const handleSecondLevelClick = useCallback((key: string) => {
+    setExpandedSecondKey((prev) => (prev === key ? null : key));
   }, []);
 
   const tagTree = useMemo(() => buildTagTree((tags || []) as TagItem[]), [tags]);
@@ -93,38 +99,63 @@ const PersonList = () => {
         </div>
       </div>
 
-      {/* 筛选标签（全部来自 Doris tag 表 /persons/tags），默认展示所有人员 */}
+      {/* 筛选标签：一级分类 -> 二级分类可点击 -> 点击后展示三级标签 */}
       <div className="person-list-filter">
         <div className="person-list-filter-title">筛选标签</div>
+        {tagsLoading ? (
+          <div className="person-list-filter-loading">
+            <Spin size="small" tip="标签加载中..." />
+          </div>
+        ) : (
+        <>
         {Object.entries(tagTree).map(([firstLevelName, secondMap]) => (
           <div key={firstLevelName} className="person-list-filter-block">
             <div className="person-list-filter-category">
               <span className="person-list-filter-bar" />
               <span className="person-list-filter-category-label">{firstLevelName}</span>
             </div>
-            {Object.entries(secondMap).map(([secondLevelName, items]) => (
-              <div key={`${firstLevelName}-${secondLevelName}`} className="person-list-filter-row">
-                {secondLevelName ? (
-                  <span className="person-list-filter-sub-label">{secondLevelName}：</span>
-                ) : null}
-                <div className="person-list-filter-tags">
-                  {items.map((t) => (
-                    <Tag
-                      key={t.tagId}
-                      className={`person-list-tag ${selectedTag === t.tagName ? 'person-list-tag-selected' : ''}`}
-                      onClick={() => handleTagClick(t.tagName)}
-                    >
-                      {t.tagName}
-                      {t.personCount != null && (
-                        <span className="person-list-tag-count">({t.personCount})</span>
-                      )}
-                    </Tag>
-                  ))}
+            <div className="person-list-filter-seconds-row">
+            {Object.entries(secondMap).map(([secondLevelName, items]) => {
+              const secondKey = `${firstLevelName}-${secondLevelName}`;
+              const isExpanded = expandedSecondKey === secondKey;
+              const displaySecondName = secondLevelName || '其他';
+              return (
+                <div key={secondKey} className="person-list-filter-second-wrap">
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className={`person-list-filter-second ${isExpanded ? 'person-list-filter-second-expanded' : ''}`}
+                    onClick={() => handleSecondLevelClick(secondKey)}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleSecondLevelClick(secondKey)}
+                  >
+                    <span className="person-list-filter-second-label">{displaySecondName}</span>
+                    <span className="person-list-filter-second-count">共 {items.length} 项</span>
+                    <span className="person-list-filter-second-arrow">{isExpanded ? '▼' : '▶'}</span>
+                  </div>
+                  {isExpanded && (
+                    <div className="person-list-filter-tags person-list-filter-tags-third">
+                      {items.map((t) => (
+                        <Tag
+                          key={t.tagId}
+                          className={`person-list-tag ${selectedTag === t.tagName ? 'person-list-tag-selected' : ''}`}
+                          onClick={() => handleTagClick(t.tagName)}
+                        >
+                          {t.tagName}
+                          {t.personCount != null && (
+                            <span className="person-list-tag-count">({t.personCount})</span>
+                          )}
+                        </Tag>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
+            </div>
           </div>
         ))}
+        </>
+        )}
       </div>
 
       {/* 分割线 */}
@@ -143,7 +174,7 @@ const PersonList = () => {
         <>
           <Row gutter={[16, 16]} className="person-list-grid">
             {filteredList.map((person: PersonCardData) => (
-              <Col xs={24} sm={12} md={8} lg={6} xl={4} key={person.personId}>
+              <Col xs={24} sm={12} md={8} lg={6} className="person-list-col-five" key={person.personId}>
                 <PersonCard
                   person={person}
                   showActionLink

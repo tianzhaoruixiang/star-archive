@@ -145,6 +145,10 @@ services:
   onlyoffice:
     image: onlyoffice/documentserver:9.2
     container_name: archive-onlyoffice
+    # 使 OnlyOffice 能访问宿主机上的后端（document-download-base 使用 host.docker.internal 时）
+    # Windows/Mac 自带；Linux 需加 extra_hosts 否则会报 Download failed
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       archive-network:
         ipv4_address: 172.20.80.20

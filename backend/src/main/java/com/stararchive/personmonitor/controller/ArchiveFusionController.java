@@ -101,17 +101,21 @@ public class ArchiveFusionController {
             @RequestParam(value = "download", defaultValue = "0") int download) {
         Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
         if (taskOpt.isEmpty()) {
+            log.warn("档案文件下载: 任务不存在 taskId={}", taskId);
             return ResponseEntity.notFound().build();
         }
         ArchiveImportTask task = taskOpt.get();
         String path = task.getFilePathId();
         if (path == null || path.isBlank()) {
+            log.warn("档案文件下载: 任务未关联文件 taskId={}", taskId);
             return ResponseEntity.notFound().build();
         }
         byte[] data = seaweedFSService.download(path);
         if (data == null || data.length == 0) {
+            log.warn("档案文件下载: SeaweedFS 拉取失败或为空 taskId={}, path={}", taskId, path);
             return ResponseEntity.notFound().build();
         }
+        log.debug("档案文件下载: 成功 taskId={}, size={}", taskId, data.length);
         MediaType contentType = contentTypeFromFileName(task.getFileName());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(contentType);
@@ -157,6 +161,7 @@ public class ArchiveFusionController {
         String title = task.getFileName() != null ? task.getFileName() : "document." + fileType;
         String documentType = isCellType(fileType) ? "cell" : "word";
 
+        log.info("OnlyOffice 预览配置: taskId={}, documentUrl={} (OnlyOffice 需能访问该地址)", taskId, documentUrl);
         OnlyOfficePreviewConfigDTO config = OnlyOfficePreviewConfigDTO.builder()
                 .documentServerUrl(docServerUrl)
                 .documentUrl(documentUrl)

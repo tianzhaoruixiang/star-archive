@@ -108,7 +108,7 @@ const OnlyOfficeViewer: FC<OnlyOfficeViewerProps> = ({
         <Spin tip="正在加载文档..." size="large" />
       </div>
       <p className="onlyoffice-viewer-hint">
-        若预览空白或报错「无法下载文档」，请确认后端配置 onlyoffice.document-download-base 对 OnlyOffice 可访问（Docker 内建议 http://host.docker.internal:8000/api）。
+        若出现「Download failed」：请确认（1）后端已启动且端口与 document-download-base 一致；（2）OnlyOffice 能访问该地址（Docker 下 Linux 需在 onlyoffice 服务中配置 extra_hosts: host.docker.internal:host-gateway）；（3）任务已关联文件且 SeaweedFS 可访问。详见后端日志「档案文件下载」/「OnlyOffice 预览配置」。
       </p>
     </div>
   );

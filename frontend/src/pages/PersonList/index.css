@@ -78,6 +78,17 @@
   margin-bottom: 14px;
 }
 
+.person-list-filter-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  color: var(--text-secondary);
+}
+.person-list-filter-loading .ant-spin-text {
+  margin-left: 8px;
+}
+
 .person-list-filter-title {
   font-size: 14px;
   font-weight: var(--font-weight-subtitle);
@@ -86,6 +97,10 @@
 }
 
 .person-list-filter-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px 14px;
+  flex-wrap: wrap;
   margin-bottom: 12px;
 }
 
@@ -97,7 +112,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  flex-shrink: 0;
+  min-height: 32px;
 }
 
 .person-list-filter-bar {
@@ -112,6 +128,70 @@
   font-size: 13px;
   font-weight: var(--font-weight-subtitle);
   color: var(--text-secondary);
+}
+
+/* 二级分类：与一级分类同一行，横向排列 */
+.person-list-filter-seconds-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.person-list-filter-second-wrap {
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.person-list-filter-second {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.person-list-filter-second:hover {
+  border-color: var(--primary);
+  background: var(--primary-hover);
+  color: var(--text-secondary);
+}
+
+.person-list-filter-second-expanded {
+  border-color: var(--primary);
+  background: var(--primary-hover);
+}
+
+.person-list-filter-second-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.person-list-filter-second-count {
+  font-size: 11px;
+  color: var(--text-placeholder);
+}
+
+.person-list-filter-second-arrow {
+  font-size: 10px;
+  color: var(--text-placeholder);
+  transition: transform 0.2s;
+}
+
+.person-list-filter-tags-third {
+  margin-top: 8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--card-border);
+  min-width: 0;
 }
 
 .person-list-filter-row {
@@ -206,6 +286,14 @@
 
 .person-list-grid {
   margin-bottom: var(--page-gap);
+}
+
+/* 大屏每行 5 张人物卡片（24 栅格不整除 5，用 20% 宽度） */
+@media (min-width: 992px) {
+  .person-list-grid .person-list-col-five {
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
 }
 
 /* 分页 - 继承 page-pagination 变量 */
