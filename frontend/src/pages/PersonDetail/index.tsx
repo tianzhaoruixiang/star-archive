@@ -434,7 +434,7 @@ const PersonDetail = () => {
                     <span className="time">
                       {formatDateTime(t.eventTime, '')}
                     </span>
-                    {t.travelType === 'FLIGHT' ? '航班' : '火车'}：{t.departure} → {t.destination}
+                    {t.travelType === 'FLIGHT' ? '航班' : '火车'}：{(t.departureCity && t.destinationCity) ? `${t.departureCity} → ${t.destinationCity}` : `${t.departure ?? ''} → ${t.destination ?? ''}`}
                     {t.ticketNumber && ` · 票号 ${t.ticketNumber}`}
                     {t.visaType && ` · 签证 ${t.visaType}`}
                   </li>

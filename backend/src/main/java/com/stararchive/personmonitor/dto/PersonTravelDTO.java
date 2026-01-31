@@ -23,4 +23,8 @@ public class PersonTravelDTO {
     private String travelType;
     private String ticketNumber;
     private String visaType;
+    /** 出发城市 */
+    private String departureCity;
+    /** 到达城市 */
+    private String destinationCity;
 }

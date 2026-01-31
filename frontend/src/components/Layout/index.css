@@ -170,3 +170,8 @@
   overflow: auto;
   min-height: calc(100vh - 64px);
 }
+
+/* 首页时 main 底部不预留 24px */
+.content.content--dashboard {
+  padding-bottom: 0;
+}

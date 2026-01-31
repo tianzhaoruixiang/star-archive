@@ -1,4 +1,41 @@
-/* 首页 - 使用统一深色主题变量 */
+/* 首页 - 科技感 / 智能监测大屏风格 */
+
+/* 充满视口：高度 = 100vh - 顶栏(64px) - main 顶部 padding(24px)，占满底部（main 底部已无 24px） */
+.page-wrapper.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 68px);
+  min-height: 0;
+  max-height: calc(100vh - 68px);
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-bottom: 0;
+  background:
+    linear-gradient(180deg, rgba(6, 12, 28, 0.97) 0%, var(--page-bg-mid) 40%, var(--page-bg-end) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(56, 132, 255, 0.03) 1px,
+      rgba(56, 132, 255, 0.03) 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(56, 132, 255, 0.03) 1px,
+      rgba(56, 132, 255, 0.03) 2px
+    ),
+    var(--page-bg);
+}
+.page-wrapper.dashboard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(56, 132, 255, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
 
 .dashboard-loading {
   display: flex;
@@ -8,92 +45,224 @@
   color: var(--text-placeholder);
 }
 
-/* 顶部 4 个指标卡 */
+/* 顶部 4 个指标卡：紧凑高度，适应首页 100% 高度 */
 .dashboard-cards {
-  margin-bottom: 20px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.dashboard-cards.ant-row {
+  margin-top: -22px !important;
+  margin-bottom: -2px !important;
+}
+.dashboard-cards .ant-col {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 }
 
 .dashboard-card {
-  border-radius: 12px;
-  border: none;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  position: relative;
+  background: rgba(18, 28, 52, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 8px 0 0 8px;
+}
+.dashboard-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .dashboard-card .ant-card-body {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 20px;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.dashboard-card .ant-statistic {
+  text-align: center;
+}
+.dashboard-card .ant-statistic-content-value {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  font-size: 18px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
 }
 
 .dashboard-card-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 18px;
   color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+.dashboard-card:hover .dashboard-card-icon {
+  transform: scale(1.05);
 }
 
 .dashboard-card-purple {
-  background: var(--accent-purple);
+  background: linear-gradient(135deg, rgba(92, 107, 192, 0.9) 0%, rgba(63, 81, 181, 0.85) 100%);
 }
-
+.dashboard-card-purple::before { background: linear-gradient(180deg, #7986cb, #5c6bc0); }
 .dashboard-card-purple .dashboard-card-icon {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .dashboard-card-green {
-  background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+  background: linear-gradient(135deg, rgba(56, 142, 60, 0.9) 0%, rgba(46, 125, 50, 0.85) 100%);
 }
-
+.dashboard-card-green::before { background: linear-gradient(180deg, #81c784, #66bb6a); }
 .dashboard-card-green .dashboard-card-icon {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .dashboard-card-pink {
-  background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+  background: linear-gradient(135deg, rgba(194, 24, 91, 0.9) 0%, rgba(173, 20, 87, 0.85) 100%);
 }
-
+.dashboard-card-pink::before { background: linear-gradient(180deg, #f06292, #e91e63); }
 .dashboard-card-pink .dashboard-card-icon {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .dashboard-card-blue {
-  background: linear-gradient(135deg, #1e88e5 0%, #42a5f5 100%);
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.9) 0%, rgba(21, 101, 192, 0.85) 100%);
 }
-
+.dashboard-card-blue::before { background: linear-gradient(180deg, #42a5f5, #1e88e5); }
 .dashboard-card-blue .dashboard-card-icon {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .dashboard-card .ant-statistic-title {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+  margin-bottom: 0;
+  font-weight: 500;
+}
+.dashboard-card .ant-statistic-content {
+  line-height: 1.2;
 }
 
-/* 三栏主区域 */
+/* 三栏主区域：占满剩余高度且不超出，置于背景之上 */
 .dashboard-main {
   margin-top: 0;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.dashboard-main .ant-row {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  align-items: stretch;
+}
+
+.dashboard-main .ant-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: var(--spacing-md);
+}
+
+/* 左右列可纵向滚动，避免第二张卡片（签证类型、群体类别）底部被裁切 */
+.dashboard-main .ant-col:first-child,
+.dashboard-main .ant-col:last-child {
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+.dashboard-main .ant-col:first-child::-webkit-scrollbar,
+.dashboard-main .ant-col:last-child::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard-main .ant-col:first-child::-webkit-scrollbar-thumb,
+.dashboard-main .ant-col:last-child::-webkit-scrollbar-thumb {
+  background: #2a4a6f;
+  border-radius: 3px;
+}
+
+.dashboard-main .dashboard-panel {
+  margin-bottom: 0;
 }
 
 .dashboard-panel {
   margin-bottom: var(--spacing-lg);
   border-radius: var(--card-radius);
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
+  border: 1px solid rgba(30, 51, 84, 0.8);
+  background: rgba(14, 28, 52, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.dashboard-main .dashboard-panel {
+  position: relative;
+  z-index: 1;
+}
+
+/* 中间地图列：地图卡片占满列高，标题区紧凑 */
+.dashboard-main .ant-col:nth-child(2) .dashboard-panel-map {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-panel-map .ant-card-head {
+  padding: 4px 10px;
+  min-height: 32px;
+}
+
+.dashboard-panel-map .ant-card-head-title {
+  font-size: 12px;
 }
 
 .dashboard-panel .ant-card-head {
-  border-bottom: 1px solid var(--card-border);
+  position: relative;
+  border-bottom: 1px solid rgba(30, 51, 84, 0.9);
   color: var(--text-muted);
   font-size: var(--font-body);
+  padding: 8px 12px;
+  min-height: 40px;
 }
-
 .dashboard-panel .ant-card-head-title {
   color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 13px;
+}
+.dashboard-panel .ant-card-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 48px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(56, 132, 255, 0.8), transparent);
+  border-radius: 0 1px 0 0;
 }
 
 .dashboard-panel .ant-card-body {
@@ -101,11 +270,21 @@
   color: var(--text-muted);
 }
 
-/* 机构分布TOP15、各地排名、签证类型排名、群体类别 - 统一默认高度以符合页面布局 */
+/* 机构分布TOP15、各地排名、签证类型排名、群体类别 - 紧凑高度，避免滚动条 */
 .dashboard-panel-rank-card {
-  min-height: 320px;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.dashboard-panel-rank-card .ant-card-head {
+  padding: 6px 12px;
+  min-height: 36px;
+}
+
+.dashboard-panel-rank-card .ant-card-head-title {
+  font-size: 13px;
 }
 
 .dashboard-panel-rank-card .ant-card-body {
@@ -113,13 +292,13 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  padding: 10px 12px;
 }
 
 .dashboard-panel-rank-card .rank-list,
 .dashboard-panel-rank-card .rank-list-scroll {
   flex: 1;
-  min-height: 240px;
-  max-height: 280px;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -146,9 +325,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(46, 63, 95, 0.6);
-  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(30, 51, 84, 0.6);
+  font-size: 12px;
+  transition: background 0.15s ease;
+}
+.dashboard-panel-rank-card .rank-item:hover {
+  background: rgba(56, 132, 255, 0.04);
 }
 
 .rank-item:last-child {
@@ -157,10 +340,16 @@
 
 .rank-num {
   flex-shrink: 0;
-  width: 22px;
+  width: 24px;
+  height: 20px;
+  line-height: 20px;
   text-align: center;
-  color: var(--text-placeholder);
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(139, 157, 195, 0.9);
+  background: rgba(30, 51, 84, 0.6);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .rank-name {
@@ -170,28 +359,35 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-secondary);
+  font-size: 12px;
 }
 
 .rank-value {
   flex-shrink: 0;
-  color: #52c41a;
-  font-weight: 500;
+  color: #4ade80;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+.dashboard-panel-rank-card .rank-item:hover .rank-name {
+  color: var(--text-primary);
 }
 
 .rank-bar-wrap {
   flex-shrink: 0;
-  width: 60px;
-  height: 6px;
-  background: var(--card-border);
+  width: 56px;
+  height: 5px;
+  background: rgba(30, 51, 84, 0.8);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .rank-bar {
   height: 100%;
-  background: linear-gradient(90deg, #1890ff 0%, #36cfc9 100%);
+  background: linear-gradient(90deg, #38bdf8 0%, #22d3ee 100%);
   border-radius: 3px;
-  transition: width 0.3s;
+  transition: width 0.35s ease;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
 
 .rank-item-simple .rank-value {
@@ -224,49 +420,48 @@
   border-bottom-color: var(--input-border);
 }
 
-/* 地图区域 */
+/* 地图区域：充满卡片高度 */
 .dashboard-panel-map .ant-card-body {
   padding: 0;
   position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-section.map-container {
   position: relative;
-  height: 520px;
+  flex: 1;
+  min-height: 160px;
   width: 100%;
-  /* 毛玻璃：半透明深色 + 背景模糊与饱和度 */
-  background: rgba(10, 10, 15, 0.6);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(102, 126, 234, 0.25);
+  background: linear-gradient(165deg, rgba(8, 14, 28, 0.92) 0%, rgba(15, 23, 42, 0.88) 100%);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(56, 132, 255, 0.18);
   border-radius: 0 0 12px 12px;
   box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 10px 48px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 100px rgba(56, 132, 255, 0.04);
   overflow: hidden;
 }
-
-/* 顶部扫描线：紫→蓝渐变，横向移动 */
-.map-section::before {
+.map-section.map-container::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #667eea 20%, #764ba2 50%, #667eea 80%, transparent 100%);
-  background-size: 200% 100%;
-  animation: sectionScan 3s linear infinite;
-  z-index: 2;
+  inset: 0;
+  border-radius: 0 0 12px 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(56, 132, 255, 0.15) 0%, transparent 30%, transparent 70%, rgba(56, 132, 255, 0.08) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
   pointer-events: none;
+  z-index: 2;
 }
 
-@keyframes sectionScan {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* 中部柔光：径向渐变，中间微亮 */
+/* 中部柔光：径向渐变，科技感光晕 */
 .map-section::after {
   content: '';
   position: absolute;
@@ -275,9 +470,9 @@
   right: 0;
   bottom: 0;
   background: radial-gradient(
-    ellipse 80% 60% at 50% 50%,
-    rgba(102, 126, 234, 0.05) 0%,
-    transparent 70%
+    ellipse 70% 50% at 50% 45%,
+    rgba(56, 132, 255, 0.07) 0%,
+    transparent 60%
   );
   pointer-events: none;
   z-index: 1;
@@ -285,7 +480,8 @@
 
 .map-container {
   position: relative;
-  height: 520px;
+  flex: 1;
+  min-height: 0;
   width: 100%;
 }
 
@@ -332,38 +528,19 @@
   color: var(--primary);
 }
 
-/* 省份下钻详情页 */
-.dashboard-province-detail {
+/* 省份下钻详情页：统计分布与地图均占满视窗剩余高度 */
+.page-wrapper.dashboard-province-detail {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px);
+  min-height: calc(100vh - 64px);
   width: 100%;
   box-sizing: border-box;
 }
 
-.dashboard-province-detail-body {
-  margin-top: 0;
-}
-
-.dashboard-province-detail-map-card .ant-card-body {
-  padding: 0;
-}
-
-.dashboard-province-detail-map-wrap {
-  position: relative;
-  height: 400px;
-  width: 100%;
-}
-
-.dashboard-province-detail-map-loading,
-.dashboard-province-detail-map-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 400px;
-  color: var(--text-placeholder);
-  font-size: 14px;
-}
-
 .dashboard-province-detail-header {
-  margin-bottom: 16px;
+  flex-shrink: 0;
+  margin-bottom: 12px;
 }
 
 .dashboard-province-detail-header .ant-btn {
@@ -372,6 +549,67 @@
 
 .dashboard-province-detail-header .ant-btn:hover {
   color: var(--primary);
+}
+
+.dashboard-province-detail-body {
+  flex: 1;
+  min-height: 0;
+  margin-top: 0;
+  display: flex;
+}
+
+.dashboard-province-detail-body .ant-row {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  align-items: stretch;
+}
+
+/* 左侧：统计分布区域占满视窗剩余高度，内容超出可滚动 */
+.dashboard-province-detail-body .ant-col:first-child {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dashboard-province-detail-body .ant-col:first-child > .dashboard-panel.dashboard-province-detail-title-card {
+  flex-shrink: 0;
+}
+
+/* 统计卡片两行均分剩余高度并充满 */
+.dashboard-province-detail-body .ant-col:first-child > .ant-row.dashboard-province-detail-cards {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.dashboard-province-detail-body .ant-col:first-child > .ant-row.dashboard-province-detail-cards .ant-col {
+  display: flex;
+  min-height: 0;
+}
+
+.dashboard-province-detail-body .ant-col:first-child > .ant-row.dashboard-province-detail-cards .dashboard-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-province-detail-body .ant-col:first-child > .ant-row.dashboard-province-detail-cards .dashboard-panel .ant-card-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-province-detail-body .ant-col:first-child > .ant-row.dashboard-province-detail-cards .rank-list,
+.dashboard-province-detail-body .ant-col:first-child > .ant-row.dashboard-province-detail-cards .rank-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .dashboard-province-detail-desc {
@@ -384,6 +622,7 @@
   justify-content: center;
   align-items: center;
   min-height: 280px;
+  flex: 1;
 }
 
 .dashboard-province-detail-title-card .ant-statistic-title {
@@ -391,11 +630,12 @@
 }
 
 .dashboard-province-detail-cards {
-  margin-top: 16px;
+  margin-top: 12px;
+  gap: 12px;
 }
 
 .dashboard-province-detail-cards .dashboard-panel {
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .dashboard-province-detail-empty {
@@ -403,5 +643,52 @@
   padding: 16px;
   text-align: center;
   font-size: 13px;
+}
+
+/* 右侧：省份地图列占满剩余高度 */
+.dashboard-province-detail-body .ant-col:last-child {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.dashboard-province-detail-map-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-province-detail-map-card .ant-card-head {
+  padding: 8px 12px;
+  min-height: 40px;
+  flex-shrink: 0;
+}
+
+.dashboard-province-detail-map-card .ant-card-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-province-detail-map-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.dashboard-province-detail-map-loading,
+.dashboard-province-detail-map-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 200px;
+  color: var(--text-placeholder);
+  font-size: 14px;
 }
 

@@ -3,9 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, Row, Col, Statistic, Spin, Tabs } from 'antd';
 import {
   TeamOutlined,
-  AlertOutlined,
-  EnvironmentOutlined,
-  BarChartOutlined,
+  StarOutlined,
+  GlobalOutlined,
+  RiseOutlined,
 } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
@@ -161,11 +161,12 @@ const Dashboard = () => {
             const v = countMap.get(params.name) ?? 0;
             return `${params.name}: ${v}`;
           },
-          backgroundColor: 'rgba(15, 23, 42, 0.92)',
-          borderColor: 'rgba(102, 126, 234, 0.6)',
+          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+          borderColor: 'rgba(102, 126, 234, 0.5)',
           borderWidth: 1,
-          textStyle: { color: '#e2e8f0', fontSize: 12 },
-          padding: [8, 12],
+          borderRadius: 8,
+          textStyle: { color: '#e2e8f0', fontSize: 13, fontWeight: 500 },
+          padding: [10, 14],
         },
         visualMap: {
           min: minVal,
@@ -174,9 +175,9 @@ const Dashboard = () => {
           realtime: false,
           calculable: true,
           inRange: { color: visualMapColors },
-          right: 12,
-          bottom: 0,
-          textStyle: { color: '#8b9dc3' },
+          right: 14,
+          bottom: 8,
+          textStyle: { color: '#94a3b8', fontSize: 11, fontWeight: 500 },
         },
         series: [
           {
@@ -187,34 +188,40 @@ const Dashboard = () => {
             layoutCenter: ['50%', '70%'],
             layoutSize: '130%',
             itemStyle: {
-              borderColor: '#d1d5db',
-              borderWidth: 1.5,
+              borderColor: 'rgba(148, 163, 184, 0.6)',
+              borderWidth: 1.2,
+              shadowBlur: 4,
+              shadowColor: 'rgba(0, 0, 0, 0.12)',
             },
             label: {
               show: true,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 600,
-              color: '#1e293b',
+              color: '#0f172a',
               fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
-              textBorderColor: 'rgba(255, 255, 255, 0.8)',
-              textBorderWidth: 1,
-              textShadowColor: 'rgba(0, 0, 0, 0.15)',
-              textShadowBlur: 2,
+              textBorderColor: 'rgba(255, 255, 255, 0.95)',
+              textBorderWidth: 1.5,
+              textShadowColor: 'rgba(0, 0, 0, 0.2)',
+              textShadowBlur: 3,
+              padding: [1, 3],
             },
             emphasis: {
               label: {
                 show: true,
                 fontWeight: 700,
-                color: '#0f172a',
-                textBorderColor: 'rgba(255, 255, 255, 0.95)',
-                textBorderWidth: 1.5,
+                color: '#020617',
+                fontSize: 14,
+                textBorderColor: '#fff',
+                textBorderWidth: 2,
+                textShadowColor: 'rgba(0, 0, 0, 0.25)',
+                textShadowBlur: 4,
               },
               itemStyle: {
                 areaColor: '#818cf8',
                 borderColor: 'rgba(102, 126, 234, 0.9)',
                 borderWidth: 2.5,
-                shadowBlur: 10,
-                shadowColor: 'rgba(0, 0, 0, 0.3)',
+                shadowBlur: 12,
+                shadowColor: 'rgba(59, 130, 246, 0.35)',
               },
             },
             data: provinceList.map((p) => ({ name: p.name, value: p.value })),
@@ -271,43 +278,43 @@ const Dashboard = () => {
             <Statistic
               title="监测人员总数"
               value={totalPerson}
-              valueStyle={{ color: '#fff', fontSize: 28 }}
+              valueStyle={{ color: '#fff', fontSize: 18 }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card className="dashboard-card dashboard-card-green">
             <div className="dashboard-card-icon">
-              <AlertOutlined />
+              <StarOutlined />
             </div>
             <Statistic
               title="重点人员"
               value={keyPerson}
-              valueStyle={{ color: '#fff', fontSize: 28 }}
+              valueStyle={{ color: '#fff', fontSize: 18 }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card className="dashboard-card dashboard-card-pink">
             <div className="dashboard-card-icon">
-              <EnvironmentOutlined />
+              <GlobalOutlined />
             </div>
             <Statistic
               title="活跃区域"
               value={activeRegions}
-              valueStyle={{ color: '#fff', fontSize: 28 }}
+              valueStyle={{ color: '#fff', fontSize: 18 }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card className="dashboard-card dashboard-card-blue">
             <div className="dashboard-card-icon">
-              <BarChartOutlined />
+              <RiseOutlined />
             </div>
             <Statistic
               title="今日流动记录"
               value={todayMovement}
-              valueStyle={{ color: '#fff', fontSize: 28 }}
+              valueStyle={{ color: '#fff', fontSize: 18 }}
             />
           </Card>
         </Col>
@@ -375,7 +382,7 @@ const Dashboard = () => {
               <ReactECharts
                 key={`china-map-${location.key}-${chinaGeoLoaded}`}
                 option={mapOption()}
-                style={{ height: 520, width: '100%', position: 'absolute', left: 0, top: 0 }}
+                style={{ height: '100%', width: '100%', position: 'absolute', left: 0, top: 0 }}
                 opts={{ renderer: 'canvas' }}
                 notMerge
                 onEvents={{

@@ -205,7 +205,7 @@ public class DashboardService {
      */
     public ProvinceStatsDTO getProvinceStats(String provinceName) {
         if (provinceName == null || provinceName.isBlank()) {
-            return new ProvinceStatsDTO(0L, 0L, List.of(), List.of(), List.of());
+            return new ProvinceStatsDTO(0L, 0L, List.of(), List.of(), List.of(), List.of());
         }
         String province = provinceName.trim();
         long totalPersonCount = personTravelRepository.countDistinctPersonIdByDestinationProvince(province);
@@ -216,12 +216,15 @@ public class DashboardService {
                 personTravelRepository.findOrganizationCountsByDestinationProvince(province));
         List<ProvinceStatsDTO.RankItem> belongingGroupRank = toRankItemList(
                 personTravelRepository.findBelongingGroupCountsByDestinationProvince(province));
+        List<ProvinceStatsDTO.RankItem> cityRank = toRankItemList(
+                personTravelRepository.findDestinationCityCountsByDestinationProvince(province));
         return new ProvinceStatsDTO(
                 totalPersonCount,
                 travelRecordCount,
                 visaTypeRank,
                 organizationRank,
-                belongingGroupRank
+                belongingGroupRank,
+                cityRank
         );
     }
 

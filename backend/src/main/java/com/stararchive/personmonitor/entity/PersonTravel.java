@@ -52,6 +52,12 @@ public class PersonTravel {
     @Column(name = "departure_province", length = 50)
     private String departureProvince;
     
+    @Column(name = "destination_city", length = 50)
+    private String destinationCity;
+    
+    @Column(name = "departure_city", length = 50)
+    private String departureCity;
+    
     @Column(name = "created_time")
     private LocalDateTime createdTime;
     

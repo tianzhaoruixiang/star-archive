@@ -114,4 +114,10 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      */
     @Query(value = "SELECT p.belonging_group, COUNT(DISTINCT pt.person_id) AS cnt FROM person_travel pt INNER JOIN person p ON pt.person_id = p.person_id WHERE pt.destination_province = :province AND (p.belonging_group IS NOT NULL AND p.belonging_group != '') GROUP BY p.belonging_group ORDER BY cnt DESC LIMIT 15", nativeQuery = true)
     List<Object[]> findBelongingGroupCountsByDestinationProvince(@Param("province") String province);
+
+    /**
+     * 指定省份按到达城市统计行程数，返回 [destination_city, count]，用于省份页城市分布
+     */
+    @Query(value = "SELECT destination_city, COUNT(*) AS cnt FROM person_travel WHERE destination_province = :province AND destination_city IS NOT NULL AND destination_city != '' GROUP BY destination_city ORDER BY cnt DESC LIMIT 15", nativeQuery = true)
+    List<Object[]> findDestinationCityCountsByDestinationProvince(@Param("province") String province);
 }

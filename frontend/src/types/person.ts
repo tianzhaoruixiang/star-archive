@@ -43,6 +43,10 @@ export interface PersonTravelItem {
   travelType?: string;
   departure?: string;
   destination?: string;
+  /** 出发城市 */
+  departureCity?: string;
+  /** 到达城市 */
+  destinationCity?: string;
   ticketNumber?: string;
   visaType?: string;
 }

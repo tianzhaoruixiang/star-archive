@@ -64,7 +64,7 @@ function row(travelId, i) {
   const eventTime = randomDate(2024, 2025, i);
   const ticketStr = ticket ? `'${ticket}'` : 'NULL';
   const visaStr = visa ? `'${visa}'` : 'NULL';
-  return `(${travelId}, '${personId}', '${eventTime}', '${personName}', '${depPlace}', '${destPlace}', '${travelType}', ${ticketStr}, ${visaStr}, '${dest.province}', '${dep.province}', NOW(), NOW())`;
+  return `(${travelId}, '${personId}', '${eventTime}', '${personName}', '${depPlace}', '${destPlace}', '${travelType}', ${ticketStr}, ${visaStr}, '${dest.province}', '${dep.province}', '${dest.city}', '${dep.city}', NOW(), NOW())`;
 }
 
 const TOTAL = 5000;
@@ -90,7 +90,7 @@ for (let b = 0; b < NUM_BATCHES; b++) {
   outLines.push('INSERT INTO person_travel (');
   outLines.push('    travel_id, person_id, event_time, person_name, departure, destination,');
   outLines.push('    travel_type, ticket_number, visa_type, destination_province, departure_province,');
-  outLines.push('    created_time, updated_time');
+  outLines.push('    destination_city, departure_city, created_time, updated_time');
   outLines.push(') VALUES');
   outLines.push(rows.join(',\n') + ';');
   if (b < NUM_BATCHES - 1) outLines.push('');

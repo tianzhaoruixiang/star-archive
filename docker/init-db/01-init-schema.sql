@@ -86,6 +86,8 @@ CREATE TABLE IF NOT EXISTS person_travel
     `visa_type` VARCHAR(50) COMMENT '签证类型: 公务签证/外交签证/记者签证/旅游签证/其他，出入境时填写',
     `destination_province` VARCHAR(50) COMMENT '目的地省份（用于各地排名统计）',
     `departure_province` VARCHAR(50) COMMENT '出发地省份（用于各地排名统计）',
+    `destination_city` VARCHAR(50) COMMENT '到达城市',
+    `departure_city` VARCHAR(50) COMMENT '出发城市',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )

@@ -24,6 +24,8 @@ public class ProvinceStatsDTO {
     private List<RankItem> organizationRank;
     /** 所属群体排名（该省涉及人员按所属群体统计） */
     private List<RankItem> belongingGroupRank;
+    /** 城市分布排名（该省行程按到达城市统计） */
+    private List<RankItem> cityRank;
 
     @Data
     @NoArgsConstructor

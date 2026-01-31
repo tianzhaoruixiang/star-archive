@@ -59,32 +59,122 @@ const ProvinceDetail: FC = () => {
       });
   }, [adcode]);
 
+  /** 省份地图：与中国地图样式一致，按城市人数渐变着色 */
   const provinceMapOption = useCallback(() => {
     if (!provinceGeoLoaded || !provinceMapKey) return { backgroundColor: 'transparent' };
-    return {
+    const cityList = stats?.cityRank ?? [];
+    const countMap = new Map(cityList.map((c) => [c.name, c.value]));
+    const values = cityList.map((c) => c.value);
+    const minVal = values.length ? Math.min(...values) : 0;
+    let maxVal = values.length ? Math.max(...values) : 1;
+    if (maxVal <= minVal) maxVal = minVal + 1;
+
+    /* 与中国地图一致的 16 级冷暖渐变：浅蓝（少）→ 深红（多） */
+    const visualMapColors = [
+      '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981',
+      '#34d399', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#991b1b',
+    ];
+
+    const baseOption = {
       backgroundColor: 'transparent',
-      tooltip: { trigger: 'item', formatter: '{b}' },
+      tooltip: {
+        trigger: 'item',
+        formatter: (params: { name: string }) => {
+          const v = countMap.get(params.name) ?? 0;
+          return `${params.name}: ${v}`;
+        },
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        borderColor: 'rgba(102, 126, 234, 0.5)',
+        borderWidth: 1,
+        borderRadius: 8,
+        textStyle: { color: '#e2e8f0', fontSize: 13, fontWeight: 500 },
+        padding: [10, 14],
+      },
       series: [
         {
+          name: '人员数量',
           type: 'map',
           map: provinceMapKey,
           roam: true,
           layoutCenter: ['50%', '50%'],
           layoutSize: '120%',
-          label: { show: true, color: '#8b9dc3' },
           itemStyle: {
-            areaColor: 'rgba(30, 64, 175, 0.4)',
-            borderColor: 'rgba(99, 102, 241, 0.6)',
-            borderWidth: 1,
+            borderColor: 'rgba(148, 163, 184, 0.6)',
+            borderWidth: 1.2,
+            shadowBlur: 4,
+            shadowColor: 'rgba(0, 0, 0, 0.12)',
+          },
+          label: {
+            show: true,
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#0f172a',
+            fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
+            textBorderColor: 'rgba(255, 255, 255, 0.95)',
+            textBorderWidth: 1.5,
+            textShadowColor: 'rgba(0, 0, 0, 0.2)',
+            textShadowBlur: 3,
+            padding: [1, 3],
           },
           emphasis: {
-            label: { show: true, color: '#c7d2fe' },
-            itemStyle: { areaColor: 'rgba(99, 102, 241, 0.6)' },
+            label: {
+              show: true,
+              fontWeight: 700,
+              color: '#020617',
+              fontSize: 14,
+              textBorderColor: '#fff',
+              textBorderWidth: 2,
+              textShadowColor: 'rgba(0, 0, 0, 0.25)',
+              textShadowBlur: 4,
+            },
+            itemStyle: {
+              areaColor: '#818cf8',
+              borderColor: 'rgba(102, 126, 234, 0.9)',
+              borderWidth: 2.5,
+              shadowBlur: 12,
+              shadowColor: 'rgba(59, 130, 246, 0.35)',
+            },
+          },
+          data: cityList.map((c) => ({ name: c.name, value: c.value })),
+        },
+      ],
+    };
+
+    if (cityList.length > 0) {
+      return {
+        ...baseOption,
+        visualMap: {
+          min: minVal,
+          max: maxVal,
+          text: ['高', '低'],
+          realtime: false,
+          calculable: true,
+          inRange: { color: visualMapColors },
+          right: 14,
+          bottom: 8,
+          textStyle: { color: '#94a3b8', fontSize: 11, fontWeight: 500 },
+        },
+      };
+    }
+
+    /* 无城市数据时：单色底图，样式仍与中国地图一致 */
+    const seriesBase = baseOption.series[0] as Record<string, unknown>;
+    return {
+      ...baseOption,
+      series: [
+        {
+          ...seriesBase,
+          itemStyle: {
+            borderColor: 'rgba(148, 163, 184, 0.6)',
+            borderWidth: 1.2,
+            areaColor: 'rgba(30, 64, 175, 0.4)',
+            shadowBlur: 4,
+            shadowColor: 'rgba(0, 0, 0, 0.12)',
           },
         },
       ],
     };
-  }, [provinceGeoLoaded, provinceMapKey]);
+  }, [provinceGeoLoaded, provinceMapKey, stats?.cityRank]);
 
   const renderRankList = (list: ProvinceStatsDTO['visaTypeRank'], emptyText: string) => {
     if (!list || list.length === 0) {
@@ -170,17 +260,24 @@ const ProvinceDetail: FC = () => {
             </Card>
 
             <Row gutter={16} className="dashboard-province-detail-cards">
-              <Col xs={24} md={8}>
+              <Col xs={24} md={12}>
+                <Card className="dashboard-panel" title="城市分布" size="small">
+                  {renderRankList(stats?.cityRank ?? [], '暂无城市分布数据')}
+                </Card>
+              </Col>
+              <Col xs={24} md={12}>
                 <Card className="dashboard-panel" title="签证类型分布" size="small">
                   {renderRankList(stats?.visaTypeRank ?? [], '暂无签证类型数据')}
                 </Card>
               </Col>
-              <Col xs={24} md={8}>
+            </Row>
+            <Row gutter={16} className="dashboard-province-detail-cards">
+              <Col xs={24} md={12}>
                 <Card className="dashboard-panel" title="机构分布" size="small">
                   {renderRankList(stats?.organizationRank ?? [], '暂无机构数据')}
                 </Card>
               </Col>
-              <Col xs={24} md={8}>
+              <Col xs={24} md={12}>
                 <Card className="dashboard-panel" title="所属群体分布" size="small">
                   {renderRankList(stats?.belongingGroupRank ?? [], '暂无群体数据')}
                 </Card>
@@ -189,11 +286,11 @@ const ProvinceDetail: FC = () => {
           </Col>
           <Col xs={24} lg={10}>
             <Card className="dashboard-panel dashboard-province-detail-map-card" title={`${name} 地图`} size="small">
-              <div className="dashboard-province-detail-map-wrap">
+              <div className="dashboard-province-detail-map-wrap map-section map-container">
                 {provinceGeoLoaded ? (
                   <ReactECharts
                     option={provinceMapOption()}
-                    style={{ height: 400, width: '100%' }}
+                    style={{ height: '100%', width: '100%' }}
                     opts={{ renderer: 'canvas' }}
                     notMerge
                   />

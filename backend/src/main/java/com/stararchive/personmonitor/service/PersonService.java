@@ -238,6 +238,8 @@ public class PersonService {
         dto.setTravelType(travel.getTravelType());
         dto.setTicketNumber(travel.getTicketNumber());
         dto.setVisaType(travel.getVisaType());
+        dto.setDepartureCity(travel.getDepartureCity());
+        dto.setDestinationCity(travel.getDestinationCity());
         return dto;
     }
     

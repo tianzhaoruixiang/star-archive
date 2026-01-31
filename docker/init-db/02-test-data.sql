@@ -229,11 +229,11 @@ INSERT INTO person (
     NOW()
 );
 
--- 插入测试行程数据（含 visa_type、destination_province、departure_province）
+-- 插入测试行程数据（含 visa_type、destination_province、departure_province、destination_city、departure_city）
 INSERT INTO person_travel (
     travel_id, person_id, event_time, person_name, departure, destination,
     travel_type, ticket_number, visa_type, destination_province, departure_province,
-    created_time, updated_time
+    destination_city, departure_city, created_time, updated_time
 ) VALUES
 (
     1,
@@ -247,6 +247,8 @@ INSERT INTO person_travel (
     '公务签证',
     '上海市',
     '北京市',
+    '上海',
+    '北京',
     NOW(),
     NOW()
 ),
@@ -262,6 +264,8 @@ INSERT INTO person_travel (
     NULL,
     '浙江省',
     '上海市',
+    '杭州',
+    '上海',
     NOW(),
     NOW()
 ),
@@ -277,6 +281,8 @@ INSERT INTO person_travel (
     NULL,
     '江苏省',
     '上海市',
+    '苏州',
+    '上海',
     NOW(),
     NOW()
 ),
@@ -292,6 +298,8 @@ INSERT INTO person_travel (
     '旅游签证',
     '北京市',
     '广东省',
+    '北京',
+    '广州',
     NOW(),
     NOW()
 ),
@@ -307,6 +315,8 @@ INSERT INTO person_travel (
     NULL,
     '广东省',
     '广东省',
+    '广州',
+    '深圳',
     NOW(),
     NOW()
 ),
@@ -322,6 +332,8 @@ INSERT INTO person_travel (
     '公务签证',
     '四川省',
     '浙江省',
+    '成都',
+    '杭州',
     NOW(),
     NOW()
 ),
@@ -337,6 +349,8 @@ INSERT INTO person_travel (
     NULL,
     '湖北省',
     '江苏省',
+    '武汉',
+    '南京',
     NOW(),
     NOW()
 ),
@@ -352,6 +366,8 @@ INSERT INTO person_travel (
     '旅游签证',
     '上海市',
     '北京市',
+    '上海',
+    '北京',
     NOW(),
     NOW()
 ),
@@ -367,6 +383,8 @@ INSERT INTO person_travel (
     NULL,
     '重庆市',
     '四川省',
+    '重庆',
+    '成都',
     NOW(),
     NOW()
 ),
@@ -382,6 +400,8 @@ INSERT INTO person_travel (
     '公务签证',
     '广东省',
     '上海市',
+    '深圳',
+    '上海',
     NOW(),
     NOW()
 );

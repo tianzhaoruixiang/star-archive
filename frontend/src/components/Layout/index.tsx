@@ -139,7 +139,9 @@ const Layout = () => {
           </span>
         </div>
       </Header>
-      <Content className="content">
+      <Content
+        className={location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/') ? 'content content--dashboard' : 'content'}
+      >
         <Outlet />
       </Content>
     </AntLayout>

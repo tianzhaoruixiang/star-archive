@@ -70,6 +70,8 @@ export interface ProvinceStatsDTO {
   visaTypeRank: ProvinceStatsRankItem[];
   organizationRank: ProvinceStatsRankItem[];
   belongingGroupRank: ProvinceStatsRankItem[];
+  /** 城市分布排名（该省行程按到达城市统计） */
+  cityRank?: ProvinceStatsRankItem[];
 }
 
 export const dashboardAPI = {
