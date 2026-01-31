@@ -230,6 +230,59 @@
   position: relative;
 }
 
+.map-section.map-container {
+  position: relative;
+  height: 520px;
+  width: 100%;
+  /* 毛玻璃：半透明深色 + 背景模糊与饱和度 */
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  border-radius: 0 0 12px 12px;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+/* 顶部扫描线：紫→蓝渐变，横向移动 */
+.map-section::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #667eea 20%, #764ba2 50%, #667eea 80%, transparent 100%);
+  background-size: 200% 100%;
+  animation: sectionScan 3s linear infinite;
+  z-index: 2;
+  pointer-events: none;
+}
+
+@keyframes sectionScan {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 中部柔光：径向渐变，中间微亮 */
+.map-section::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgba(102, 126, 234, 0.05) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
 .map-container {
   position: relative;
   height: 520px;
@@ -242,8 +295,9 @@
   top: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(180deg, #0d1f3c 0%, #1a2f52 100%);
+  background: transparent;
   border-radius: 0 0 12px 12px;
+  pointer-events: none;
 }
 
 /* 右侧悬浮按钮 */

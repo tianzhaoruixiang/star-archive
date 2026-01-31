@@ -78,6 +78,10 @@ services:
         mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/01-init-schema.sql
         echo "Running 02-test-data.sql..."
         mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/02-test-data.sql || true
+        echo "Running 03-test-person-500.sql (500 条人物测试数据)..."
+        mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/03-test-person-500.sql || true
+        echo "Running 04-test-person-travel-5000.sql (5000 条行程测试数据)..."
+        mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/04-test-person-travel-5000.sql || true
         echo "Doris init completed."
     depends_on:
       doris-fe:
@@ -137,7 +141,6 @@ services:
       - seaweedfs-master
       - seaweedfs-volume
     restart: unless-stopped
-
   # OnlyOffice Document Server（档案融合文件预览）
   onlyoffice:
     image: onlyoffice/documentserver:9.2
@@ -147,19 +150,19 @@ services:
         ipv4_address: 172.20.80.20
     ports:
       - "8081:80"
-    # volumes:
-    #   - ./data/onlyoffice/data:/var/www/onlyoffice/Data
-    #   - ./data/onlyoffice/logs:/var/log/onlyoffice
+    volumes:
+      # 使用命名卷，由容器自行创建 Data/certs 等目录，避免 bind 挂载时 certs 缺失报错
+      - onlyoffice-data:/var/www/onlyoffice/Data
+      - ./data/onlyoffice/logs:/var/log/onlyoffice
     environment:
-      - JWT_ENABLED=false
-      - JWT_SECRET=your-secret-key-here
-      - DB_TYPE=sqlite
+      - JWT_ENABLED=false # Set to true and configure a secret for production use
+      - LETS_ENCRYPT_ENABLED=false # Set to true to automatically obtain a Let's Encrypt SSL certificate
     restart: unless-stopped
     deploy:
       resources:
         limits:
           memory: 2G
-          cpus: '1.0'
+          cpus: "1.0"
 
 networks:
   archive-network:
@@ -176,3 +179,4 @@ volumes:
   seaweedfs-master-data:
   seaweedfs-volume-data:
   seaweedfs-filer-data:
+  onlyoffice-data:

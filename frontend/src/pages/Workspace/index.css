@@ -392,6 +392,15 @@
   font-size: 12px;
 }
 
+.import-detail-original-onlyoffice {
+  min-height: 400px;
+  padding: 0;
+}
+
+.import-detail-original-onlyoffice .onlyoffice-viewer {
+  border-radius: 6px;
+}
+
 .import-detail-original-pre {
   margin: 0;
   max-height: 560px;
@@ -430,6 +439,28 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
+}
+
+.import-detail-result-avatar,
+.import-detail-result-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.import-detail-result-avatar {
+  object-fit: cover;
+}
+
+.import-detail-result-avatar-placeholder {
+  background: var(--input-bg, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #9ca3af);
+  font-size: 18px;
 }
 
 .import-detail-result-checked {

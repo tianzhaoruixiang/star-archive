@@ -91,11 +91,11 @@ public class DashboardService {
     }
 
     /**
-     * 按行程签证类型统计，返回 TOP15（用于首页签证类型排名）
+     * 按人员档案签证类型统计，返回 TOP15（用于首页签证类型排名，统计 person 表 visa_type）
      */
     public List<MapItem> getVisaTypeTop15() {
-        log.info("获取签证类型排名 TOP15");
-        List<Object[]> rows = personTravelRepository.findVisaTypeCountsTop15();
+        log.info("获取签证类型排名 TOP15（人员表）");
+        List<Object[]> rows = personRepository.findVisaTypeCountsTop15();
         return rows.stream()
                 .map(row -> new MapItem(
                         row[0] != null ? row[0].toString() : "",

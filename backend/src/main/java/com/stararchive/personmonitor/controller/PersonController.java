@@ -4,6 +4,7 @@ import com.stararchive.personmonitor.common.ApiResponse;
 import com.stararchive.personmonitor.common.PageResponse;
 import com.stararchive.personmonitor.dto.PersonCardDTO;
 import com.stararchive.personmonitor.dto.PersonDetailDTO;
+import com.stararchive.personmonitor.dto.PersonUpdateDTO;
 import com.stararchive.personmonitor.dto.TagDTO;
 import com.stararchive.personmonitor.service.PersonService;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +57,17 @@ public class PersonController {
     @GetMapping("/{personId}")
     public ResponseEntity<ApiResponse<PersonDetailDTO>> getPersonDetail(@PathVariable String personId) {
         PersonDetailDTO detail = personService.getPersonDetail(personId);
+        return ResponseEntity.ok(ApiResponse.success(detail));
+    }
+
+    /**
+     * 更新人员档案（部分字段可选）
+     */
+    @PutMapping("/{personId}")
+    public ResponseEntity<ApiResponse<PersonDetailDTO>> updatePerson(
+            @PathVariable String personId,
+            @RequestBody PersonUpdateDTO dto) {
+        PersonDetailDTO detail = personService.updatePerson(personId, dto);
         return ResponseEntity.ok(ApiResponse.success(detail));
     }
     

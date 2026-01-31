@@ -18,7 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -95,6 +97,40 @@ public class PersonService {
         
         return detail;
     }
+
+    /**
+     * 更新人员档案（仅更新 DTO 中非 null 字段）
+     */
+    @Transactional
+    public PersonDetailDTO updatePerson(String personId, PersonUpdateDTO dto) {
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new EntityNotFoundException("人员不存在: " + personId));
+        if (dto.getChineseName() != null) person.setChineseName(dto.getChineseName());
+        if (dto.getOriginalName() != null) person.setOriginalName(dto.getOriginalName());
+        if (dto.getAliasNames() != null) person.setAliasNames(dto.getAliasNames());
+        if (dto.getOrganization() != null) person.setOrganization(dto.getOrganization());
+        if (dto.getBelongingGroup() != null) person.setBelongingGroup(dto.getBelongingGroup());
+        if (dto.getGender() != null) person.setGender(dto.getGender());
+        if (dto.getBirthDate() != null) person.setBirthDate(dto.getBirthDate());
+        if (dto.getNationality() != null) person.setNationality(dto.getNationality());
+        if (dto.getNationalityCode() != null) person.setNationalityCode(dto.getNationalityCode());
+        if (dto.getHouseholdAddress() != null) person.setHouseholdAddress(dto.getHouseholdAddress());
+        if (dto.getHighestEducation() != null) person.setHighestEducation(dto.getHighestEducation());
+        if (dto.getPhoneNumbers() != null) person.setPhoneNumbers(dto.getPhoneNumbers());
+        if (dto.getEmails() != null) person.setEmails(dto.getEmails());
+        if (dto.getPassportNumbers() != null) person.setPassportNumbers(dto.getPassportNumbers());
+        if (dto.getIdCardNumber() != null) person.setIdCardNumber(dto.getIdCardNumber());
+        if (dto.getVisaType() != null) person.setVisaType(dto.getVisaType());
+        if (dto.getVisaNumber() != null) person.setVisaNumber(dto.getVisaNumber());
+        if (dto.getPersonTags() != null) person.setPersonTags(dto.getPersonTags());
+        if (dto.getWorkExperience() != null) person.setWorkExperience(dto.getWorkExperience());
+        if (dto.getEducationExperience() != null) person.setEducationExperience(dto.getEducationExperience());
+        if (dto.getRemark() != null) person.setRemark(dto.getRemark());
+        if (dto.getIsKeyPerson() != null) person.setIsKeyPerson(dto.getIsKeyPerson());
+        person.setUpdatedTime(LocalDateTime.now());
+        personRepository.save(person);
+        return getPersonDetail(personId);
+    }
     
     /**
      * 获取标签树（含每个标签对应人员数量）
@@ -135,6 +171,7 @@ public class PersonService {
         dto.setAvatarUrl(person.getAvatarFiles() != null && !person.getAvatarFiles().isEmpty()
                 ? seaweedFSService.getAvatarProxyPath(person.getAvatarFiles().get(0)) : null);
         dto.setIdCardNumber(person.getIdCardNumber());
+        dto.setVisaType(person.getVisaType());
         dto.setBirthDate(person.getBirthDate());
         dto.setPersonTags(person.getPersonTags());
         dto.setUpdatedTime(person.getUpdatedTime());
@@ -153,8 +190,16 @@ public class PersonService {
         dto.setChineseName(person.getChineseName());
         dto.setOriginalName(person.getOriginalName());
         dto.setAliasNames(person.getAliasNames());
-        dto.setAvatarUrl(person.getAvatarFiles() != null && !person.getAvatarFiles().isEmpty()
-                ? seaweedFSService.getAvatarProxyPath(person.getAvatarFiles().get(0)) : null);
+        List<String> avatarPaths = person.getAvatarFiles();
+        if (avatarPaths != null && !avatarPaths.isEmpty()) {
+            dto.setAvatarUrl(seaweedFSService.getAvatarProxyPath(avatarPaths.get(0)));
+            dto.setAvatarUrls(avatarPaths.stream()
+                    .map(seaweedFSService::getAvatarProxyPath)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setAvatarUrl(null);
+            dto.setAvatarUrls(null);
+        }
         dto.setGender(person.getGender());
         dto.setBirthDate(person.getBirthDate());
         dto.setNationality(person.getNationality());
@@ -167,6 +212,8 @@ public class PersonService {
         dto.setEmails(person.getEmails());
         dto.setPassportNumbers(person.getPassportNumbers());
         dto.setIdCardNumber(person.getIdCardNumber());
+        dto.setVisaType(person.getVisaType());
+        dto.setVisaNumber(person.getVisaNumber());
         dto.setTwitterAccounts(person.getTwitterAccounts());
         dto.setLinkedinAccounts(person.getLinkedinAccounts());
         dto.setFacebookAccounts(person.getFacebookAccounts());

@@ -1,8 +1,8 @@
 /* 人员档案列表页 - 使用统一深色主题变量 */
 
 .page-wrapper.person-list-page {
-  width: 75%;
-  max-width: 75%;
+  width: 90%;
+  max-width: 95%;
   margin-left: auto;
   margin-right: auto;
 }

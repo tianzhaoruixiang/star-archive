@@ -148,6 +148,11 @@ const Dashboard = () => {
     if (maxVal <= minVal) maxVal = minVal + 1;
 
     if (chinaGeoLoaded) {
+      /* 16 级冷暖渐变：浅蓝（少）→ 深红（多），专业数据可视化 */
+      const visualMapColors = [
+        '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981',
+        '#34d399', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#991b1b',
+      ];
       return {
         backgroundColor: 'transparent',
         tooltip: {
@@ -156,6 +161,11 @@ const Dashboard = () => {
             const v = countMap.get(params.name) ?? 0;
             return `${params.name}: ${v}`;
           },
+          backgroundColor: 'rgba(15, 23, 42, 0.92)',
+          borderColor: 'rgba(102, 126, 234, 0.6)',
+          borderWidth: 1,
+          textStyle: { color: '#e2e8f0', fontSize: 12 },
+          padding: [8, 12],
         },
         visualMap: {
           min: minVal,
@@ -163,9 +173,7 @@ const Dashboard = () => {
           text: ['高', '低'],
           realtime: false,
           calculable: true,
-          inRange: {
-            color: ['#e0e7ff', '#6366f1', '#3730a3', '#1e1b4b'],
-          },
+          inRange: { color: visualMapColors },
           right: 12,
           bottom: 0,
           textStyle: { color: '#8b9dc3' },
@@ -178,12 +186,37 @@ const Dashboard = () => {
             roam: true,
             layoutCenter: ['50%', '70%'],
             layoutSize: '130%',
+            itemStyle: {
+              borderColor: '#d1d5db',
+              borderWidth: 1.5,
+            },
             label: {
               show: true,
-              fontSize: 10,
-              color: '#1f2937',
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#1e293b',
+              fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
+              textBorderColor: 'rgba(255, 255, 255, 0.8)',
+              textBorderWidth: 1,
+              textShadowColor: 'rgba(0, 0, 0, 0.15)',
+              textShadowBlur: 2,
             },
-            emphasis: { label: { show: true }, itemStyle: { areaColor: '#60a5fa' } },
+            emphasis: {
+              label: {
+                show: true,
+                fontWeight: 700,
+                color: '#0f172a',
+                textBorderColor: 'rgba(255, 255, 255, 0.95)',
+                textBorderWidth: 1.5,
+              },
+              itemStyle: {
+                areaColor: '#818cf8',
+                borderColor: 'rgba(102, 126, 234, 0.9)',
+                borderWidth: 2.5,
+                shadowBlur: 10,
+                shadowColor: 'rgba(0, 0, 0, 0.3)',
+              },
+            },
             data: provinceList.map((p) => ({ name: p.name, value: p.value })),
           },
         ],
@@ -280,10 +313,10 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* 三栏：左 中 右 */}
+      {/* 三栏：左 中 右（左右卡片略窄，中间地图更宽） */}
       <Row gutter={16} className="dashboard-main">
         {/* 左侧：机构分布 TOP15、签证类型排名 */}
-        <Col xs={24} lg={6}>
+        <Col xs={24} lg={5}>
           <Card className="dashboard-panel dashboard-panel-rank-card" title="机构分布TOP15" size="small">
             <div className="rank-list rank-list-scroll">
               {organizationTop15.length === 0 ? (
@@ -335,9 +368,9 @@ const Dashboard = () => {
         </Col>
 
         {/* 中间：全国监测分布图 + 人物行程趋势分析 */}
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={14}>
           <Card className="dashboard-panel dashboard-panel-map" title="全国监测分布图" size="small">
-            <div className="map-container">
+            <div className="map-section map-container">
               <div className="map-outline" />
               <ReactECharts
                 key={`china-map-${location.key}-${chinaGeoLoaded}`}
@@ -355,7 +388,7 @@ const Dashboard = () => {
               />
             </div>
           </Card>
-          <Card className="dashboard-panel" title="人物行程趋势分析" size="small">
+          {/* <Card className="dashboard-panel" title="人物行程趋势分析" size="small">
             <Tabs
               activeKey={chartType}
               onChange={(k) => setChartType(k as 'line' | 'bar')}
@@ -372,11 +405,11 @@ const Dashboard = () => {
               opts={{ renderer: 'canvas' }}
               notMerge
             />
-          </Card>
+          </Card> */}
         </Col>
 
         {/* 右侧：各地排名、群体类别 */}
-        <Col xs={24} lg={6}>
+        <Col xs={24} lg={5}>
           <Card className="dashboard-panel dashboard-panel-rank-card" title="各地排名" size="small">
             <Tabs
               activeKey={locationTab}

@@ -71,4 +71,10 @@ public interface PersonRepository extends JpaRepository<Person, String> {
      */
     @Query(value = "SELECT belonging_group, COUNT(*) FROM person WHERE belonging_group IS NOT NULL AND belonging_group != '' GROUP BY belonging_group ORDER BY COUNT(*) DESC", nativeQuery = true)
     List<Object[]> findBelongingGroupCounts();
+
+    /**
+     * 按签证类型统计人数，返回 TOP15（用于首页签证类型排名，统计人员表 visa_type）
+     */
+    @Query(value = "SELECT visa_type, COUNT(*) FROM person WHERE visa_type IS NOT NULL AND visa_type != '' GROUP BY visa_type ORDER BY COUNT(*) DESC LIMIT 15", nativeQuery = true)
+    List<Object[]> findVisaTypeCountsTop15();
 }

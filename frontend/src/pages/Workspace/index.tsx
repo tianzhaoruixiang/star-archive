@@ -28,7 +28,7 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
 const Workspace = () => {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth?.user);
-  const [activeTab, setActiveTab] = useState('data');
+  const [activeTab, setActiveTab] = useState('fusion');
   const [personalTree, setPersonalTree] = useState<unknown[]>([]);
   const [publicTree, setPublicTree] = useState<unknown[]>([]);
 

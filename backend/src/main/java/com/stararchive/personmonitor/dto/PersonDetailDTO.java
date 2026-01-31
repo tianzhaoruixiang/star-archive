@@ -19,7 +19,10 @@ public class PersonDetailDTO {
     private String chineseName;
     private String originalName;
     private List<String> aliasNames;
+    /** 第一张头像 URL（兼容旧版） */
     private String avatarUrl;
+    /** 全部头像代理 URL 列表，用于详情页多图展示（第一张大头像，其余小头像） */
+    private List<String> avatarUrls;
     private String gender;
     private LocalDateTime birthDate;
     private String nationality;
@@ -32,6 +35,10 @@ public class PersonDetailDTO {
     private List<String> emails;
     private List<String> passportNumbers;
     private String idCardNumber;
+    /** 签证类型：公务签证/外交签证/记者签证/旅游签证/其他 */
+    private String visaType;
+    /** 签证号码 */
+    private String visaNumber;
     private List<String> twitterAccounts;
     private List<String> linkedinAccounts;
     private List<String> facebookAccounts;

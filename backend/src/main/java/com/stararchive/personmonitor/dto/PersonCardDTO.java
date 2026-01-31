@@ -20,6 +20,8 @@ public class PersonCardDTO {
     private String originalName;
     private String avatarUrl;
     private String idCardNumber;
+    /** 签证类型（首页签证类型排名按人员表此字段统计） */
+    private String visaType;
     private LocalDateTime birthDate;
     private List<String> personTags;
     private LocalDateTime updatedTime;

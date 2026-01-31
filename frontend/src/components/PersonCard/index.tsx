@@ -61,9 +61,6 @@ const PersonCard: FC<PersonCardProps> = ({
         ) : (
           <div className="person-card-avatar">{displayName.charAt(0)}</div>
         )}
-        <Tag className="person-card-status">
-          {person.personTags?.[0] ?? '—'}
-        </Tag>
       </div>
       <div className="person-card-name">{displayName}</div>
       <div className="person-card-row">身份证: {person.idCardNumber || '—'}</div>

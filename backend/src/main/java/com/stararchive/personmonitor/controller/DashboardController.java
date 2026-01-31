@@ -58,7 +58,7 @@ public class DashboardController {
     }
 
     /**
-     * 按行程签证类型统计，返回 TOP15（用于首页签证类型排名）
+     * 按人员档案签证类型统计，返回 TOP15（用于首页签证类型排名，统计 person 表 visa_type）
      */
     @GetMapping("/visa-type-top15")
     public ResponseEntity<ApiResponse<List<DashboardMapDTO.MapItem>>> getVisaTypeTop15() {

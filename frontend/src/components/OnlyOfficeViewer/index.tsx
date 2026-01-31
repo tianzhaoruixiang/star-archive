@@ -83,7 +83,8 @@ const OnlyOfficeViewer: FC<OnlyOfficeViewerProps> = ({
       scriptLoadedRef.current = true;
       initEditor();
     };
-    script.onerror = () => {
+    script.onerror = (e) => {
+      console.error(e)
       onError?.('OnlyOffice 脚本加载失败，请确认 OnlyOffice 服务已启动（document-server-url）或使用下载');
     };
     document.head.appendChild(script);

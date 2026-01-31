@@ -83,7 +83,15 @@ public class Person {
     
     @Column(name = "id_card_number", length = 18)
     private String idCardNumber;
-    
+
+    /** 签证类型：公务签证/外交签证/记者签证/旅游签证/其他（人员档案维度，首页签证类型排名按此统计） */
+    @Column(name = "visa_type", length = 50)
+    private String visaType;
+
+    /** 签证号码 */
+    @Column(name = "visa_number", length = 100)
+    private String visaNumber;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "twitter_accounts", columnDefinition = "json")
     private List<String> twitterAccounts;

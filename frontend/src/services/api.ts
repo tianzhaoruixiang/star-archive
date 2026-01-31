@@ -85,11 +85,39 @@ export const dashboardAPI = {
     apiClient.get<ProvinceStatsDTO>(`/dashboard/province/${encodeURIComponent(provinceName)}/stats`),
 };
 
+/** 人员档案更新请求体（与后端 PersonUpdateDTO 对应，字段可选） */
+export interface PersonUpdatePayload {
+  chineseName?: string;
+  originalName?: string;
+  aliasNames?: string[];
+  organization?: string;
+  belongingGroup?: string;
+  gender?: string;
+  birthDate?: string | null;
+  nationality?: string;
+  nationalityCode?: string;
+  householdAddress?: string;
+  highestEducation?: string;
+  phoneNumbers?: string[];
+  emails?: string[];
+  passportNumbers?: string[];
+  idCardNumber?: string;
+  visaType?: string;
+  visaNumber?: string;
+  personTags?: string[];
+  workExperience?: string;
+  educationExperience?: string;
+  remark?: string;
+  isKeyPerson?: boolean;
+}
+
 export const personAPI = {
   getPersonList: (page: number, size: number) =>
     apiClient.get('/persons', { params: { page, size } }),
   getPersonDetail: (personId: string) =>
     apiClient.get(`/persons/${personId}`),
+  updatePerson: (personId: string, data: PersonUpdatePayload) =>
+    apiClient.put(`/persons/${personId}`, data),
   getTags: () => apiClient.get('/persons/tags'),
   getPersonListByTag: (tag: string, page: number, size: number) =>
     apiClient.get('/persons/by-tag', { params: { tag, page, size } }),

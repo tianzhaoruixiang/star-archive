@@ -19,6 +19,10 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.extractor.WordExtractor;
+import org.apache.poi.hwpf.model.PicturesTable;
+import org.apache.poi.hwpf.usermodel.CharacterRun;
+import org.apache.poi.hwpf.usermodel.Picture;
+import org.apache.poi.hwpf.usermodel.Range;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -563,7 +567,7 @@ public class ArchiveFusionService {
     }
 
     /**
-     * 从档案文件（DOCX/PDF）中提取图片，上传至 SeaweedFS，返回 Filer 相对路径列表。
+     * 从档案文件（DOC/DOCX/PDF）中提取图片，上传至 SeaweedFS，返回 Filer 相对路径列表。
      * 用于人物头像：导入时写入 person.avatar_files，前端通过 /api/avatar?path= 展示。
      */
     private List<String> extractAndUploadImagesFromFile(MultipartFile file, String fileType, String taskId) {
@@ -572,11 +576,69 @@ public class ArchiveFusionService {
         try {
             if ("DOCX".equals(typeUpper)) {
                 paths = extractImagesFromDocxAndUpload(file, taskId);
+            } else if ("DOC".equals(typeUpper)) {
+                paths = extractImagesFromDocAndUpload(file, taskId);
             } else if ("PDF".equals(typeUpper)) {
                 paths = extractImagesFromPdfAndUpload(file, taskId);
             }
         } catch (Exception e) {
             log.warn("档案图片提取或上传失败: fileType={}, taskId={}", fileType, taskId, e);
+        }
+        return paths;
+    }
+
+    /**
+     * 从 .doc（老格式 Word）中提取图片并上传至 SeaweedFS。
+     * 先尝试 getAllPictures()；若为空则按 POI 建议扫描所有 CharacterRun 提取图片（部分 .doc 图片不在连续 data stream 中）。
+     */
+    private List<String> extractImagesFromDocAndUpload(MultipartFile file, String taskId) throws Exception {
+        List<String> paths = new ArrayList<>();
+        try (HWPFDocument doc = new HWPFDocument(file.getInputStream())) {
+            PicturesTable picturesTable = doc.getPicturesTable();
+            if (picturesTable == null) return paths;
+
+            List<Picture> pictures = picturesTable.getAllPictures();
+            if (pictures != null && !pictures.isEmpty()) {
+                for (int i = 0; i < pictures.size(); i++) {
+                    Picture pic = pictures.get(i);
+                    byte[] data = pic.getContent();
+                    if (data == null || data.length == 0) continue;
+                    String fileName = pic.suggestFullFileName();
+                    if (fileName == null || fileName.isBlank()) {
+                        fileName = "image-" + i + ".jpg";
+                    }
+                    try {
+                        String path = seaweedFSService.uploadBytes(data, fileName, taskId);
+                        paths.add(path);
+                    } catch (Exception e) {
+                        log.warn("DOC 单张图片上传失败: fileName={}", fileName, e);
+                    }
+                }
+            }
+
+            // POI 文档：并非所有 .doc 的图片都在 data stream 中连续存放，建议扫描所有 CharacterRun
+            if (paths.isEmpty()) {
+                Range range = doc.getRange();
+                int numRuns = range.numCharacterRuns();
+                for (int i = 0; i < numRuns; i++) {
+                    CharacterRun run = range.getCharacterRun(i);
+                    if (!picturesTable.hasPicture(run)) continue;
+                    Picture pic = picturesTable.extractPicture(run, true);
+                    if (pic == null) continue;
+                    byte[] data = pic.getContent();
+                    if (data == null || data.length == 0) continue;
+                    String fileName = pic.suggestFullFileName();
+                    if (fileName == null || fileName.isBlank()) {
+                        fileName = "image-" + i + ".jpg";
+                    }
+                    try {
+                        String path = seaweedFSService.uploadBytes(data, fileName, taskId);
+                        paths.add(path);
+                    } catch (Exception e) {
+                        log.warn("DOC CharacterRun 图片上传失败: fileName={}", fileName, e);
+                    }
+                }
+            }
         }
         return paths;
     }

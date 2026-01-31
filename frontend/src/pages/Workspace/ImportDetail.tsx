@@ -68,14 +68,32 @@ const ImportDetail: React.FC = () => {
   const [importing, setImporting] = useState(false);
   const [previewConfig, setPreviewConfig] = useState<OnlyOfficePreviewConfigDTO | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  /** 原始文档区 OnlyOffice 配置（页面加载时拉取，用于左侧对比阅读） */
+  const [documentPreviewConfig, setDocumentPreviewConfig] = useState<OnlyOfficePreviewConfigDTO | null>(null);
 
   const loadDetail = useCallback(async (id: string) => {
     setLoading(true);
+    setDocumentPreviewConfig(null);
     try {
       const res = await archiveFusionAPI.getTaskDetail(id) as { data?: ArchiveFusionTaskDetailDTO };
       const data = res?.data ?? res;
-      if (data) setDetail(data as ArchiveFusionTaskDetailDTO);
-      else message.error('任务不存在');
+      if (data) {
+        setDetail(data as ArchiveFusionTaskDetailDTO);
+        const task = (data as ArchiveFusionTaskDetailDTO).task;
+        if (task?.status === 'SUCCESS' && task?.taskId) {
+          try {
+            const cfgRes = await archiveFusionAPI.getPreviewConfig(task.taskId) as { data?: OnlyOfficePreviewConfigDTO };
+            const cfg = cfgRes?.data ?? (cfgRes as unknown as OnlyOfficePreviewConfigDTO);
+            if (cfg && typeof (cfg as OnlyOfficePreviewConfigDTO).documentServerUrl === 'string') {
+              setDocumentPreviewConfig(cfg as OnlyOfficePreviewConfigDTO);
+            }
+          } catch {
+            // 预览配置可选，失败不提示
+          }
+        }
+      } else {
+        message.error('任务不存在');
+      }
     } catch {
       message.error('加载任务详情失败');
     } finally {
@@ -132,6 +150,10 @@ const ImportDetail: React.FC = () => {
 
   const handlePreview = useCallback(async () => {
     if (!detail?.task?.taskId) return;
+    if (documentPreviewConfig?.enabled) {
+      setPreviewConfig(documentPreviewConfig);
+      return;
+    }
     setPreviewConfig(null);
     setPreviewLoading(true);
     try {
@@ -140,7 +162,7 @@ const ImportDetail: React.FC = () => {
       if (cfg && typeof cfg.documentServerUrl === 'string') {
         setPreviewConfig(cfg);
       } else {
-        message.warning(res?.message ?? '无法获取预览配置');
+        message.warning((res as { message?: string })?.message ?? '无法获取预览配置');
       }
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string }; status?: number } };
@@ -149,7 +171,7 @@ const ImportDetail: React.FC = () => {
     } finally {
       setPreviewLoading(false);
     }
-  }, [detail?.task?.taskId]);
+  }, [detail?.task?.taskId, documentPreviewConfig]);
 
   const unimportedResultIds = detail?.extractResults?.filter((r) => !r.imported).map((r) => r.resultId) ?? [];
   const selectAllUnimported = useCallback(() => {
@@ -183,6 +205,21 @@ const ImportDetail: React.FC = () => {
     }
   }, [detail?.task?.taskId, detail?.extractResults, loadDetail]);
 
+  /** 从 rawJson 中取第一个头像路径，生成 /api/avatar?path= 代理 URL */
+  const getExtractAvatarUrl = useCallback((rawJson: string | undefined): string | null => {
+    if (!rawJson) return null;
+    try {
+      const obj = JSON.parse(rawJson) as Record<string, unknown>;
+      const files = obj?.avatar_files;
+      if (!Array.isArray(files) || files.length === 0) return null;
+      const first = files[0];
+      if (typeof first !== 'string' || !first.trim()) return null;
+      return `/api/avatar?path=${encodeURIComponent(first.trim())}`;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const renderExtractResult = useCallback((r: ArchiveExtractResultDTO) => {
     const canSelect = !r.imported;
     let rawObj: Record<string, unknown> = {};
@@ -191,9 +228,15 @@ const ImportDetail: React.FC = () => {
     } catch {
       // ignore
     }
+    const avatarUrl = getExtractAvatarUrl(r.rawJson);
     return (
       <Card key={r.resultId} size="small" className="import-detail-result-card">
         <div className="import-detail-result-head">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="import-detail-result-avatar" />
+          ) : (
+            <div className="import-detail-result-avatar-placeholder"><UserOutlined /></div>
+          )}
           {canSelect ? (
             <Checkbox
               checked={selectedResultIds.includes(r.resultId)}
@@ -242,7 +285,7 @@ const ImportDetail: React.FC = () => {
         </div>
       </Card>
     );
-  }, [selectedResultIds, toggleResultSelection, navigate]);
+  }, [selectedResultIds, toggleResultSelection, navigate, getExtractAvatarUrl]);
 
   if (loading) {
     return (
@@ -324,42 +367,52 @@ const ImportDetail: React.FC = () => {
         <Row gutter={16}>
           <Col xs={24} lg={12}>
             <Card size="small" title="原始文档（可对比阅读）" className="import-detail-card import-detail-card-original">
-              {(() => {
-                const parsed = parseOriginalTextAsTable(detail.task.originalText, detail.task.fileType ?? '');
-                if (parsed && (parsed.rows.length > 0 || parsed.headers.length > 0)) {
-                  const colCount = parsed.headers.length;
-                  const padRow = (row: string[]) =>
-                    row.length >= colCount ? row.slice(0, colCount) : [...row, ...Array(colCount - row.length).fill('')];
-                  const columns = parsed.headers.map((h, i) => ({
-                    title: h,
-                    dataIndex: String(i),
-                    key: String(i),
-                    ellipsis: true,
-                    render: (v: string) => v ?? '—',
-                  }));
-                  const dataSource = parsed.rows.map((row, i) => ({
-                    key: i,
-                    ...Object.fromEntries(padRow(row).map((cell, j) => [String(j), cell])),
-                  }));
+              {documentPreviewConfig?.enabled ? (
+                <div className="import-detail-original-onlyoffice">
+                  <OnlyOfficeViewer
+                    config={documentPreviewConfig}
+                    height="60vh"
+                    onError={(msg) => message.warning(msg)}
+                  />
+                </div>
+              ) : (
+                (() => {
+                  const parsed = parseOriginalTextAsTable(detail.task.originalText, detail.task.fileType ?? '');
+                  if (parsed && (parsed.rows.length > 0 || parsed.headers.length > 0)) {
+                    const colCount = parsed.headers.length;
+                    const padRow = (row: string[]) =>
+                      row.length >= colCount ? row.slice(0, colCount) : [...row, ...Array(colCount - row.length).fill('')];
+                    const columns = parsed.headers.map((h, i) => ({
+                      title: h,
+                      dataIndex: String(i),
+                      key: String(i),
+                      ellipsis: true,
+                      render: (v: string) => v ?? '—',
+                    }));
+                    const dataSource = parsed.rows.map((row, i) => ({
+                      key: i,
+                      ...Object.fromEntries(padRow(row).map((cell, j) => [String(j), cell])),
+                    }));
+                    return (
+                      <div className="import-detail-original-body">
+                        <Table
+                          size="small"
+                          pagination={false}
+                          columns={columns}
+                          dataSource={dataSource}
+                          scroll={{ x: 'max-content' }}
+                          className="import-detail-original-table"
+                        />
+                      </div>
+                    );
+                  }
                   return (
-                    <div className="import-detail-original-body">
-                      <Table
-                        size="small"
-                        pagination={false}
-                        columns={columns}
-                        dataSource={dataSource}
-                        scroll={{ x: 'max-content' }}
-                        className="import-detail-original-table"
-                      />
-                    </div>
+                    <pre className="import-detail-original-pre">
+                      {detail.task.originalText || '无原文'}
+                    </pre>
                   );
-                }
-                return (
-                  <pre className="import-detail-original-pre">
-                    {detail.task.originalText || '无原文'}
-                  </pre>
-                );
-              })()}
+                })()
+              )}
             </Card>
           </Col>
           <Col xs={24} lg={12}>

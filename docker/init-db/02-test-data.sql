@@ -125,7 +125,7 @@ INSERT INTO tag (tag_id, first_level_name, second_level_name, tag_name, tag_desc
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
     gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
-    phone_numbers, emails, passport_numbers, id_card_number,
+    phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
 ) VALUES
@@ -150,6 +150,8 @@ INSERT INTO person (
     ARRAY('zhangsan@example.com'),
     NULL,
     '110101199001011234',
+    '公务签证',
+    'V2025001',
     ARRAY('@zhangsan_tw'),
     ARRAY('zhangsan-linkedin'),
     NULL,
@@ -181,6 +183,8 @@ INSERT INTO person (
     ARRAY('lisi@example.com'),
     NULL,
     '110101198505151234',
+    '旅游签证',
+    NULL,
     NULL,
     ARRAY('lisi-professional'),
     NULL,
@@ -212,6 +216,8 @@ INSERT INTO person (
     ARRAY('wangwu@example.com'),
     NULL,
     '110101197508201234',
+    '公务签证',
+    'V2025003',
     ARRAY('@wangwu_news'),
     NULL,
     NULL,

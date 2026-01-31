@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS person
     `emails` ARRAY<VARCHAR(100)> COMMENT '邮箱数组',
     `passport_numbers` ARRAY<VARCHAR(50)> COMMENT '护照号数组',
     `id_card_number` VARCHAR(18) COMMENT '身份证号',
+    `visa_type` VARCHAR(50) COMMENT '签证类型：公务签证/外交签证/记者签证/旅游签证/其他（首页签证类型排名按此统计）',
+    `visa_number` VARCHAR(100) COMMENT '签证号码',
     `twitter_accounts` ARRAY<VARCHAR(100)> COMMENT 'Twitter账号',
     `linkedin_accounts` ARRAY<VARCHAR(100)> COMMENT '领英账号',
     `facebook_accounts` ARRAY<VARCHAR(100)> COMMENT 'Facebook账号',
@@ -65,6 +67,7 @@ ALTER TABLE person ADD INDEX idx_education (highest_education) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_key_person (is_key_person) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_created_time (created_time) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_id_card (id_card_number) USING INVERTED;
+ALTER TABLE person ADD INDEX idx_visa_type (visa_type) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_phone (phone_numbers) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_email (emails) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_belonging_group (belonging_group) USING INVERTED;
