@@ -151,7 +151,7 @@ export const SidebarAndGridSkeleton: FC = () => (
       <Skeleton paragraph={{ rows: 8 }} active />
     </div>
     <div className="skeleton-main">
-      <Skeleton.Input active size="middle" className="skeleton-main-title" />
+      <Skeleton.Input active size="default" className="skeleton-main-title" />
       <PageCardGridSkeleton title={false} count={6} />
     </div>
   </div>
