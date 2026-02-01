@@ -88,6 +88,7 @@ const ImportDetail: React.FC = () => {
         const task = (data as ArchiveFusionTaskDetailDTO).task;
         if (task?.status === 'SUCCESS' && task?.taskId) {
           try {
+            // @ts-ignore
             const cfgRes = await archiveFusionAPI.getPreviewConfig(task.taskId) as { data?: OnlyOfficePreviewConfigDTO };
             const cfg = cfgRes?.data ?? (cfgRes as unknown as OnlyOfficePreviewConfigDTO);
             if (cfg && typeof (cfg as OnlyOfficePreviewConfigDTO).documentServerUrl === 'string') {
@@ -168,6 +169,7 @@ const ImportDetail: React.FC = () => {
     setPreviewConfig(null);
     setPreviewLoading(true);
     try {
+      // @ts-ignore
       const res = await archiveFusionAPI.getPreviewConfig(detail.task.taskId) as { data?: OnlyOfficePreviewConfigDTO; message?: string };
       const cfg = res?.data ?? (res as unknown as OnlyOfficePreviewConfigDTO);
       if (cfg && typeof cfg.documentServerUrl === 'string') {
@@ -221,18 +223,18 @@ const ImportDetail: React.FC = () => {
     }
   }, [detail?.task?.taskId, detail?.extractResults, batchTags, importAsPublic, isAdmin, loadDetail]);
 
-  /** 从 rawJson 中取第一个头像路径，生成头像代理 URL */
-  const getExtractAvatarUrl = useCallback((rawJson: string | undefined): string | null => {
-    if (!rawJson) return null;
+  /** 从 rawJson 中取全部头像路径，生成头像代理 URL 列表（支持多头像展示） */
+  const getExtractAvatarUrls = useCallback((rawJson: string | undefined): string[] => {
+    if (!rawJson) return [];
     try {
       const obj = JSON.parse(rawJson) as Record<string, unknown>;
       const files = obj?.avatar_files;
-      if (!Array.isArray(files) || files.length === 0) return null;
-      const first = files[0];
-      if (typeof first !== 'string' || !first.trim()) return null;
-      return `${BASE_PATH}/api/avatar?path=${encodeURIComponent(first.trim())}`;
+      if (!Array.isArray(files)) return [];
+      return files
+        .filter((f): f is string => typeof f === 'string' && f.trim().length > 0)
+        .map((f) => `${BASE_PATH}/api/avatar?path=${encodeURIComponent(f.trim())}`);
     } catch {
-      return null;
+      return [];
     }
   }, []);
 
@@ -244,7 +246,7 @@ const ImportDetail: React.FC = () => {
     } catch {
       // ignore
     }
-    const avatarUrl = getExtractAvatarUrl(r.rawJson);
+    const avatarUrls = getExtractAvatarUrls(r.rawJson);
     return (
       <Card key={r.resultId} size="small" className="import-detail-result-card">
         <div className="import-detail-result-head">
@@ -278,10 +280,25 @@ const ImportDetail: React.FC = () => {
                         data={rawObj}
                         renderAfterBasicInfoTitle={
                           <div className="import-detail-resume-avatar-wrap">
-                            {avatarUrl ? (
-                              <img src={avatarUrl} alt="" className="import-detail-resume-avatar" />
+                            {avatarUrls.length > 0 ? (
+                              <>
+                                <div className="import-detail-resume-avatar-main">
+                                  <img src={avatarUrls[0]} alt="" className="import-detail-resume-avatar-img" />
+                                </div>
+                                {avatarUrls.length > 1 && (
+                                  <div className="import-detail-resume-avatar-thumbs">
+                                    {avatarUrls.slice(1).map((url, idx) => (
+                                      <div key={idx} className="import-detail-resume-avatar-thumb">
+                                        <img src={url} alt="" className="import-detail-resume-avatar-img" />
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
                             ) : (
-                              <div className="import-detail-resume-avatar-placeholder"><UserOutlined /></div>
+                              <div className="import-detail-resume-avatar-placeholder import-detail-resume-avatar-main">
+                                <UserOutlined />
+                              </div>
                             )}
                           </div>
                         }
@@ -317,7 +334,7 @@ const ImportDetail: React.FC = () => {
         </div>
       </Card>
     );
-  }, [selectedResultIds, toggleResultSelection, navigate, getExtractAvatarUrl]);
+  }, [selectedResultIds, toggleResultSelection, navigate, getExtractAvatarUrls]);
 
   if (loading) {
     return (

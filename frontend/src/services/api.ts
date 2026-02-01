@@ -213,10 +213,23 @@ export const keyPersonLibraryAPI = {
     apiClient.delete(`/key-person-library/directories/${directoryId}/persons/${personId}`),
 };
 
+/** 新闻列表项/详情（与后端 NewsDTO 对应） */
+export interface NewsItem {
+  newsId: string;
+  mediaName?: string;
+  title?: string;
+  content?: string;
+  authors?: string[];
+  publishTime?: string | number | number[];
+  tags?: string[];
+  originalUrl?: string;
+  category?: string;
+}
+
 export const newsAPI = {
   getNewsList: (page: number, size: number, keyword?: string) =>
     apiClient.get('/news', { params: { page, size, keyword } }),
-  getNewsDetail: (newsId: string) => apiClient.get(`/news/${newsId}`),
+  getNewsDetail: (newsId: string) => apiClient.get<NewsItem>(`/news/${newsId}`),
   getNewsAnalysis: () => apiClient.get('/news/analysis'),
 };
 
@@ -273,6 +286,36 @@ export const sysUserAPI = {
   delete: (userId: number) => apiClient.delete(`/sys/users/${userId}`),
 };
 
+/** 个人工作区目录项（文件或文件夹） */
+export interface PersonalDriveEntry {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size?: number;
+  mtime?: string;
+}
+
+/** 个人工作区 API：列表、建目录、上传、删除、下载 */
+export const personalDriveAPI = {
+  list: (path: string) =>
+    apiClient.get<PersonalDriveEntry[]>('/workspace/personal-drive/list', { params: { path: path || '/' } }),
+  mkdir: (path: string) =>
+    apiClient.post('/workspace/personal-drive/mkdir', null, { params: { path } }),
+  upload: (path: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/workspace/personal-drive/upload', formData, {
+      params: { path: path || '/' },
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
+    });
+  },
+  delete: (path: string, isDir: boolean) =>
+    apiClient.delete('/workspace/personal-drive/delete', { params: { path, isDir } }),
+  getDownloadUrl: (path: string) =>
+    `${BASE_PATH}/api/workspace/personal-drive/file?path=${encodeURIComponent(path)}&download=1`,
+};
+
 /** 人员档案导入融合：上传、任务列表、任务详情、确认导入 */
 /** 预测模型（智能化模型管理） */
 export interface PredictionModelDTO {
@@ -322,7 +365,7 @@ export const archiveFusionAPI = {
     apiClient.get(`/workspace/archive-fusion/tasks/${taskId}`),
   /** 获取 OnlyOffice 预览配置（documentServerUrl、documentUrl、documentKey 等） */
   getPreviewConfig: (taskId: string) =>
-    apiClient.get<{ data?: OnlyOfficePreviewConfigDTO }>(`/workspace/archive-fusion/tasks/${taskId}/preview-config`),
+    apiClient.get<{ data: OnlyOfficePreviewConfigDTO }>(`/workspace/archive-fusion/tasks/${taskId}/preview-config`),
   /** 档案文件下载地址（GET 该 URL 会返回文件流，download=1 时触发下载） */
   getFileDownloadUrl: (taskId: string) =>
     `${BASE_PATH}/api/workspace/archive-fusion/tasks/${taskId}/file?download=1`,

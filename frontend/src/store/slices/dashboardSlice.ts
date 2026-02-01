@@ -40,7 +40,19 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchStatistics.fulfilled, (state, action) => {
         state.loading = false;
-        state.statistics = action.payload;
+        // 保证类型安全，只允许 DashboardStats 或 null
+        if (
+          action.payload &&
+          typeof action.payload === 'object' &&
+          'totalPersonCount' in action.payload &&
+          'keyPersonCount' in action.payload &&
+          'todayNewsCount' in action.payload &&
+          'todaySocialDynamicCount' in action.payload
+        ) {
+          state.statistics = action.payload as DashboardStats;
+        } else {
+          state.statistics = null;
+        }
       })
       .addCase(fetchStatistics.rejected, (state, action) => {
         state.loading = false;

@@ -1,124 +1,174 @@
-import { Tabs, Card, Input, List, Tag, Empty } from 'antd';
-import { SearchOutlined, BarChartOutlined } from '@ant-design/icons';
-import { useState, useEffect } from 'react';
-import { newsAPI, socialAPI } from '@/services/api';
-import { formatDateTime } from '@/utils/date';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Input, Button, Pagination, Empty, Spin, Tag } from 'antd';
+import { SearchOutlined, FileTextOutlined } from '@ant-design/icons';
+import { newsAPI, type NewsItem } from '@/services/api';
+import { formatDateTime, parseDate } from '@/utils/date';
 import './index.css';
 
-const { TabPane } = Tabs;
+const PAGE_SIZE = 20;
 
-const SituationAwareness = () => {
-  const [newsKeyword, setNewsKeyword] = useState('');
-  const [newsList, setNewsList] = useState<any[]>([]);
-  const [socialList, setSocialList] = useState<any[]>([]);
-  const [newsLoading, setNewsLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState(false);
+/** 从新闻内容截取摘要（纯文本，约 120 字） */
+function getSummary(content: string | undefined, maxLen: number = 120): string {
+  if (!content?.trim()) return '';
+  const text = content.replace(/\s+/g, ' ').trim();
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen) + '…';
+}
 
-  const loadNews = () => {
-    setNewsLoading(true);
-    newsAPI.getNewsList(0, 20, newsKeyword || undefined).then((res: any) => {
-      const d = res?.data ?? res;
-      const content = d?.content ?? d?.list ?? [];
-      setNewsList(Array.isArray(content) ? content : []);
-    }).finally(() => setNewsLoading(false));
-  };
+/** 新闻列表项卡片 */
+const NewsListCard: React.FC<{
+  item: NewsItem;
+  onTitleClick: (newsId: string) => void;
+}> = ({ item, onTitleClick }) => {
+  const publishTimeStr = parseDate(item.publishTime)
+    ? formatDateTime(item.publishTime, '')
+    : '';
+  const summary = getSummary(item.content);
 
-  const loadSocial = (platform?: string) => {
-    setSocialLoading(true);
-    socialAPI.getSocialList(0, 20, platform).then((res: any) => {
-      const d = res?.data ?? res;
-      const content = d?.content ?? d?.list ?? [];
-      setSocialList(Array.isArray(content) ? content : []);
-    }).finally(() => setSocialLoading(false));
-  };
+  return (
+    <article className="news-list-card">
+      <div className="news-list-card-body">
+        <h3 className="news-list-card-title">
+          <span
+            className="news-list-card-title-link"
+            onClick={() => onTitleClick(item.newsId)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && onTitleClick(item.newsId)}
+          >
+            {item.title || '无标题'}
+          </span>
+        </h3>
+        {summary && <p className="news-list-card-summary">{summary}</p>}
+        <div className="news-list-card-meta">
+          {item.category && (
+            <Tag color="blue" className="news-list-card-tag">
+              {item.category}
+            </Tag>
+          )}
+          {item.mediaName && (
+            <span className="news-list-card-source">{item.mediaName}</span>
+          )}
+          {publishTimeStr && (
+            <span className="news-list-card-time">{publishTimeStr}</span>
+          )}
+        </div>
+      </div>
+      <FileTextOutlined className="news-list-card-icon" />
+    </article>
+  );
+};
 
-  useEffect(() => { loadNews(); }, []);
-  useEffect(() => { loadSocial(); }, []);
+/** 态势感知 - 仅保留新闻动态，主流新闻站风格 */
+const SituationAwareness: React.FC = () => {
+  const navigate = useNavigate();
+  const [keyword, setKeyword] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [list, setList] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
+  const loadList = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = (await newsAPI.getNewsList(
+        page - 1,
+        PAGE_SIZE,
+        keyword || undefined
+      )) as { data?: { content?: NewsItem[]; list?: NewsItem[]; totalElements?: number; total?: number } };
+      const data = res?.data ?? res;
+      // @ts-ignore
+      const content = data?.content ?? data?.list ?? [];
+      // @ts-ignore
+      const totalCount = data?.totalElements ?? data?.total ?? 0;
+      setList(Array.isArray(content) ? content : []);
+      setTotal(Number(totalCount));
+    } finally {
+      setLoading(false);
+    }
+  }, [page, keyword]);
+
+  useEffect(() => {
+    loadList();
+  }, [loadList]);
+
+  const handleSearch = useCallback(() => {
+    setKeyword(searchInput.trim());
+    setPage(1);
+  }, [searchInput]);
+
+  const handlePageChange = useCallback((p: number) => {
+    setPage(p);
+  }, []);
+
+  const handleTitleClick = useCallback(
+    (newsId: string) => {
+      navigate(`/situation/news/${newsId}`);
+    },
+    [navigate]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="page-wrapper situation-awareness">
-      <Card title="态势感知">
-        <Tabs defaultActiveKey="news">
-          <TabPane tab="新闻动态" key="news">
-            <div className="tab-toolbar">
-              <Input
-                placeholder="搜索关键词"
-                prefix={<SearchOutlined />}
-                value={newsKeyword}
-                onChange={(e) => setNewsKeyword(e.target.value)}
-                onPressEnter={loadNews}
-                style={{ width: 260 }}
-              />
-              <a onClick={loadNews}>搜索</a>
-              <span className="hint">按日期排序，点击可查看详情</span>
-            </div>
-            <Card size="small" title="新闻列表" loading={newsLoading}>
-              {newsList.length === 0 ? (
-                <Empty description="暂无新闻数据，请先配置新闻接口" />
-              ) : (
-                <List
-                  dataSource={newsList}
-                  renderItem={(item: any) => (
-                    <List.Item
-                      onClick={() => {}}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div>
-                        <Tag color="blue">{item.category ?? item.mediaName}</Tag>
-                        {item.title}
-                      </div>
-                      <span className="list-meta">
-                        {formatDateTime(item.publishTime, '')}
-                      </span>
-                    </List.Item>
-                  )}
+      <div className="news-page-header">
+        <h1 className="news-page-title">新闻动态</h1>
+        <p className="news-page-desc">态势感知 · 新闻资讯</p>
+      </div>
+
+      <div className="news-search-bar">
+        <Input
+          placeholder="搜索新闻关键词"
+          prefix={<SearchOutlined className="news-search-icon" />}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onPressEnter={handleSearch}
+          className="news-search-input"
+          allowClear
+        />
+        <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+          搜索
+        </Button>
+      </div>
+
+      <div className="news-list-wrap">
+        {loading ? (
+          <div className="news-list-loading">
+            <Spin size="large" tip="加载中..." />
+          </div>
+        ) : list.length === 0 ? (
+          <Empty
+            className="news-list-empty"
+            description="暂无新闻数据"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        ) : (
+          <>
+            <ul className="news-list">
+              {list.map((item) => (
+                <li key={item.newsId}>
+                  <NewsListCard item={item} onTitleClick={handleTitleClick} />
+                </li>
+              ))}
+            </ul>
+            {totalPages > 1 && (
+              <div className="news-pagination">
+                <Pagination
+                  current={page}
+                  total={total}
+                  pageSize={PAGE_SIZE}
+                  onChange={handlePageChange}
+                  showSizeChanger={false}
+                  showTotal={(t) => `共 ${t} 条`}
                 />
-              )}
-            </Card>
-          </TabPane>
-          <TabPane tab="社交动态" key="social">
-            <div className="tab-toolbar">
-              <span className="hint">按社交平台展示，点击查看发言详情</span>
-            </div>
-            <Card size="small" title="社交动态列表" loading={socialLoading}>
-              {socialList.length === 0 ? (
-                <Empty description="暂无社交动态，请先配置社交接口" />
-              ) : (
-                <List
-                  dataSource={socialList}
-                  renderItem={(item: any) => (
-                    <List.Item>
-                      <div>
-                        <Tag color="green">{item.socialAccountType}</Tag>
-                        {item.socialAccount} — {item.title ?? item.content?.slice(0, 50)}
-                      </div>
-                      <span className="list-meta">
-                        {formatDateTime(item.publishTime, '')}
-                      </span>
-                    </List.Item>
-                  )}
-                />
-              )}
-            </Card>
-          </TabPane>
-          <TabPane tab="新闻分析" key="news-analysis">
-            <Card>
-              <div className="analysis-placeholder">
-                <BarChartOutlined style={{ fontSize: 48, color: '#ccc' }} />
-                <p>今日热点排行前十、词云、按类别图表 — 待对接分析接口</p>
               </div>
-            </Card>
-          </TabPane>
-          <TabPane tab="社交分析" key="social-analysis">
-            <Card>
-              <div className="analysis-placeholder">
-                <BarChartOutlined style={{ fontSize: 48, color: '#ccc' }} />
-                <p>今日热点排行前十、词云、按社交类别图表 — 待对接分析接口</p>
-              </div>
-            </Card>
-          </TabPane>
-        </Tabs>
-      </Card>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

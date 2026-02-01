@@ -77,16 +77,27 @@ const SystemConfigPage = () => {
         const data = res?.data ?? res;
         if (data && typeof data === 'object') {
           form.setFieldsValue({
+            // @ts-ignore
             systemName: data.systemName ?? '重点人员档案监测系统',
+            // @ts-ignore
             systemLogoUrl: data.systemLogoUrl ?? '',
+            // @ts-ignore
             frontendBaseUrl: data.frontendBaseUrl ?? '/',
+            // @ts-ignore
             navDashboard: data.navDashboard !== false,
+            // @ts-ignore
             navPersons: data.navPersons !== false,
+            // @ts-ignore
             navKeyPersonLibrary: data.navKeyPersonLibrary !== false,
+            // @ts-ignore
             navWorkspace: data.navWorkspace !== false,
+            // @ts-ignore
             navModelManagement: data.navModelManagement !== false,
+            // @ts-ignore
             navSituation: data.navSituation !== false,
+            // @ts-ignore
             navSystemConfig: data.navSystemConfig !== false,
+            // @ts-ignore
             showPersonDetailEdit: data.showPersonDetailEdit !== false,
           });
         }

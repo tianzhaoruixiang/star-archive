@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, Button, Row, Col, Statistic, Spin, Modal, Pagination, Empty } from 'antd';
 import { ArrowLeftOutlined, TeamOutlined, CarOutlined } from '@ant-design/icons';

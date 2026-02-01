@@ -46,8 +46,9 @@ const Layout = () => {
     const load = () => {
       systemConfigAPI
         .getPublicConfig()
-        .then((res: { data?: SystemConfigDTO }) => {
-          const data = res?.data ?? res;
+        .then((res: unknown) => {
+          const raw = res as { data?: SystemConfigDTO } | SystemConfigDTO;
+          const data = raw && typeof raw === 'object' && 'data' in raw ? (raw as { data?: SystemConfigDTO }).data : (raw as SystemConfigDTO);
           setSystemConfig(data && typeof data === 'object' ? data : null);
         })
         .catch(() => setSystemConfig(null));

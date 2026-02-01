@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 
 /** 从结构化档案 JSON（snake_case）中取值的键 */
 const pick = (obj: Record<string, unknown>, ...keys: string[]): unknown => {

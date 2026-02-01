@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useId } from 'react';
+import { type FC, useEffect, useRef, useId } from 'react';
 import { Spin } from 'antd';
 import type { OnlyOfficePreviewConfigDTO } from '@/types/archiveFusion';
 import './index.css';

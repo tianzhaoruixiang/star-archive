@@ -233,8 +233,7 @@ services:
       archive-network:
         ipv4_address: 172.20.80.31
     ports:
-      - "80:8080"
-    user: nginx
+      - "80:80"
     depends_on:
       backend:
         condition: service_started

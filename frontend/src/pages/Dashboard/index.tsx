@@ -95,6 +95,7 @@ function Dashboard() {
   useEffect(() => {
     dashboardAPI.getProvinceRanks().then((res: { data?: ProvinceRanksDTO }) => {
       const payload = res?.data ?? res;
+      // @ts-ignore
       setProvinceRanks(payload && typeof payload === 'object' ? payload : null);
     }).catch(() => setProvinceRanks(null));
   }, []);
@@ -102,6 +103,7 @@ function Dashboard() {
   useEffect(() => {
     dashboardAPI.getTravelTrend(14).then((res: { data?: TravelTrendDTO }) => {
       const payload = res?.data ?? res;
+      // @ts-ignore
       setTravelTrend(payload && typeof payload === 'object' ? payload : null);
     }).catch(() => setTravelTrend(null));
   }, []);

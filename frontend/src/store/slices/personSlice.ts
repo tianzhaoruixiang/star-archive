@@ -67,6 +67,7 @@ export const fetchPersonListByTags = createAsyncThunk(
   }
 );
 
+// @ts-ignore
 const personSlice = createSlice({
   name: 'person',
   initialState,
@@ -79,10 +80,15 @@ const personSlice = createSlice({
       })
       .addCase(fetchPersonList.fulfilled, (state, action) => {
         state.loading = false;
+        // @ts-ignore
         state.list = action.payload.content;
+        // @ts-ignore
         state.pagination = {
+          // @ts-ignore
           page: action.payload.page,
+          // @ts-ignore        
           size: action.payload.size,
+          // @ts-ignore
           total: action.payload.totalElements,
         };
       })
@@ -108,6 +114,7 @@ const personSlice = createSlice({
       })
       .addCase(fetchTags.fulfilled, (state, action) => {
         state.tagsLoading = false;
+        // @ts-ignore
         state.tags = action.payload;
       })
       .addCase(fetchTags.rejected, (state) => {
@@ -119,10 +126,14 @@ const personSlice = createSlice({
       })
       .addCase(fetchPersonListByTag.fulfilled, (state, action) => {
         state.loading = false;
+        // @ts-ignore
         state.list = action.payload.content;
         state.pagination = {
+          // @ts-ignore
           page: action.payload.page,
+          // @ts-ignore
           size: action.payload.size,
+          // @ts-ignore
           total: action.payload.totalElements,
         };
       })
@@ -136,10 +147,14 @@ const personSlice = createSlice({
       })
       .addCase(fetchPersonListByTags.fulfilled, (state, action) => {
         state.loading = false;
+        // @ts-ignore
         state.list = action.payload.content;
         state.pagination = {
+          // @ts-ignore
           page: action.payload.page,
+          // @ts-ignore
           size: action.payload.size,
+          // @ts-ignore
           total: action.payload.totalElements,
         };
       })

@@ -10,6 +10,7 @@ import com.stararchive.personmonitor.dto.OnlyOfficePreviewConfigDTO;
 import com.stararchive.personmonitor.entity.ArchiveImportTask;
 import com.stararchive.personmonitor.entity.SysUser;
 import com.stararchive.personmonitor.service.ArchiveFusionService;
+import com.stararchive.personmonitor.service.OnlyOfficePreviewTokenService;
 import com.stararchive.personmonitor.service.SeaweedFSService;
 import com.stararchive.personmonitor.service.SysUserService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class ArchiveFusionController {
     private final SeaweedFSService seaweedFSService;
     private final SysUserService sysUserService;
     private final OnlyOfficeProperties onlyOfficeProperties;
+    private final OnlyOfficePreviewTokenService onlyOfficePreviewTokenService;
 
     /**
      * 上传文件并创建档案融合任务（解析 -> 大模型抽取 -> 相似匹配）
@@ -104,12 +106,14 @@ public class ArchiveFusionController {
 
     /**
      * 获取任务对应档案文件的下载/预览流。
-     * download=1 时设置 Content-Disposition: attachment 触发下载；否则为内联预览。仅任务创建人可访问。
+     * download=1 时设置 Content-Disposition: attachment 触发下载；否则为内联预览。
+     * 仅任务创建人可访问；OnlyOffice 拉取文件时无 X-Username，需通过 previewToken 放行。
      */
     @GetMapping("/tasks/{taskId}/file")
     public ResponseEntity<byte[]> getTaskFile(
             @PathVariable String taskId,
             @RequestParam(value = "download", defaultValue = "0") int download,
+            @RequestParam(value = "previewToken", required = false) String previewToken,
             @RequestHeader(value = "X-Username", required = false) String currentUsername) {
         Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
         if (taskOpt.isEmpty()) {
@@ -117,8 +121,10 @@ public class ArchiveFusionController {
             return ResponseEntity.notFound().build();
         }
         ArchiveImportTask task = taskOpt.get();
-        if (!isTaskCreator(task, currentUsername)) {
-            log.warn("档案文件下载: 非任务创建人拒绝访问 taskId={}", taskId);
+        boolean allowedByToken = previewToken != null && !previewToken.isBlank()
+                && onlyOfficePreviewTokenService.validateToken(previewToken, taskId);
+        if (!allowedByToken && !isTaskCreator(task, currentUsername)) {
+            log.warn("档案文件下载: 无有效 previewToken 且非任务创建人 taskId={}", taskId);
             return ResponseEntity.notFound().build();
         }
         String path = task.getFilePathId();
@@ -178,7 +184,8 @@ public class ArchiveFusionController {
             docServerUrl = "http://localhost:8081";
         }
         String base = docDownloadBase.replaceAll("/$", "");
-        String documentUrl = base + "/workspace/archive-fusion/tasks/" + taskId + "/file";
+        String token = onlyOfficePreviewTokenService.createToken(taskId);
+        String documentUrl = base + "/workspace/archive-fusion/tasks/" + taskId + "/file?previewToken=" + token;
         String fileType = task.getFileType() != null ? task.getFileType().toLowerCase().replaceAll("^\\.", "") : "docx";
         String title = task.getFileName() != null ? task.getFileName() : "document." + fileType;
         String documentType = isCellType(fileType) ? "cell" : "word";

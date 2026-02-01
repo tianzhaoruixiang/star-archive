@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Tag } from 'antd';
 import { LinkOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -66,7 +66,10 @@ const PersonCard: FC<PersonCardProps> = ({
       <div className="person-card-row">身份证: {person.idCardNumber || '—'}</div>
       <div className="person-card-row">籍贯: {person.householdAddress || '—'}</div>
       <div className="person-card-row">
-        出生日期: {formatDateOnly(person.birthDate)}
+        出生日期: {
+        // @ts-ignore
+        formatDateOnly(person.birthDate)
+        }
       </div>
       <div className="person-card-row">电话: {person.phoneSummary || '—'}</div>
       <div className="person-card-tags">

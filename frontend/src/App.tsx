@@ -7,6 +7,7 @@ import PersonList from './pages/PersonList';
 import PersonDetail from './pages/PersonDetail';
 import KeyPersonLibrary from './pages/KeyPersonLibrary';
 import SituationAwareness from './pages/SituationAwareness';
+import NewsDetail from './pages/SituationAwareness/NewsDetail';
 import Workspace from './pages/Workspace';
 import WorkspaceImportDetail from './pages/Workspace/ImportDetail';
 import ModelManagement from './pages/ModelManagement';
@@ -32,6 +33,7 @@ function App() {
         <Route path="persons" element={<PersonList />} />
         <Route path="persons/:personId" element={<PersonDetail />} />
         <Route path="situation" element={<SituationAwareness />} />
+        <Route path="situation/news/:newsId" element={<NewsDetail />} />
         <Route path="key-person-library" element={<KeyPersonLibrary />} />
         <Route path="workspace" element={<Workspace />} />
         <Route path="workspace/fusion/:taskId" element={<WorkspaceImportDetail />} />
