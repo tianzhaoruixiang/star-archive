@@ -192,3 +192,20 @@ services:
         limits:
           memory: 2G
           cpus: "1.0"
+
+networks:
+  archive-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.80.0/24
+
+volumes:
+  doris-fe-meta:
+  doris-fe-log:
+  doris-be-storage:
+  doris-be-log:
+  seaweedfs-master-data:
+  seaweedfs-volume-data:
+  seaweedfs-filer-data:
+  onlyoffice-data:
