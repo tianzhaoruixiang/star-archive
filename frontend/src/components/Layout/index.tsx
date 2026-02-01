@@ -162,7 +162,7 @@ const Layout = () => {
           <span className="logo-text">{appName}</span>
         </div>
         <Menu
-          theme="light"
+          theme="dark"
           mode="horizontal"
           selectedKeys={selectedKeys}
           openKeys={menuOpenKeys}

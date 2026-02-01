@@ -28,6 +28,35 @@
   line-height: var(--line-height-body);
 }
 
+/* 新闻分类 Tab：政治、经济、文化、社会民生 */
+.news-category-tabs.ant-tabs {
+  margin-bottom: 16px;
+}
+
+.news-category-tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.news-category-tabs .ant-tabs-tab {
+  color: var(--text-placeholder);
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+.news-category-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary);
+  text-shadow: 0 0 12px var(--primary-glow);
+}
+
+.news-category-tabs .ant-tabs-ink-bar {
+  background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.news-category-tabs .ant-tabs-nav::before {
+  border-bottom-color: var(--card-border-subtle);
+}
+
 .news-search-bar {
   display: flex;
   align-items: center;

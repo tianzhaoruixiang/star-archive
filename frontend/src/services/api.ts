@@ -111,7 +111,17 @@ export const dashboardAPI = {
   getGroupCategoryStats: () => apiClient.get<OrganizationRankItem[]>('/dashboard/group-category-stats'),
   getProvinceStats: (provinceName: string) =>
     apiClient.get<ProvinceStatsDTO>(`/dashboard/province/${encodeURIComponent(provinceName)}/stats`),
+  /** 省份间人员流动（出发省→目的省，去重人数），用于地图流动线 */
+  getProvinceFlow: () =>
+    apiClient.get<ProvinceFlowItemDTO[]>('/dashboard/province-flow'),
 };
+
+/** 省份流动项（与后端 ProvinceFlowItemDTO 一致） */
+export interface ProvinceFlowItemDTO {
+  fromProvince: string;
+  toProvince: string;
+  personCount: number;
+}
 
 /** 人员档案更新请求体（与后端 PersonUpdateDTO 对应，字段可选） */
 export interface PersonUpdatePayload {
@@ -158,20 +168,26 @@ export interface PersonEditHistoryItem {
   changes: PersonEditHistoryChangeItem[];
 }
 
-/** 人员列表筛选（可选；目的地省份可与 destinationCity/visaType/organization/belongingGroup 组合） */
+/** 人员列表筛选（可选；目的地省份可与 destinationCity/visaType/organization/belongingGroup 组合；流动线为 departureProvince + destinationProvince） */
 export interface PersonListFilter {
   isKeyPerson?: boolean;
   organization?: string;
   visaType?: string;
   belongingGroup?: string;
+  /** 出发省份（与 destinationProvince 同时使用时表示流动线：从 A 到 B 的人员） */
+  departureProvince?: string;
   /** 目的地省份（有该省行程的人员） */
   destinationProvince?: string;
   /** 目的地城市（须与 destinationProvince 同时使用） */
   destinationCity?: string;
 }
 
+export interface GetPersonListOptions {
+  signal?: AbortSignal;
+}
+
 export const personAPI = {
-  getPersonList: (page: number, size: number, filter?: PersonListFilter) =>
+  getPersonList: (page: number, size: number, filter?: PersonListFilter, options?: GetPersonListOptions) =>
     apiClient.get('/persons', {
       params: {
         page,
@@ -180,9 +196,11 @@ export const personAPI = {
         ...(filter?.organization && { organization: filter.organization }),
         ...(filter?.visaType && { visaType: filter.visaType }),
         ...(filter?.belongingGroup && { belongingGroup: filter.belongingGroup }),
+        ...(filter?.departureProvince && { departureProvince: filter.departureProvince }),
         ...(filter?.destinationProvince && { destinationProvince: filter.destinationProvince }),
         ...(filter?.destinationCity && { destinationCity: filter.destinationCity }),
       },
+      ...(options?.signal && { signal: options.signal }),
     }),
   getPersonDetail: (personId: string) =>
     apiClient.get(`/persons/${personId}`),
@@ -260,9 +278,12 @@ export interface NewsItem {
   category?: string;
 }
 
+/** 新闻分类（与后端 category 字段一致，用于筛选） */
+export const NEWS_CATEGORIES = ['政治', '经济', '文化', '社会民生'] as const;
+
 export const newsAPI = {
-  getNewsList: (page: number, size: number, keyword?: string) =>
-    apiClient.get('/news', { params: { page, size, keyword } }),
+  getNewsList: (page: number, size: number, keyword?: string, category?: string) =>
+    apiClient.get('/news', { params: { page, size, keyword, category } }),
   getNewsDetail: (newsId: string) => apiClient.get<NewsItem>(`/news/${newsId}`),
   getNewsAnalysis: () => apiClient.get('/news/analysis'),
 };

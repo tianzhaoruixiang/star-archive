@@ -1,7 +1,8 @@
 .person-card {
   border-radius: var(--card-radius-lg);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--card-border-subtle);
   background: var(--card-bg);
+  backdrop-filter: blur(12px);
   box-shadow: var(--card-shadow);
   cursor: pointer;
   transition: all var(--transition-normal);
@@ -9,6 +10,7 @@
 
 .person-card:hover {
   box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border);
 }
 
 .person-card .ant-card-body {
@@ -36,7 +38,8 @@
   font-size: 18px;
   font-weight: 600;
   color: #fff;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, #0891b2 100%);
+  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35);
 }
 
 .person-card-avatar-img {

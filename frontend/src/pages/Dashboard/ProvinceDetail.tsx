@@ -46,23 +46,33 @@ const ProvinceDetail: FC = () => {
     setPersonListModalTitle(title);
     setPersonListFilter(filter);
     setPersonListPage(0);
+    setPersonListData({ content: [], totalElements: 0 });
     setPersonListModalOpen(true);
   }, []);
 
   useEffect(() => {
     if (!personListModalOpen) return;
+    const controller = new AbortController();
     setPersonListLoading(true);
+    const filter = personListFilter;
     personAPI
-      .getPersonList(personListPage, PERSON_LIST_PAGE_SIZE, personListFilter)
+      .getPersonList(personListPage, PERSON_LIST_PAGE_SIZE, filter, { signal: controller.signal })
       .then((res: unknown) => {
-        const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { content?: PersonCardData[]; totalElements?: number } }).data : res as { content?: PersonCardData[]; totalElements?: number };
-        setPersonListData({
-          content: Array.isArray(data?.content) ? data.content : [],
-          totalElements: typeof data?.totalElements === 'number' ? data.totalElements : 0,
-        });
+        const raw = res && typeof res === 'object' && 'data' in res ? (res as { data?: unknown }).data : res;
+        const data = raw && typeof raw === 'object' && raw !== null ? (raw as { content?: unknown; totalElements?: number }) : null;
+        const content = Array.isArray(data?.content) ? data.content : [];
+        const totalElements = typeof data?.totalElements === 'number' ? data.totalElements : 0;
+        setPersonListData({ content: content as PersonCardData[], totalElements });
       })
-      .catch(() => setPersonListData({ content: [], totalElements: 0 }))
+      .catch((err: unknown) => {
+        const isCancel = err != null && typeof err === 'object' &&
+          (( 'name' in err && (err as { name: string }).name === 'Canceled') ||
+           ('code' in err && (err as { code: string }).code === 'ERR_CANCELED'));
+        if (isCancel) return;
+        setPersonListData({ content: [], totalElements: 0 });
+      })
       .finally(() => setPersonListLoading(false));
+    return () => controller.abort();
   }, [personListModalOpen, personListPage, personListFilter]);
 
   useEffect(() => {
@@ -246,23 +256,21 @@ const ProvinceDetail: FC = () => {
       <div className="rank-list rank-list-scroll">
         {list.map((item, index) => {
           const clickOpts = name && getClickFilter?.(item);
+          const handleOpenModal = clickOpts
+            ? () => openPersonListModal(clickOpts.title, clickOpts.filter)
+            : undefined;
           return (
-            <div key={`${item.name}-${index}`} className="rank-item">
+            <div
+              key={`${item.name}-${index}`}
+              className={`rank-item ${clickOpts ? 'rank-item-clickable' : ''}`}
+              onClick={handleOpenModal}
+              onKeyDown={handleOpenModal ? (e) => e.key === 'Enter' && handleOpenModal() : undefined}
+              role={clickOpts ? 'button' : undefined}
+              tabIndex={clickOpts ? 0 : undefined}
+            >
               <span className="rank-num">{index + 1}</span>
               <span className="rank-name" title={item.name}>{item.name}</span>
-              {clickOpts ? (
-                <span
-                  className="rank-value dashboard-rank-value-clickable"
-                  onClick={() => openPersonListModal(clickOpts.title, clickOpts.filter)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && openPersonListModal(clickOpts.title, clickOpts.filter)}
-                >
-                  {item.value}
-                </span>
-              ) : (
-                <span className="rank-value">{item.value}</span>
-              )}
+              <span className="rank-value">{item.value}</span>
               <div className="rank-bar-wrap">
                 <div
                   className="rank-bar"

@@ -2,6 +2,7 @@ package com.stararchive.personmonitor.service;
 
 import com.stararchive.personmonitor.dto.DashboardMapDTO;
 import com.stararchive.personmonitor.dto.DashboardStatsDTO;
+import com.stararchive.personmonitor.dto.ProvinceFlowItemDTO;
 import com.stararchive.personmonitor.dto.ProvinceRanksDTO;
 import com.stararchive.personmonitor.dto.ProvinceStatsDTO;
 import com.stararchive.personmonitor.dto.TravelTrendDTO;
@@ -128,6 +129,23 @@ public class DashboardService {
                 .collect(Collectors.toList());
 
         return new ProvinceRanksDTO(all, yesterdayArrival, yesterdayDeparture, stay);
+    }
+
+    /**
+     * 省份间人员流动数据（出发省→目的省，去重人数），用于地图流动线
+     */
+    public List<ProvinceFlowItemDTO> getProvinceFlow() {
+        log.info("获取省份间人员流动数据");
+        List<Object[]> rows = personTravelRepository.findProvinceFlowCounts();
+        return rows.stream()
+                .map(row -> {
+                    String from = row[0] != null ? row[0].toString().trim() : "";
+                    String to = row[1] != null ? row[1].toString().trim() : "";
+                    long cnt = row[2] instanceof Number ? ((Number) row[2]).longValue() : 0L;
+                    return new ProvinceFlowItemDTO(from, to, cnt);
+                })
+                .filter(dto -> !dto.getFromProvince().isEmpty() && !dto.getToProvince().isEmpty())
+                .collect(Collectors.toList());
     }
 
     private static List<MapItem> toMapItemList(List<Object[]> rows) {

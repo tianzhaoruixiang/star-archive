@@ -1,3 +1,5 @@
+/* 系统配置页 - 深色科技感，与全站配色统一 */
+
 .system-config-page {
   width: 100%;
   padding: var(--page-padding);
@@ -5,6 +7,7 @@
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
+  background: transparent;
 }
 
 .system-config-page > * {
@@ -20,18 +23,156 @@
   min-height: 320px;
 }
 
+/* 卡片：深色玻璃质感 + 青蓝描边 */
 .system-config-card {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
   box-sizing: border-box;
+  border-radius: var(--card-radius-lg);
+  border: 1px solid var(--card-border-subtle);
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--card-shadow);
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.system-config-card:hover {
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.system-config-card .ant-card-head {
+  border-bottom: 1px solid var(--card-border-subtle);
+  padding: 16px 20px;
+}
+
+.system-config-card .ant-card-head-title {
+  color: var(--text-primary);
+  font-size: var(--font-section);
+  font-weight: var(--font-weight-subtitle);
+}
+
+.system-config-card .ant-card-head-title .anticon {
+  color: var(--primary);
+  margin-right: 8px;
+  text-shadow: 0 0 12px var(--primary-glow);
 }
 
 .system-config-card .ant-card-body {
   width: 100%;
   box-sizing: border-box;
+  padding: 20px 24px;
+  color: var(--text-secondary);
 }
 
+/* 表单项：标签与说明 */
+.system-config-page .ant-form-item-label > label {
+  color: var(--text-secondary) !important;
+}
+
+.system-config-page .ant-form-item-explain,
+.system-config-page .ant-form-item-extra {
+  color: var(--text-muted) !important;
+}
+
+/* 输入框：深色底 + 青蓝描边 */
+.system-config-page .ant-input,
+.system-config-page .ant-input-affix-wrapper,
+.system-config-page .ant-input-password {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  transition: all var(--transition-fast);
+}
+
+.system-config-page .ant-input::placeholder,
+.system-config-page .ant-input-password input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.system-config-page .ant-input:hover,
+.system-config-page .ant-input-affix-wrapper:hover,
+.system-config-page .ant-input-password:hover {
+  border-color: var(--input-hover-border) !important;
+}
+
+.system-config-page .ant-input:focus,
+.system-config-page .ant-input-affix-wrapper-focused,
+.system-config-page .ant-input-password:focus-within {
+  border-color: var(--input-focus-border) !important;
+  box-shadow: var(--input-focus-glow);
+}
+
+.system-config-page .ant-input-password .ant-input {
+  background: transparent !important;
+}
+
+.system-config-page .ant-input-show-count-suffix {
+  color: var(--text-muted);
+}
+
+/* Switch：未选中灰底，选中青蓝 */
+.system-config-page .ant-switch {
+  background: rgba(148, 163, 184, 0.35) !important;
+  border: 1px solid var(--card-border-subtle);
+}
+
+.system-config-page .ant-switch-checked {
+  background: var(--primary) !important;
+  border-color: var(--primary);
+  box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.system-config-page .ant-switch-inner {
+  color: var(--text-muted);
+}
+
+.system-config-page .ant-switch-checked .ant-switch-inner {
+  color: #fff;
+}
+
+/* 主按钮：青蓝渐变 + 光晕 */
+.system-config-page .ant-btn-primary {
+  background: var(--accent-btn) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35);
+  transition: all var(--transition-fast);
+}
+
+.system-config-page .ant-btn-primary:hover {
+  background: var(--accent-btn-hover) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.45);
+}
+
+/* 次要按钮 / 上传按钮 */
+.system-config-page .ant-btn-default {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--text-secondary) !important;
+  border-radius: var(--radius-md);
+}
+
+.system-config-page .ant-btn-default:hover {
+  border-color: var(--input-hover-border) !important;
+  color: var(--primary) !important;
+}
+
+/* 危险按钮（删除） */
+.system-config-page .ant-btn-text.ant-btn-dangerous {
+  color: var(--accent-red) !important;
+}
+
+.system-config-page .ant-btn-text.ant-btn-dangerous:hover {
+  color: #fff !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* 导航/功能开关行 */
 .system-config-nav-switches {
   display: flex;
   flex-wrap: wrap;
@@ -48,8 +189,10 @@
 .system-config-nav-label {
   flex: 0 0 auto;
   width: 80px;
+  color: var(--text-secondary);
 }
 
+/* Logo 行 */
 .system-config-logo-row {
   display: flex;
   align-items: center;
@@ -61,6 +204,13 @@
   min-width: 0;
 }
 
+.system-config-logo-row .system-config-logo-input.ant-input {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* 大模型配置区块 */
 .system-config-llm-row .ant-form-item {
   margin-bottom: 0;
 }
@@ -69,10 +219,86 @@
   margin-top: 16px;
 }
 
+/* 用户管理卡片 */
+.system-config-users-card {
+  margin-top: 16px;
+}
+
 .system-config-users-toolbar {
   margin-bottom: 16px;
 }
 
+.system-config-users-toolbar .ant-btn-primary {
+  background: var(--accent-btn) !important;
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35);
+}
+
+.system-config-users-toolbar .ant-btn-primary:hover {
+  background: var(--accent-btn-hover) !important;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.45);
+}
+
 .system-config-users-card .ant-table {
   font-size: 13px;
+}
+
+/* 表格在卡片内使用 common 的 ant-table 覆盖，此处补充分页等 */
+.system-config-users-card .ant-table-thead > tr > th {
+  background: rgba(6, 182, 212, 0.08) !important;
+  color: var(--text-muted) !important;
+  border-bottom-color: var(--card-border-subtle) !important;
+}
+
+.system-config-users-card .ant-table-tbody > tr > td {
+  border-bottom-color: var(--card-border-subtle) !important;
+  color: var(--text-secondary);
+}
+
+.system-config-users-card .ant-table-tbody > tr:hover > td {
+  background: var(--primary-light) !important;
+}
+
+/* 新增用户弹窗内表单 */
+.system-config-page .ant-modal-content {
+  background: var(--card-bg-solid) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: var(--card-radius-lg) !important;
+}
+
+.system-config-page .ant-modal-header {
+  background: transparent !important;
+  border-bottom-color: var(--card-border-subtle) !important;
+}
+
+.system-config-page .ant-modal-title {
+  color: var(--text-primary) !important;
+}
+
+.system-config-page .ant-modal-close-x {
+  color: var(--text-muted) !important;
+}
+
+.system-config-page .ant-modal-body {
+  color: var(--text-secondary) !important;
+}
+
+.system-config-page .ant-modal-footer .ant-btn-default {
+  color: var(--text-secondary);
+}
+
+/* Popconfirm 气泡 */
+.system-config-page .ant-popover-inner {
+  background: var(--card-bg-solid) !important;
+  border: 1px solid var(--card-border-subtle) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.system-config-page .ant-popover-message-title {
+  color: var(--text-primary) !important;
+}
+
+.system-config-page .ant-popover-buttons .ant-btn-primary {
+  background: var(--accent-btn) !important;
+  border: none !important;
 }

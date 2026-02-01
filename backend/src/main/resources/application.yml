@@ -27,7 +27,7 @@ spring:
 
   jpa:
     database-platform: com.stararchive.personmonitor.config.DorisDialect
-    show-sql: true
+    show-sql: false
     open-in-view: false
     hibernate:
       ddl-auto: none

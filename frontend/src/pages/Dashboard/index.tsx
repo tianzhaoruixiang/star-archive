@@ -11,9 +11,10 @@ import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchStatistics } from '@/store/slices/dashboardSlice';
-import { dashboardAPI, personAPI, type OrganizationRankItem, type VisaTypeRankItem, type ProvinceRanksDTO, type TravelTrendDTO, type PersonListFilter } from '@/services/api';
+import { dashboardAPI, personAPI, type OrganizationRankItem, type VisaTypeRankItem, type ProvinceRanksDTO, type ProvinceFlowItemDTO, type TravelTrendDTO, type PersonListFilter } from '@/services/api';
 import PersonCard from '@/components/PersonCard';
 import type { PersonCardData } from '@/components/PersonCard';
+import { getProvinceCenter } from '@/utils/provinceGeo';
 import { DashboardSkeleton, PageCardGridSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
@@ -28,7 +29,8 @@ interface RankItem {
   value: number;
 }
 
-const TREND_COLORS = ['#71717a', '#22c55e', '#f59e0b', '#a1a1aa'];
+/* 深色主题：疑似=橙、康复=绿、青蓝/紫强调 */
+const TREND_COLORS = ['#f59e0b', '#22c55e', '#06b6d4', '#a855f7'];
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -42,6 +44,7 @@ function Dashboard() {
   const [provinceRanks, setProvinceRanks] = useState<ProvinceRanksDTO | null>(null);
   const [travelTrend, setTravelTrend] = useState<TravelTrendDTO | null>(null);
   const [groupCategoryStats, setGroupCategoryStats] = useState<OrganizationRankItem[]>([]);
+  const [provinceFlow, setProvinceFlow] = useState<ProvinceFlowItemDTO[]>([]);
   const [chinaGeoLoaded, setChinaGeoLoaded] = useState(false);
 
   /** 人物列表弹框 */
@@ -56,23 +59,33 @@ function Dashboard() {
     setPersonListModalTitle(title);
     setPersonListFilter(filter);
     setPersonListPage(0);
+    setPersonListData({ content: [], totalElements: 0 });
     setPersonListModalOpen(true);
   }, []);
 
   useEffect(() => {
     if (!personListModalOpen) return;
+    const controller = new AbortController();
     setPersonListLoading(true);
+    console.log('[Dashboard] 查询人员列表:', { page: personListPage, filter: personListFilter });
     personAPI
-      .getPersonList(personListPage, PERSON_LIST_PAGE_SIZE, personListFilter)
+      .getPersonList(personListPage, PERSON_LIST_PAGE_SIZE, personListFilter, { signal: controller.signal })
       .then((res: unknown) => {
         const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { content?: PersonCardData[]; totalElements?: number } }).data : res as { content?: PersonCardData[]; totalElements?: number };
+        console.log('[Dashboard] 人员列表查询结果:', data);
         setPersonListData({
           content: Array.isArray(data?.content) ? data.content : [],
           totalElements: typeof data?.totalElements === 'number' ? data.totalElements : 0,
         });
       })
-      .catch(() => setPersonListData({ content: [], totalElements: 0 }))
+      .catch((err: unknown) => {
+        const isCancel = err != null && typeof err === 'object' &&
+          (('name' in err && (err as { name: string }).name === 'Canceled') ||
+           ('code' in err && (err as { code: string }).code === 'ERR_CANCELED'));
+        if (!isCancel) setPersonListData({ content: [], totalElements: 0 });
+      })
       .finally(() => setPersonListLoading(false));
+    return () => controller.abort();
   }, [personListModalOpen, personListPage, personListFilter]);
 
   useEffect(() => {
@@ -128,9 +141,17 @@ function Dashboard() {
       .catch(() => setChinaGeoLoaded(false));
   }, []);
 
-  const totalPerson = statistics?.totalPersonCount ?? 8000;
-  const keyPerson = statistics?.keyPersonCount ?? 2009;
-  const activeRegions = 147;
+  useEffect(() => {
+    dashboardAPI.getProvinceFlow().then((res: unknown) => {
+      const raw = res && typeof res === 'object' && 'data' in res ? (res as { data?: unknown }).data : res;
+      const list = Array.isArray(raw) ? raw : [];
+      setProvinceFlow(list as ProvinceFlowItemDTO[]);
+    }).catch(() => setProvinceFlow([]));
+  }, []);
+
+  const totalPerson = statistics?.totalPersonCount ?? 0;
+  const keyPerson = statistics?.keyPersonCount ?? 0;
+  const activeRegions = 0;
   const todayMovement = statistics?.todaySocialDynamicCount ?? 0;
 
   const trendOption = useCallback(() => {
@@ -148,21 +169,21 @@ function Dashboard() {
       legend: {
         data: series.map((s) => s.name),
         bottom: 0,
-        textStyle: { color: '#71717a', fontSize: 12 },
+        textStyle: { color: '#94a3b8', fontSize: 12 },
         itemWidth: 14,
         itemHeight: 14,
       },
       xAxis: {
         type: 'category',
         data: xData,
-        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
-        axisLabel: { color: '#71717a' },
+        axisLine: { lineStyle: { color: 'rgba(6, 182, 212, 0.2)' } },
+        axisLabel: { color: '#94a3b8' },
       },
       yAxis: {
         type: 'value',
         axisLine: { show: false },
-        splitLine: { lineStyle: { color: 'rgba(0,0,0,0.06)', type: 'dashed' } },
-        axisLabel: { color: '#71717a' },
+        splitLine: { lineStyle: { color: 'rgba(6, 182, 212, 0.1)', type: 'dashed' } },
+        axisLabel: { color: '#94a3b8' },
       },
       series: series.map((s, i) => ({
         name: s.name,
@@ -171,7 +192,7 @@ function Dashboard() {
         smooth: true,
         itemStyle: { color: TREND_COLORS[i % TREND_COLORS.length] },
         lineStyle: { color: TREND_COLORS[i % TREND_COLORS.length], width: 2 },
-        areaStyle: isBar ? undefined : { color: 'rgba(0, 122, 255, 0.08)' },
+        areaStyle: isBar ? undefined : { color: 'rgba(6, 182, 212, 0.12)' },
       })),
     };
   }, [chartType, travelTrend]);
@@ -186,24 +207,127 @@ function Dashboard() {
     if (maxVal <= minVal) maxVal = minVal + 1;
 
     if (chinaGeoLoaded) {
-      /* 16 级冷暖渐变：浅蓝（少）→ 深红（多），专业数据可视化 */
+      /* 深色主题：蓝绿黄橙红渐变（少→多），科技感热力 */
       const visualMapColors = [
-        '#d4d4d8', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#22c55e', '#10b981', '#14b8a6',
-        '#34d399', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#991b1b',
+        '#1e293b', '#334155', '#475569', '#0f766e', '#0d9488', '#14b8a6', '#22d3ee', '#06b6d4',
+        '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#7f1d1d',
       ];
+      /* 流动线数据：仅保留两端都有坐标的线路 */
+      const lineData = provinceFlow
+        .map((f) => {
+          const fromCoord = getProvinceCenter(f.fromProvince);
+          const toCoord = getProvinceCenter(f.toProvince);
+          if (!fromCoord || !toCoord) return null;
+          return {
+            coords: [fromCoord, toCoord] as [number, number][],
+            value: f.personCount,
+            fromProvince: f.fromProvince,
+            toProvince: f.toProvince,
+          };
+        })
+        .filter((d): d is NonNullable<typeof d> => d != null);
+
+      const series: Record<string, unknown>[] = [
+        {
+          name: '人员数量',
+          type: 'map',
+          map: 'china',
+          geoIndex: 0,
+          itemStyle: {
+            borderColor: 'rgba(6, 182, 212, 0.35)',
+            borderWidth: 1.2,
+            shadowBlur: 6,
+            shadowColor: 'rgba(6, 182, 212, 0.15)',
+          },
+          label: {
+            show: true,
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#e2e8f0',
+            fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
+            textBorderColor: 'rgba(15, 13, 26, 0.9)',
+            textBorderWidth: 1.5,
+            textShadowColor: 'rgba(6, 182, 212, 0.2)',
+            textShadowBlur: 3,
+            padding: [1, 3],
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontWeight: 700,
+              color: '#f1f5f9',
+              fontSize: 14,
+              textBorderColor: 'rgba(6, 182, 212, 0.5)',
+              textBorderWidth: 2,
+              textShadowColor: 'rgba(6, 182, 212, 0.4)',
+              textShadowBlur: 4,
+            },
+            itemStyle: {
+              areaColor: 'rgba(6, 182, 212, 0.25)',
+              borderColor: 'rgba(6, 182, 212, 0.8)',
+              borderWidth: 2.5,
+              shadowBlur: 12,
+              shadowColor: 'rgba(6, 182, 212, 0.4)',
+            },
+          },
+          data: provinceList.map((p) => ({ name: p.name, value: p.value })),
+        },
+      ];
+      if (lineData.length > 0) {
+        series.push({
+          name: '人员流动',
+          type: 'lines',
+          coordinateSystem: 'geo',
+          geoIndex: 0,
+          data: lineData,
+          lineStyle: {
+            color: 'rgba(6, 182, 212, 0.55)',
+            width: 1.2,
+            curveness: 0.15,
+          },
+          effect: {
+            show: true,
+            period: 2.5,
+            trailLength: 0.35,
+            color: 'rgba(6, 182, 212, 0.75)',
+            symbolSize: 2.5,
+          },
+          emphasis: {
+            lineStyle: { width: 2.2, color: 'rgba(6, 182, 212, 0.9)' },
+            label: { show: false },
+          },
+        });
+      }
+
       return {
         backgroundColor: 'transparent',
+        geo: {
+          map: 'china',
+          roam: true,
+          layoutCenter: ['50%', '60%'],
+          layoutSize: '110%',
+          silent: false,
+          itemStyle: {
+            borderColor: 'rgba(6, 182, 212, 0.35)',
+            borderWidth: 1.2,
+          },
+          label: { show: false },
+        },
         tooltip: {
           trigger: 'item',
-          formatter: (params: { name: string }) => {
-            const v = countMap.get(params.name) ?? 0;
+          formatter: (params: { seriesType?: string; name?: string; data?: { fromProvince?: string; toProvince?: string; value?: number } }) => {
+            if (params.seriesType === 'lines' && params.data) {
+              const d = params.data as { fromProvince?: string; toProvince?: string; value?: number };
+              return `从 ${d.fromProvince ?? ''} → ${d.toProvince ?? ''}: ${d.value ?? 0} 人<br/>点击查看人员`;
+            }
+            const v = countMap.get(params.name ?? '') ?? 0;
             return `${params.name}: ${v}`;
           },
-          backgroundColor: 'rgba(255, 255, 255, 0.96)',
-          borderColor: 'rgba(0, 0, 0, 0.08)',
+          backgroundColor: 'rgba(22, 20, 42, 0.95)',
+          borderColor: 'rgba(6, 182, 212, 0.3)',
           borderWidth: 1,
           borderRadius: 8,
-          textStyle: { color: '#1d1d1f', fontSize: 13, fontWeight: 500 },
+          textStyle: { color: '#f1f5f9', fontSize: 13, fontWeight: 500 },
           padding: [10, 14],
         },
         visualMap: {
@@ -217,54 +341,7 @@ function Dashboard() {
           bottom: 8,
           textStyle: { color: '#94a3b8', fontSize: 11, fontWeight: 500 },
         },
-        series: [
-          {
-            name: '人员数量',
-            type: 'map',
-            map: 'china',
-            roam: true,
-            layoutCenter: ['50%', '60%'],
-            layoutSize: '110%',
-            itemStyle: {
-              borderColor: 'rgba(148, 163, 184, 0.6)',
-              borderWidth: 1.2,
-              shadowBlur: 4,
-              shadowColor: 'rgba(0, 0, 0, 0.12)',
-            },
-            label: {
-              show: true,
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#0f172a',
-              fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
-              textBorderColor: 'rgba(255, 255, 255, 0.95)',
-              textBorderWidth: 1.5,
-              textShadowColor: 'rgba(0, 0, 0, 0.2)',
-              textShadowBlur: 3,
-              padding: [1, 3],
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontWeight: 700,
-                color: '#020617',
-                fontSize: 14,
-                textBorderColor: '#fff',
-                textBorderWidth: 2,
-                textShadowColor: 'rgba(0, 0, 0, 0.25)',
-                textShadowBlur: 4,
-              },
-              itemStyle: {
-                areaColor: '#52525b',
-                borderColor: 'rgba(102, 126, 234, 0.9)',
-                borderWidth: 2.5,
-                shadowBlur: 12,
-                shadowColor: 'rgba(59, 130, 246, 0.35)',
-              },
-            },
-            data: provinceList.map((p) => ({ name: p.name, value: p.value })),
-          },
-        ],
+        series,
       };
     }
 
@@ -289,12 +366,12 @@ function Dashboard() {
             [117.2, 31.82, 42],
             [106.58, 29.56, 38],
           ].map(([lng, lat, v]) => ({ value: [lng, lat, v], name: `区域${v}` })),
-          itemStyle: { color: '#71717a', borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1 },
+          itemStyle: { color: 'rgba(6, 182, 212, 0.5)', borderColor: 'rgba(6, 182, 212, 0.4)', borderWidth: 1 },
           emphasis: { scale: 1.2 },
         },
       ],
     };
-  }, [chinaGeoLoaded, provinceRanks?.all]);
+  }, [chinaGeoLoaded, provinceRanks?.all, provinceFlow]);
 
   if (loading && !statistics) {
     return <DashboardSkeleton />;
@@ -458,8 +535,24 @@ function Dashboard() {
                 opts={{ renderer: 'canvas' }}
                 notMerge
                 onEvents={{
-                  click: (params: { componentSubType?: string; name?: string }) => {
-                    if (chinaGeoLoaded && params.componentSubType === 'map' && params.name) {
+                  click: (params: { componentSubType?: string; name?: string; data?: { fromProvince?: string; toProvince?: string } }) => {
+                    if (!chinaGeoLoaded) return;
+                    if (params.componentSubType === 'lines' && params.data) {
+                      const d = params.data as { fromProvince?: string; toProvince?: string };
+                      console.log('[Dashboard] 点击流动线:', d);
+                      if (d.fromProvince && d.toProvince) {
+                        console.log('[Dashboard] 打开人员列表弹窗:', {
+                          departureProvince: d.fromProvince,
+                          destinationProvince: d.toProvince,
+                        });
+                        openPersonListModal(`${d.fromProvince} → ${d.toProvince} 流动人员`, {
+                          departureProvince: d.fromProvince,
+                          destinationProvince: d.toProvince,
+                        });
+                      }
+                      return;
+                    }
+                    if (params.componentSubType === 'map' && params.name) {
                       navigate(`/dashboard/province/${encodeURIComponent(params.name)}`);
                     }
                   },
@@ -527,13 +620,13 @@ function Dashboard() {
                     title={`${item.name}: ${item.value}`}
                     placement="left"
                     overlayInnerStyle={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.96)',
-                      border: '1px solid rgba(0, 0, 0, 0.08)',
+                      backgroundColor: 'rgba(22, 20, 42, 0.95)',
+                      border: '1px solid rgba(6, 182, 212, 0.25)',
                       borderRadius: 8,
                       padding: '10px 14px',
                       fontSize: 13,
                       fontWeight: 500,
-                      color: '#1d1d1f',
+                      color: '#f1f5f9',
                     }}
                   >
                     <div className="rank-item">

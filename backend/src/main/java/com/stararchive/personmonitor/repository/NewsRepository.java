@@ -37,4 +37,10 @@ public interface NewsRepository extends JpaRepository<News, String> {
      */
     @Query("SELECT n FROM News n WHERE n.title LIKE CONCAT('%', :keyword, '%') OR n.content LIKE CONCAT('%', :keyword, '%') ORDER BY n.publishTime DESC")
     Page<News> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * 按分类 + 关键词筛选新闻（分类与关键词同时生效）
+     */
+    @Query("SELECT n FROM News n WHERE n.category = :category AND (n.title LIKE CONCAT('%', :keyword, '%') OR n.content LIKE CONCAT('%', :keyword, '%')) ORDER BY n.publishTime DESC")
+    Page<News> findByCategoryAndKeyword(@Param("category") String category, @Param("keyword") String keyword, Pageable pageable);
 }

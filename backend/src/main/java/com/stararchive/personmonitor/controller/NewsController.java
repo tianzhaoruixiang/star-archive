@@ -24,9 +24,10 @@ public class NewsController {
     public ResponseEntity<ApiResponse<PageResponse<NewsDTO>>> getNewsList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String keyword
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category
     ) {
-        PageResponse<NewsDTO> result = newsService.getNewsList(page, size, keyword);
+        PageResponse<NewsDTO> result = newsService.getNewsList(page, size, keyword, category);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 

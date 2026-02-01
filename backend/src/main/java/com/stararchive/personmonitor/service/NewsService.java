@@ -25,12 +25,21 @@ public class NewsService {
 
     private final NewsRepository newsRepository;
 
-    public PageResponse<NewsDTO> getNewsList(int page, int size, String keyword) {
-        log.info("查询新闻列表: page={}, size={}, keyword={}", page, size, keyword);
+    public PageResponse<NewsDTO> getNewsList(int page, int size, String keyword, String category) {
+        log.info("查询新闻列表: page={}, size={}, keyword={}, category={}", page, size, keyword, category);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishTime"));
-        Page<News> newsPage = keyword != null && !keyword.isBlank()
-                ? newsRepository.searchByKeyword(keyword.trim(), pageable)
-                : newsRepository.findAllByOrderByPublishTimeDesc(pageable);
+        Page<News> newsPage;
+        String cat = category != null && !category.isBlank() ? category.trim() : null;
+        String kw = keyword != null && !keyword.isBlank() ? keyword.trim() : null;
+        if (cat != null && kw != null) {
+            newsPage = newsRepository.findByCategoryAndKeyword(cat, kw, pageable);
+        } else if (cat != null) {
+            newsPage = newsRepository.findByCategoryOrderByPublishTimeDesc(cat, pageable);
+        } else if (kw != null) {
+            newsPage = newsRepository.searchByKeyword(kw, pageable);
+        } else {
+            newsPage = newsRepository.findAllByOrderByPublishTimeDesc(pageable);
+        }
         List<NewsDTO> list = newsPage.getContent().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

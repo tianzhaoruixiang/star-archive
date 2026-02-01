@@ -254,7 +254,7 @@
 /* 当前已选标签 */
 .person-list-selected {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   margin-bottom: var(--spacing-md);
   padding: 12px 16px;
@@ -267,6 +267,7 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
+  line-height: 28px;
 }
 
 .person-list-selected-tags {
@@ -274,6 +275,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  min-height: 28px;
 }
 
 .person-list-selected-tag {

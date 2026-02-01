@@ -40,12 +40,13 @@ public class PersonController {
             @RequestParam(required = false) String organization,
             @RequestParam(required = false) String visaType,
             @RequestParam(required = false) String belongingGroup,
+            @RequestParam(required = false) String departureProvince,
             @RequestParam(required = false) String destinationProvince,
             @RequestParam(required = false) String destinationCity,
             @RequestHeader(value = "X-Username", required = false) String currentUser
     ) {
         PageResponse<PersonCardDTO> result = personService.getPersonListFiltered(
-                page, size, isKeyPerson, organization, visaType, belongingGroup, destinationProvince, destinationCity, currentUser);
+                page, size, isKeyPerson, organization, visaType, belongingGroup, departureProvince, destinationProvince, destinationCity, currentUser);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
     

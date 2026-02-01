@@ -1,3 +1,5 @@
+/* 登录页 - 深色科技感玻璃卡片 */
+
 .login-container {
   display: flex;
   justify-content: center;
@@ -5,8 +7,9 @@
   min-height: 100vh;
   padding: 24px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(245, 245, 247, 0.92) 50%, rgba(255, 255, 255, 0.88) 100%),
+    linear-gradient(165deg, rgba(15, 13, 26, 0.97) 0%, rgba(22, 20, 42, 0.95) 50%, rgba(26, 23, 53, 0.92) 100%),
     var(--bg-login) center/cover no-repeat fixed;
+  background-blend-mode: overlay, normal;
 }
 
 .login-card {
@@ -15,11 +18,12 @@
   border-radius: var(--card-radius-lg);
   border: 1px solid var(--card-border);
   background: var(--card-bg);
-  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--card-shadow), 0 0 40px rgba(6, 182, 212, 0.08);
 }
 
 .login-card .ant-card-head {
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border-subtle);
 }
 
 .login-card .ant-card-head-title {
@@ -28,6 +32,7 @@
   font-weight: 600;
   color: var(--text-primary);
   padding: 24px 0;
+  text-shadow: 0 0 20px var(--primary-glow);
 }
 
 .login-card .ant-card-body {
@@ -39,6 +44,7 @@
   background: var(--input-bg) !important;
   border: 1px solid var(--input-border) !important;
   border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
   transition: all var(--transition-fast);
 }
 
@@ -50,7 +56,7 @@
 .login-card .ant-input-affix-wrapper-focused,
 .login-card .ant-input-password:focus-within {
   border-color: var(--input-focus-border) !important;
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2) !important;
+  box-shadow: var(--input-focus-glow);
 }
 
 .login-card .ant-input {
@@ -63,20 +69,22 @@
 }
 
 .login-card .ant-input-prefix {
-  color: var(--text-placeholder);
+  color: var(--text-muted);
 }
 
 .login-card .ant-btn-primary {
   height: 48px;
   font-size: 17px;
   font-weight: 500;
-  background: var(--primary) !important;
+  background: var(--accent-btn) !important;
   border: none !important;
   border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
 }
 
 .login-card .ant-btn-primary:hover {
   background: var(--accent-btn-hover) !important;
+  box-shadow: 0 6px 24px rgba(6, 182, 212, 0.45);
 }
 
 .login-card .ant-form-item {
@@ -86,4 +94,8 @@
 .login-card .ant-form-item:last-of-type {
   margin-bottom: 0;
   margin-top: 12px;
+}
+
+.login-card .ant-form-item-label > label {
+  color: var(--text-secondary) !important;
 }

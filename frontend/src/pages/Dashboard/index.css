@@ -1,6 +1,5 @@
-/* 首页 - 科技感 / 智能监测大屏风格 */
+/* 首页 - 深色科技感 / 智能监测大屏风格 */
 
-/* 充满视口：高度 = 100vh - 顶栏(52px) - main 顶部 padding(24px) */
 .page-wrapper.dashboard {
   display: flex;
   flex-direction: column;
@@ -11,8 +10,9 @@
   overflow: hidden;
   box-sizing: border-box;
   padding-bottom: 0;
-  background: var(--bg-pattern), var(--page-bg);
-  background-size: 60px 60px, auto;
+  background: var(--bg-pattern), var(--page-bg-gradient);
+  background-attachment: fixed, scroll;
+  background-size: 100% 100%, auto;
 }
 
 .dashboard-loading {
@@ -23,7 +23,6 @@
   color: var(--text-placeholder);
 }
 
-/* 顶部 4 个指标卡：紧凑高度，适应首页 100% 高度 */
 .dashboard-cards {
   margin-bottom: 4px;
   flex-shrink: 0;
@@ -41,12 +40,13 @@
 
 .dashboard-card {
   border-radius: var(--card-radius);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--card-border-subtle);
   overflow: hidden;
   position: relative;
   background: var(--card-bg);
+  backdrop-filter: blur(12px);
   box-shadow: var(--card-shadow);
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
 }
 .dashboard-card::before {
   content: '';
@@ -60,6 +60,7 @@
 .dashboard-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--card-shadow-hover);
+  border-color: var(--card-border);
 }
 
 .dashboard-card .ant-card-body {
@@ -79,7 +80,8 @@
   letter-spacing: 0.02em;
   font-weight: 600;
   font-size: 18px;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  text-shadow: 0 0 24px var(--primary-glow);
 }
 
 .dashboard-card-icon {
@@ -90,11 +92,12 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .dashboard-card:hover .dashboard-card-icon {
   transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.25);
 }
 
 .dashboard-card-purple {
@@ -111,17 +114,17 @@
 }
 .dashboard-card-green::before { background: var(--accent-green); }
 .dashboard-card-green .dashboard-card-icon {
-  background: rgba(52, 199, 89, 0.15);
+  background: rgba(34, 197, 94, 0.2);
   color: var(--accent-green);
 }
 
 .dashboard-card-pink {
   background: var(--card-bg);
 }
-.dashboard-card-pink::before { background: #ff2d55; }
+.dashboard-card-pink::before { background: var(--accent-purple); }
 .dashboard-card-pink .dashboard-card-icon {
-  background: rgba(255, 45, 85, 0.15);
-  color: #ff2d55;
+  background: var(--accent-purple-light);
+  color: var(--accent-purple);
 }
 
 .dashboard-card-blue {
@@ -129,7 +132,7 @@
 }
 .dashboard-card-blue::before { background: var(--accent-amber); }
 .dashboard-card-blue .dashboard-card-icon {
-  background: rgba(255, 149, 0, 0.15);
+  background: rgba(245, 158, 11, 0.2);
   color: var(--accent-amber);
 }
 
@@ -181,7 +184,7 @@
 }
 .dashboard-main .ant-col:first-child::-webkit-scrollbar-thumb,
 .dashboard-main .ant-col:last-child::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(6, 182, 212, 0.25);
   border-radius: 2px;
 }
 
@@ -192,8 +195,9 @@
 .dashboard-panel {
   margin-bottom: var(--spacing-lg);
   border-radius: var(--card-radius-lg);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--card-border-subtle);
   background: var(--card-bg);
+  backdrop-filter: blur(12px);
   box-shadow: var(--card-shadow);
 }
 .dashboard-main .dashboard-panel {
@@ -220,7 +224,7 @@
 
 .dashboard-panel .ant-card-head {
   position: relative;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border-subtle);
   color: var(--text-muted);
   font-size: var(--font-body);
   padding: 12px 16px;
@@ -238,8 +242,9 @@
   bottom: -1px;
   width: 48px;
   height: 2px;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--primary), var(--accent-purple));
   border-radius: 0 1px 0 0;
+  box-shadow: 0 0 12px var(--primary-glow);
 }
 
 .dashboard-panel .ant-card-body {
@@ -294,8 +299,11 @@
 }
 
 .rank-list::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(6, 182, 212, 0.25);
   border-radius: 2px;
+}
+.rank-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.4);
 }
 
 .rank-item {
@@ -303,7 +311,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border-subtle);
   font-size: 13px;
   transition: background 0.15s ease;
 }
@@ -323,8 +331,9 @@
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-muted);
-  background: var(--input-bg);
+  color: var(--text-primary);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border: 1px solid var(--card-border-subtle);
   border-radius: 6px;
   font-variant-numeric: tabular-nums;
 }
@@ -366,16 +375,17 @@
   flex-shrink: 0;
   width: 56px;
   height: 6px;
-  background: var(--input-bg);
+  background: rgba(6, 182, 212, 0.12);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .rank-bar {
   height: 100%;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--primary), var(--accent-purple));
   border-radius: 3px;
   transition: width 0.35s ease;
+  box-shadow: 0 0 8px var(--primary-glow);
 }
 
 .rank-item-simple .rank-value {
@@ -398,14 +408,16 @@
 
 .dashboard-trend-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
   color: var(--primary);
+  text-shadow: 0 0 12px var(--primary-glow);
 }
 
 .dashboard-trend-tabs .ant-tabs-ink-bar {
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+  box-shadow: 0 0 8px var(--primary-glow);
 }
 
 .dashboard-trend-tabs .ant-tabs-nav::before {
-  border-bottom-color: var(--input-border);
+  border-bottom-color: var(--card-border-subtle);
 }
 
 /* 地图区域：充满卡片高度 */
@@ -423,10 +435,11 @@
   flex: 1;
   min-height: 160px;
   width: 100%;
-  background: var(--input-bg);
-  border: 1px solid var(--card-border);
+  background: rgba(6, 182, 212, 0.04);
+  border: 1px solid var(--card-border-subtle);
   border-radius: 0 0 var(--card-radius-lg) var(--card-radius-lg);
   overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(6, 182, 212, 0.06);
 }
 
 .map-section::after {
@@ -467,20 +480,23 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  color: var(--text-placeholder);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border-subtle);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(8px);
 }
 
 .float-btn:hover {
-  background: var(--primary-hover);
+  background: var(--primary-light);
   color: var(--primary);
+  border-color: var(--card-border);
+  box-shadow: 0 4px 16px var(--primary-glow);
 }
 
 /* 省份下钻详情页：统计分布与地图均占满视窗剩余高度 */
@@ -668,11 +684,11 @@
   background: transparent;
 }
 .dashboard-person-list-modal .ant-modal-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(6, 182, 212, 0.25);
   border-radius: 3px;
 }
 .dashboard-person-list-modal .ant-modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(6, 182, 212, 0.4);
 }.dashboard-person-list-loading {
   display: flex;
   justify-content: center;
@@ -686,7 +702,7 @@
   display: flex;
   justify-content: center;
   padding-top: 8px;
-  border-top: 1px solid var(--card-border);
+  border-top: 1px solid var(--card-border-subtle);
 }
 .dashboard-person-list-modal .person-card {
   margin-bottom: 0;

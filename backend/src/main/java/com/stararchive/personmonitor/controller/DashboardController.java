@@ -3,6 +3,7 @@ package com.stararchive.personmonitor.controller;
 import com.stararchive.personmonitor.common.ApiResponse;
 import com.stararchive.personmonitor.dto.DashboardMapDTO;
 import com.stararchive.personmonitor.dto.DashboardStatsDTO;
+import com.stararchive.personmonitor.dto.ProvinceFlowItemDTO;
 import com.stararchive.personmonitor.dto.ProvinceRanksDTO;
 import com.stararchive.personmonitor.dto.ProvinceStatsDTO;
 import com.stararchive.personmonitor.dto.TravelTrendDTO;
@@ -71,6 +72,14 @@ public class DashboardController {
     @GetMapping("/province-ranks")
     public ResponseEntity<ApiResponse<ProvinceRanksDTO>> getProvinceRanks() {
         return ResponseEntity.ok(ApiResponse.success(dashboardService.getProvinceRanks()));
+    }
+
+    /**
+     * 省份间人员流动（出发省→目的省，去重人数），用于地图流动线
+     */
+    @GetMapping("/province-flow")
+    public ResponseEntity<ApiResponse<List<ProvinceFlowItemDTO>>> getProvinceFlow() {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getProvinceFlow()));
     }
 
     /**

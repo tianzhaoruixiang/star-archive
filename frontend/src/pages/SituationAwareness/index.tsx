@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Input, Button, Pagination, Empty, Spin, Tag } from 'antd';
+import { Input, Button, Pagination, Empty, Spin, Tag, Tabs } from 'antd';
 import { SearchOutlined, FileTextOutlined } from '@ant-design/icons';
-import { newsAPI, type NewsItem } from '@/services/api';
+import { newsAPI, type NewsItem, NEWS_CATEGORIES } from '@/services/api';
 import { formatDateTime, parseDate } from '@/utils/date';
 import './index.css';
 
 const PAGE_SIZE = 20;
+
+/** 分类 Tab：全部 + 政治、经济、文化、社会民生 */
+const CATEGORY_TAB_ALL = '全部';
+const CATEGORY_TABS = [CATEGORY_TAB_ALL, ...NEWS_CATEGORIES];
 
 /** 从新闻内容截取摘要（纯文本，约 120 字） */
 function getSummary(content: string | undefined, maxLen: number = 120): string {
@@ -65,6 +69,7 @@ const SituationAwareness: React.FC = () => {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [category, setCategory] = useState<string>(CATEGORY_TAB_ALL);
   const [list, setList] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -73,10 +78,12 @@ const SituationAwareness: React.FC = () => {
   const loadList = useCallback(async () => {
     setLoading(true);
     try {
+      const categoryParam = category === CATEGORY_TAB_ALL ? undefined : category;
       const res = (await newsAPI.getNewsList(
         page - 1,
         PAGE_SIZE,
-        keyword || undefined
+        keyword || undefined,
+        categoryParam
       )) as { data?: { content?: NewsItem[]; list?: NewsItem[]; totalElements?: number; total?: number } };
       const data = res?.data ?? res;
       // @ts-ignore
@@ -88,7 +95,7 @@ const SituationAwareness: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, keyword]);
+  }, [page, keyword, category]);
 
   useEffect(() => {
     loadList();
@@ -98,6 +105,11 @@ const SituationAwareness: React.FC = () => {
     setKeyword(searchInput.trim());
     setPage(1);
   }, [searchInput]);
+
+  const handleCategoryChange = useCallback((key: string) => {
+    setCategory(key);
+    setPage(1);
+  }, []);
 
   const handlePageChange = useCallback((p: number) => {
     setPage(p);
@@ -118,6 +130,14 @@ const SituationAwareness: React.FC = () => {
         <h1 className="news-page-title">新闻动态</h1>
         <p className="news-page-desc">态势感知 · 新闻资讯</p>
       </div>
+
+      <Tabs
+        activeKey={category}
+        onChange={handleCategoryChange}
+        size="small"
+        className="news-category-tabs"
+        items={CATEGORY_TABS.map((tab) => ({ key: tab, label: tab }))}
+      />
 
       <div className="news-search-bar">
         <Input

@@ -1,16 +1,20 @@
+/* 深色科技感布局 - 玻璃质感顶栏、青蓝/紫色强调 */
+
 .layout {
   height: 100vh;
+  background: var(--page-bg-gradient);
 }
 
 .header {
   display: flex;
   align-items: center;
   padding: 0 var(--page-padding);
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(15, 13, 26, 0.85);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border-subtle);
   height: 52px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
 }
 
 .logo {
@@ -19,24 +23,26 @@
   gap: 12px;
   margin-right: 40px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
   flex-shrink: 0;
 }
 
 .logo:hover {
-  opacity: 0.8;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .logo-icon {
   width: 28px;
   height: 28px;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, #0891b2 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   color: #fff;
+  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.4);
 }
 
 .logo-img {
@@ -44,6 +50,7 @@
   height: 28px;
   object-fit: contain;
   border-radius: 8px;
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.3));
 }
 
 .logo-text {
@@ -52,6 +59,7 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   white-space: nowrap;
+  text-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
 }
 
 .menu {
@@ -62,28 +70,44 @@
   line-height: 50px !important;
 }
 
+.menu.ant-menu-dark,
+.menu.ant-menu-dark .ant-menu-item,
+.menu.ant-menu-dark .ant-menu-submenu-title {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+}
+
 .menu .ant-menu-item {
   margin: 0 4px;
   padding: 0 16px;
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-size: 15px;
   transition: all var(--transition-fast);
 }
 
 .menu .ant-menu-item:hover {
   color: var(--text-primary);
-  background: rgba(0, 0, 0, 0.04) !important;
+  background: rgba(6, 182, 212, 0.08) !important;
 }
 
 .menu .ant-menu-item-selected {
-  color: var(--primary);
-  background: var(--primary-light) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.5) 0%, rgba(6, 182, 212, 0.35) 100%) !important;
+  box-shadow: 0 2px 12px rgba(168, 85, 247, 0.25);
 }
 
 .menu .ant-menu-item .anticon {
   font-size: 16px;
   margin-right: 8px;
+}
+
+.menu .ant-menu-submenu-title {
+  color: var(--text-muted) !important;
+}
+
+.menu .ant-menu-submenu-open > .ant-menu-submenu-title {
+  color: var(--text-primary) !important;
 }
 
 .user-section {
@@ -101,17 +125,20 @@
   padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, border 0.2s;
   color: var(--text-primary);
+  border: 1px solid transparent;
 }
 
 .user-trigger:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(6, 182, 212, 0.1);
+  border-color: var(--card-border-subtle);
 }
 
 .user-avatar {
-  background: var(--primary-light) !important;
+  background: linear-gradient(135deg, var(--primary-light) 0%, rgba(168, 85, 247, 0.15) 100%) !important;
   color: var(--primary) !important;
+  border: 1px solid var(--card-border-subtle);
 }
 
 .username {
@@ -132,7 +159,6 @@
   background: transparent;
   transition: all 0.2s;
 }
-
 
 .header-user-dropdown-info {
   padding: 4px 0;
@@ -168,18 +194,28 @@
 
 .content {
   padding: var(--page-padding);
-  background: var(--page-bg);
+  background: transparent;
   overflow: auto;
   min-height: calc(100vh - 52px);
 }
 
 .content::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
+  height: 6px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: rgba(6, 182, 212, 0.05);
+  border-radius: 3px;
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 2px;
+  background: rgba(6, 182, 212, 0.25);
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.4);
 }
 
 .content.content--dashboard {
