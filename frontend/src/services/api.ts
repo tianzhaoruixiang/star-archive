@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { OnlyOfficePreviewConfigDTO } from '@/types/archiveFusion';
+import { getStoredAuthUsername } from '@/utils/authStorage';
 
 /** 前端与 API 统一前缀 */
 export const BASE_PATH = '/littlesmall';
@@ -18,9 +19,18 @@ export function setApiUsername(username: string | null) {
   apiUsername = username ?? null;
 }
 
+/** 每次请求前确保 X-Username：优先用内存中的 apiUsername，刷新后未恢复 Redux 时从 sessionStorage 同步，避免首轮请求无用户信息 */
 apiClient.interceptors.request.use((config) => {
-  if (apiUsername) {
-    config.headers['X-Username'] = apiUsername;
+  let username = apiUsername;
+  if (!username) {
+    const stored = getStoredAuthUsername();
+    if (stored) {
+      apiUsername = stored;
+      username = stored;
+    }
+  }
+  if (username) {
+    config.headers['X-Username'] = username;
   }
   return config;
 });
@@ -183,11 +193,35 @@ export const personAPI = {
   getEditHistory: (personId: string) =>
     apiClient.get<PersonEditHistoryItem[]>(`/persons/${personId}/edit-history`),
   getTags: () => apiClient.get('/persons/tags'),
+  createTag: (dto: TagCreateDTO) => apiClient.post<TagDTO>('/persons/tags', dto),
+  deleteTag: (tagId: number) => apiClient.delete(`/persons/tags/${tagId}`),
   getPersonListByTag: (tag: string, page: number, size: number) =>
     apiClient.get('/persons/by-tag', { params: { tag, page, size } }),
   getPersonListByTags: (tags: string[], page: number, size: number) =>
     apiClient.get('/persons/by-tags', { params: { tags: tags.join(','), page, size } }),
 };
+
+/** 人物标签（与后端 TagDTO 一致，用于标签管理） */
+export interface TagDTO {
+  tagId: number;
+  firstLevelName?: string;
+  secondLevelName?: string;
+  tagName: string;
+  tagDescription?: string;
+  parentTagId?: number;
+  firstLevelSortOrder?: number;
+  personCount?: number;
+  children?: TagDTO[];
+}
+
+/** 新增人物标签请求体 */
+export interface TagCreateDTO {
+  firstLevelName?: string;
+  secondLevelName?: string;
+  tagName: string;
+  tagDescription?: string;
+  firstLevelSortOrder?: number;
+}
 
 /** 重点人员类别（单个目录项） */
 export interface KeyPersonCategory {
@@ -239,7 +273,7 @@ export const socialAPI = {
   getSocialAnalysis: () => apiClient.get('/social-dynamics/analysis'),
 };
 
-/** 系统配置（系统名称、Logo、前端 base URL、各导航显示隐藏） */
+/** 系统配置（系统名称、Logo、前端 base URL、各导航显示隐藏、人物档案融合大模型配置） */
 export interface SystemConfigDTO {
   systemName?: string;
   systemLogoUrl?: string;
@@ -252,6 +286,12 @@ export interface SystemConfigDTO {
   navSituation?: boolean;
   navSystemConfig?: boolean;
   showPersonDetailEdit?: boolean;
+  /** 人物档案融合 · 大模型调用基础 URL */
+  llmBaseUrl?: string;
+  /** 人物档案融合 · 大模型名称 */
+  llmModel?: string;
+  /** 人物档案融合 · 大模型 API Key */
+  llmApiKey?: string;
 }
 
 export const systemConfigAPI = {
@@ -330,6 +370,15 @@ export interface PredictionModelDTO {
   updatedTime?: string;
 }
 
+/** 模型命中人员分页响应（与 persons 接口一致） */
+export interface ModelLockedPersonsResponse {
+  content?: unknown[];
+  page?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
+}
+
 export const modelAPI = {
   list: () => apiClient.get<PredictionModelDTO[]>('/models'),
   getById: (modelId: string) => apiClient.get<PredictionModelDTO>(`/models/${modelId}`),
@@ -344,6 +393,9 @@ export const modelAPI = {
     apiClient.get<{ ruleConfig: string }>(`/models/${modelId}/rule-config`),
   updateRuleConfig: (modelId: string, ruleConfig: string) =>
     apiClient.put<PredictionModelDTO>(`/models/${modelId}/rule-config`, { ruleConfig }),
+  /** 分页查询模型命中（锁定）的人员列表 */
+  getLockedPersons: (modelId: string, page: number, size: number) =>
+    apiClient.get<ModelLockedPersonsResponse>(`/models/${modelId}/locked-persons`, { params: { page, size } }),
 };
 
 export const archiveFusionAPI = {

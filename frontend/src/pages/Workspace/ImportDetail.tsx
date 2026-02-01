@@ -68,8 +68,6 @@ const ImportDetail: React.FC = () => {
   const [selectedResultIds, setSelectedResultIds] = useState<string[]>([]);
   const [batchTags, setBatchTags] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
-  const [previewConfig, setPreviewConfig] = useState<OnlyOfficePreviewConfigDTO | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
   /** 导入档案可见性：公开=所有人可见，私有=仅创建人可见；仅系统管理员可选公开 */
   const [importAsPublic, setImportAsPublic] = useState<boolean>(false);
   /** 原始文档区 OnlyOffice 配置（页面加载时拉取，用于左侧对比阅读） */
@@ -160,31 +158,9 @@ const ImportDetail: React.FC = () => {
     window.open(archiveFusionAPI.getFileDownloadUrl(detail.task.taskId), '_blank');
   }, [detail?.task?.taskId]);
 
-  const handlePreview = useCallback(async () => {
-    if (!detail?.task?.taskId) return;
-    if (documentPreviewConfig?.enabled) {
-      setPreviewConfig(documentPreviewConfig);
-      return;
-    }
-    setPreviewConfig(null);
-    setPreviewLoading(true);
-    try {
-      // @ts-ignore
-      const res = await archiveFusionAPI.getPreviewConfig(detail.task.taskId) as { data?: OnlyOfficePreviewConfigDTO; message?: string };
-      const cfg = res?.data ?? (res as unknown as OnlyOfficePreviewConfigDTO);
-      if (cfg && typeof cfg.documentServerUrl === 'string') {
-        setPreviewConfig(cfg);
-      } else {
-        message.warning((res as { message?: string })?.message ?? '无法获取预览配置');
-      }
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string }; status?: number } };
-      const msg = e?.response?.data?.message ?? (e?.response?.status === 404 ? '任务不存在或未关联文件' : '获取预览配置失败');
-      message.error(msg);
-    } finally {
-      setPreviewLoading(false);
-    }
-  }, [detail?.task?.taskId, documentPreviewConfig]);
+  const goToPreview = useCallback(() => {
+    if (taskId) navigate(`/workspace/fusion/${taskId}/preview`);
+  }, [taskId, navigate]);
 
   const unimportedResultIds = detail?.extractResults?.filter((r) => !r.imported).map((r) => r.resultId) ?? [];
   const selectAllUnimported = useCallback(() => {
@@ -396,7 +372,7 @@ const ImportDetail: React.FC = () => {
             {detail.task.errorMessage && <Tag color="error">{detail.task.errorMessage}</Tag>}
           </div>
           <span className="import-detail-toolbar-divider" />
-          <Button type="link" size="small" icon={<FileTextOutlined />} loading={previewLoading} onClick={handlePreview}>预览</Button>
+          <Button type="link" size="small" icon={<FileTextOutlined />} onClick={goToPreview}>预览</Button>
           <Button type="link" size="small" icon={<DownloadOutlined />} onClick={handleDownload}>下载</Button>
         </div>
         {canCompareAndImport && showImportBtn && (
@@ -504,23 +480,6 @@ const ImportDetail: React.FC = () => {
           </Col>
         </Row>
       </div>
-      <Modal
-        title={`文档预览：${detail.task.fileName ?? ''}`}
-        open={previewConfig !== null}
-        onCancel={() => setPreviewConfig(null)}
-        footer={null}
-        width="90%"
-        style={{ top: 24 }}
-        destroyOnClose
-      >
-        {previewConfig && (
-          <OnlyOfficeViewer
-            config={previewConfig}
-            height="75vh"
-            onError={(msg) => message.warning(msg)}
-          />
-        )}
-      </Modal>
     </div>
   );
 };

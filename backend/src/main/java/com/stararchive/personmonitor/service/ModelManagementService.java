@@ -1,7 +1,12 @@
 package com.stararchive.personmonitor.service;
 
+import com.stararchive.personmonitor.common.PageResponse;
+import com.stararchive.personmonitor.dto.PersonCardDTO;
 import com.stararchive.personmonitor.dto.PredictionModelDTO;
+import com.stararchive.personmonitor.entity.Person;
 import com.stararchive.personmonitor.entity.PredictionModel;
+import com.stararchive.personmonitor.entity.PredictionModelLockedPerson;
+import com.stararchive.personmonitor.repository.PersonRepository;
 import com.stararchive.personmonitor.repository.PredictionModelLockedPersonRepository;
 import com.stararchive.personmonitor.repository.PredictionModelRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,6 +35,8 @@ public class ModelManagementService {
 
     private final PredictionModelRepository predictionModelRepository;
     private final PredictionModelLockedPersonRepository lockedPersonRepository;
+    private final PersonRepository personRepository;
+    private final PersonService personService;
     private final SemanticModelMatchService semanticModelMatchService;
 
     public List<PredictionModelDTO> list() {
@@ -106,6 +116,41 @@ public class ModelManagementService {
         entity = predictionModelRepository.save(entity);
         log.info("模型状态变更: modelId={}, status={}", modelId, status);
         return toDTO(entity);
+    }
+
+    /**
+     * 分页查询模型命中（锁定）的人员列表，仅返回当前用户可见的档案。
+     */
+    public PageResponse<PersonCardDTO> getLockedPersons(String modelId, int page, int size, String currentUser) {
+        List<PredictionModelLockedPerson> locked = lockedPersonRepository.findByModelId(modelId);
+        List<String> lockedIds = locked.stream()
+                .map(PredictionModelLockedPerson::getPersonId)
+                .collect(Collectors.toList());
+        long total = lockedIds.size();
+        if (total == 0) {
+            return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
+        }
+        int from = page * size;
+        int to = Math.min(from + size, (int) total);
+        if (from >= total) {
+            return PageResponse.of(new ArrayList<>(), page, size, total);
+        }
+        List<String> pageIds = lockedIds.subList(from, to);
+        List<Person> persons = personRepository.findAllById(pageIds);
+        String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
+        List<Person> visible = persons.stream()
+                .filter(p -> Boolean.TRUE.equals(p.getIsPublic())
+                        || (user != null && user.equals(p.getCreatedBy())))
+                .collect(Collectors.toList());
+        Map<String, Person> byId = visible.stream().collect(Collectors.toMap(Person::getPersonId, p -> p, (a, b) -> a));
+        List<Person> ordered = pageIds.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        List<PersonCardDTO> cards = ordered.stream()
+                .map(personService::toCardDTO)
+                .collect(Collectors.toList());
+        return PageResponse.of(cards, page, size, total);
     }
 
     public String getRuleConfig(String modelId) {

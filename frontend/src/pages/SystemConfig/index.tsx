@@ -1,8 +1,9 @@
-import { Card, Form, Input, Switch, Button, message, Spin, Upload, Table, Modal, Select, Popconfirm } from 'antd';
+import { Card, Form, Input, Switch, Button, message, Upload, Table, Modal, Select, Popconfirm } from 'antd';
 import { SettingOutlined, UploadOutlined, UserOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useState } from 'react';
 import { systemConfigAPI, sysUserAPI, type SystemConfigDTO, type SysUserDTO, type SysUserCreateDTO } from '@/services/api';
 import { formatDateTime } from '@/utils/date';
+import { FormCardSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
 const NAV_ITEMS: { key: keyof SystemConfigDTO; label: string }[] = [
@@ -99,6 +100,9 @@ const SystemConfigPage = () => {
             navSystemConfig: data.navSystemConfig !== false,
             // @ts-ignore
             showPersonDetailEdit: data.showPersonDetailEdit !== false,
+            llmBaseUrl: (data as SystemConfigDTO).llmBaseUrl ?? '',
+            llmModel: (data as SystemConfigDTO).llmModel ?? '',
+            llmApiKey: (data as SystemConfigDTO).llmApiKey ?? '',
           });
         }
       })
@@ -150,7 +154,7 @@ const SystemConfigPage = () => {
     return (
       <div className="page-wrapper system-config-page">
         <div className="system-config-loading">
-          <Spin size="large" tip="加载中..." />
+          <FormCardSkeleton />
         </div>
       </div>
     );
@@ -183,6 +187,9 @@ const SystemConfigPage = () => {
             navSituation: true,
             navSystemConfig: true,
             showPersonDetailEdit: true,
+            llmBaseUrl: '',
+            llmModel: '',
+            llmApiKey: '',
           }}
         >
           <Form.Item
@@ -244,6 +251,31 @@ const SystemConfigPage = () => {
                   </Form.Item>
                 </div>
               ))}
+            </div>
+          </Form.Item>
+          <Form.Item label="人物档案融合 · 大模型配置" extra="用于档案解析抽取与模型语义匹配，留空时使用 application.yml 中的 bailian 配置">
+            <div className="system-config-llm-row">
+              <Form.Item
+                name="llmBaseUrl"
+                label="大模型调用基础 URL"
+                extra="兼容 OpenAI 的接口地址，如 https://dashscope.aliyuncs.com/compatible-mode/v1"
+              >
+                <Input placeholder="如 https://dashscope.aliyuncs.com/compatible-mode/v1" maxLength={500} />
+              </Form.Item>
+              <Form.Item
+                name="llmModel"
+                label="模型名称"
+                extra="如 qwen-plus、qwen-turbo、gpt-4"
+              >
+                <Input placeholder="如 qwen-plus" maxLength={128} />
+              </Form.Item>
+              <Form.Item
+                name="llmApiKey"
+                label="API Key"
+                extra="大模型服务 API Key，请妥善保管"
+              >
+                <Input.Password placeholder="留空则不修改或使用配置文件中的 Key" maxLength={500} autoComplete="new-password" />
+              </Form.Item>
             </div>
           </Form.Item>
           <Form.Item>

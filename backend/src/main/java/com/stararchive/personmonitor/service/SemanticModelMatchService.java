@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stararchive.personmonitor.config.BailianProperties;
+import com.stararchive.personmonitor.dto.SystemConfigDTO;
 import com.stararchive.personmonitor.entity.Person;
 import com.stararchive.personmonitor.entity.PredictionModel;
 import com.stararchive.personmonitor.entity.PredictionModelLockedPerson;
@@ -40,6 +41,7 @@ public class SemanticModelMatchService {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final BailianProperties bailianProperties;
+    private final SystemConfigService systemConfigService;
     private final PredictionModelRepository predictionModelRepository;
     private final PersonRepository personRepository;
     private final PredictionModelLockedPersonRepository lockedPersonRepository;
@@ -144,17 +146,21 @@ public class SemanticModelMatchService {
 
     /**
      * 调用大模型：给定语义规则和人物档案 JSON，返回满足规则的人物 person_id 数组。
+     * 大模型配置优先使用系统配置，为空时回退到 application.yml 的 bailian 配置。
      */
     private List<String> callLlmMatchPersons(String semanticRule, String personsJson) {
-        if (bailianProperties.getApiKey() == null || bailianProperties.getApiKey().isBlank()) {
-            log.debug("未配置 bailian.api-key，语义匹配跳过本批次");
+        String apiKey = resolveLlmApiKey();
+        String baseUrl = resolveLlmBaseUrl();
+        String model = resolveLlmModel();
+        if (apiKey == null || apiKey.isBlank()) {
+            log.debug("未配置大模型 API Key（系统配置与 bailian 均未配置），语义匹配跳过本批次");
             return Collections.emptyList();
         }
-        String url = bailianProperties.getBaseUrl().replaceAll("/$", "") + "/chat/completions";
+        String url = baseUrl.replaceAll("/$", "") + "/chat/completions";
         String userContent = "语义规则：\n" + semanticRule + "\n\n人物档案列表：\n" + personsJson;
 
         Map<String, Object> body = new HashMap<>();
-        body.put("model", bailianProperties.getModel());
+        body.put("model", model);
         body.put("messages", List.of(
                 Map.of("role", "system", "content", SEMANTIC_MATCH_SYSTEM_PROMPT),
                 Map.of("role", "user", "content", userContent)
@@ -163,7 +169,7 @@ public class SemanticModelMatchService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(bailianProperties.getApiKey());
+        headers.setBearerAuth(apiKey);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         try {
@@ -205,5 +211,29 @@ public class SemanticModelMatchService {
             }
         }
         return s;
+    }
+
+    private String resolveLlmApiKey() {
+        SystemConfigDTO cfg = systemConfigService.getConfig();
+        if (cfg.getLlmApiKey() != null && !cfg.getLlmApiKey().isBlank()) {
+            return cfg.getLlmApiKey();
+        }
+        return bailianProperties.getApiKey() != null ? bailianProperties.getApiKey() : "";
+    }
+
+    private String resolveLlmBaseUrl() {
+        SystemConfigDTO cfg = systemConfigService.getConfig();
+        if (cfg.getLlmBaseUrl() != null && !cfg.getLlmBaseUrl().isBlank()) {
+            return cfg.getLlmBaseUrl().trim();
+        }
+        return bailianProperties.getBaseUrl() != null ? bailianProperties.getBaseUrl() : "";
+    }
+
+    private String resolveLlmModel() {
+        SystemConfigDTO cfg = systemConfigService.getConfig();
+        if (cfg.getLlmModel() != null && !cfg.getLlmModel().isBlank()) {
+            return cfg.getLlmModel().trim();
+        }
+        return bailianProperties.getModel() != null ? bailianProperties.getModel() : "qwen-plus";
     }
 }

@@ -4,6 +4,7 @@ import com.stararchive.personmonitor.common.PageResponse;
 import com.stararchive.personmonitor.dto.*;
 import com.stararchive.personmonitor.entity.Person;
 import com.stararchive.personmonitor.entity.PersonEditHistory;
+import com.stararchive.personmonitor.entity.Tag;
 import com.stararchive.personmonitor.entity.PersonSocialDynamic;
 import com.stararchive.personmonitor.entity.PersonTravel;
 import com.stararchive.personmonitor.repository.PersonEditHistoryRepository;
@@ -32,7 +33,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -76,6 +79,7 @@ public class PersonService {
         if (destinationProvince != null && !destinationProvince.isBlank()) {
             String province = destinationProvince.trim();
             Page<Object[]> idPage;
+            boolean visibilityInQuery = false;
             if (destinationCity != null && !destinationCity.isBlank()) {
                 log.info("按目的地省份+城市查询: province={}, city={}, page={}, size={}", province, destinationCity, page, size);
                 idPage = travelRepository.findPersonIdsByDestinationProvinceAndCity(province, destinationCity.trim(), pageable);
@@ -89,8 +93,10 @@ public class PersonService {
                 log.info("按目的地省份+所属群体查询: province={}, belongingGroup={}, page={}, size={}", province, belongingGroup, page, size);
                 idPage = travelRepository.findPersonIdsByDestinationProvinceAndBelongingGroup(province, belongingGroup.trim(), pageable);
             } else {
-                log.info("按目的地省份查询人员列表: destinationProvince={}, page={}, size={}", province, page, size);
-                idPage = travelRepository.findPersonIdsByDestinationProvince(province, pageable);
+                log.info("按目的地省份查询人员列表（可见性分页）: destinationProvince={}, page={}, size={}", province, page, size);
+                Pageable pageableNoSort = PageRequest.of(page, size);
+                idPage = travelRepository.findPersonIdsByDestinationProvinceVisible(province, user, pageableNoSort);
+                visibilityInQuery = true;
             }
             List<String> personIds = idPage.getContent().stream()
                     .map(row -> row[0] != null ? row[0].toString() : null)
@@ -100,9 +106,11 @@ public class PersonService {
                 return PageResponse.of(Collections.emptyList(), page, size, idPage.getTotalElements());
             }
             List<Person> persons = personRepository.findAllById(personIds);
-            List<Person> visible = persons.stream()
-                    .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
-                    .toList();
+            List<Person> visible = visibilityInQuery
+                    ? persons
+                    : persons.stream()
+                            .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
+                            .toList();
             List<PersonCardDTO> cards = visible.stream().map(this::convertToCardDTO).collect(Collectors.toList());
             return PageResponse.of(cards, page, size, idPage.getTotalElements());
         }
@@ -139,7 +147,9 @@ public class PersonService {
     }
 
     /**
-     * 根据多个标签查询人员（AND 逻辑：人员须同时拥有所有选中标签；按可见性过滤）
+     * 根据多个标签查询人员。
+     * 同一二级分类下的多个标签为「或」关系，不同二级分类之间为「与」关系。
+     * 即：(二级分类A内标签 OR ...) AND (二级分类B内标签 OR ...)，按可见性过滤。
      *
      * @param currentUser 当前登录用户名，为空时仅返回公开档案
      */
@@ -151,21 +161,19 @@ public class PersonService {
             return getPersonListFiltered(page, size, null, null, null, null, null, null, user);
         }
 
-        String tagCondition = IntStream.range(0, tags.size())
-                .mapToObj(i -> "JSON_CONTAINS(person_tags, JSON_ARRAY(:tag" + i + ")) = 1")
-                .collect(Collectors.joining(" AND "));
+        TagFilterSpec spec = buildTagFilterSpec(tags);
         String visibilityCondition = " (is_public = 1 OR (created_by = :currentUser AND :currentUser IS NOT NULL)) ";
-        String whereClause = "(" + tagCondition + ") AND " + visibilityCondition;
+        String whereClause = "(" + spec.tagCondition + ") AND " + visibilityCondition;
         String orderBy = " ORDER BY updated_time DESC";
-        long total = countByTags(tags, user);
+        long total = countByTagSpec(spec, user);
         int offset = page * size;
 
         Query dataQuery = entityManager.createNativeQuery(
                 "SELECT * FROM person WHERE " + whereClause + orderBy,
                 Person.class
         );
-        for (int i = 0; i < tags.size(); i++) {
-            dataQuery.setParameter("tag" + i, tags.get(i));
+        for (int i = 0; i < spec.orderedTagNames.size(); i++) {
+            dataQuery.setParameter("tag" + i, spec.orderedTagNames.get(i));
         }
         dataQuery.setParameter("currentUser", user);
         dataQuery.setFirstResult(offset);
@@ -179,18 +187,57 @@ public class PersonService {
         return PageResponse.of(cards, page, size, total);
     }
 
-    private long countByTags(List<String> tags, String currentUser) {
-        if (tags == null || tags.isEmpty()) return 0;
-        String tagCondition = IntStream.range(0, tags.size())
-                .mapToObj(i -> "JSON_CONTAINS(person_tags, JSON_ARRAY(:tag" + i + ")) = 1")
-                .collect(Collectors.joining(" AND "));
+    /**
+     * 按二级分类分组：同一二级分类下标签 OR，不同二级分类间 AND。
+     * 未在 tag 表中的标签名视为单独一组（与其它条件 AND）。
+     */
+    private TagFilterSpec buildTagFilterSpec(List<String> tagNames) {
+        List<Tag> allTags = tagRepository.findAllOrderByHierarchy();
+        Map<String, String> tagNameToSecond = new LinkedHashMap<>();
+        for (Tag t : allTags) {
+            tagNameToSecond.put(t.getTagName(), t.getSecondLevelName() != null ? t.getSecondLevelName() : "");
+        }
+        Map<String, List<String>> groupBySecond = new LinkedHashMap<>();
+        for (String name : tagNames) {
+            String second = tagNameToSecond.getOrDefault(name, name);
+            groupBySecond.computeIfAbsent(second, k -> new ArrayList<>()).add(name);
+        }
+        List<String> orFragments = new ArrayList<>();
+        List<String> orderedTagNames = new ArrayList<>();
+        int paramIndex = 0;
+        for (List<String> group : groupBySecond.values()) {
+            List<String> orParts = new ArrayList<>();
+            for (String tagName : group) {
+                orParts.add("JSON_CONTAINS(person_tags, JSON_ARRAY(:tag" + paramIndex + ")) = 1");
+                paramIndex++;
+            }
+            orFragments.add("(" + String.join(" OR ", orParts) + ")");
+            orderedTagNames.addAll(group);
+        }
+        String tagCondition = String.join(" AND ", orFragments);
+        return new TagFilterSpec(tagCondition, orderedTagNames);
+    }
+
+    private long countByTagSpec(TagFilterSpec spec, String currentUser) {
         String visibilityCondition = " (is_public = 1 OR (created_by = :currentUser AND :currentUser IS NOT NULL)) ";
-        Query countQuery = entityManager.createNativeQuery("SELECT COUNT(*) FROM person WHERE (" + tagCondition + ") AND " + visibilityCondition);
-        for (int i = 0; i < tags.size(); i++) {
-            countQuery.setParameter("tag" + i, tags.get(i));
+        Query countQuery = entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM person WHERE (" + spec.tagCondition + ") AND " + visibilityCondition
+        );
+        for (int i = 0; i < spec.orderedTagNames.size(); i++) {
+            countQuery.setParameter("tag" + i, spec.orderedTagNames.get(i));
         }
         countQuery.setParameter("currentUser", currentUser);
         return ((Number) countQuery.getSingleResult()).longValue();
+    }
+
+    private static class TagFilterSpec {
+        final String tagCondition;
+        final List<String> orderedTagNames;
+
+        TagFilterSpec(String tagCondition, List<String> orderedTagNames) {
+            this.tagCondition = tagCondition;
+            this.orderedTagNames = orderedTagNames;
+        }
     }
     
     /**
@@ -440,11 +487,25 @@ public class PersonService {
     }
     
     /**
-     * 获取标签树（含每个标签对应人员数量）
+     * 获取标签树（含每个标签对应人员数量）。
+     * 先一次性加载所有标签，再并行统计各标签人员数，避免 N+1 串行查询导致响应过慢。
      */
     public List<TagDTO> getTagTree() {
         log.info("查询标签树");
-        return tagRepository.findAllOrderByHierarchy().stream()
+        List<Tag> tags = tagRepository.findAllOrderByHierarchy();
+        Map<String, Long> countByTagName = tags.parallelStream()
+                .collect(Collectors.toConcurrentMap(
+                        Tag::getTagName,
+                        tag -> {
+                            try {
+                                return personRepository.countByPersonTagsContaining(tag.getTagName());
+                            } catch (Exception e) {
+                                return 0L;
+                            }
+                        },
+                        (a, b) -> a
+                ));
+        return tags.stream()
                 .map(tag -> {
                     TagDTO dto = new TagDTO();
                     dto.setTagId(tag.getTagId());
@@ -454,14 +515,61 @@ public class PersonService {
                     dto.setTagDescription(tag.getTagDescription());
                     dto.setParentTagId(tag.getParentTagId());
                     dto.setFirstLevelSortOrder(tag.getFirstLevelSortOrder());
-                    try {
-                        dto.setPersonCount(personRepository.countByPersonTagsContaining(tag.getTagName()));
-                    } catch (Exception e) {
-                        dto.setPersonCount(0L);
-                    }
+                    dto.setPersonCount(countByTagName.getOrDefault(tag.getTagName(), 0L));
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 新增人物标签（复用 tag 表，用于人员档案筛选与 person_tags）
+     */
+    @Transactional
+    public TagDTO createTag(TagCreateDTO dto) {
+        String tagName = dto.getTagName() != null ? dto.getTagName().trim() : "";
+        if (tagName.isEmpty()) {
+            throw new IllegalArgumentException("标签名称不能为空");
+        }
+        if (tagRepository.existsByTagName(tagName)) {
+            throw new IllegalArgumentException("标签名称已存在：" + tagName);
+        }
+        long newId = tagRepository.findMaxTagId() + 1;
+        LocalDateTime now = LocalDateTime.now();
+        Tag tag = new Tag();
+        tag.setTagId(newId);
+        tag.setFirstLevelName(dto.getFirstLevelName() != null ? dto.getFirstLevelName().trim() : null);
+        tag.setSecondLevelName(dto.getSecondLevelName() != null ? dto.getSecondLevelName().trim() : null);
+        tag.setTagName(tagName);
+        tag.setTagDescription(dto.getTagDescription() != null ? dto.getTagDescription().trim() : null);
+        tag.setParentTagId(null);
+        tag.setFirstLevelSortOrder(dto.getFirstLevelSortOrder() != null ? dto.getFirstLevelSortOrder() : 999);
+        tag.setCreatedTime(now);
+        tag.setUpdatedTime(now);
+        tagRepository.save(tag);
+        log.info("新增标签: tagId={}, tagName={}", newId, tagName);
+        TagDTO result = new TagDTO();
+        result.setTagId(tag.getTagId());
+        result.setFirstLevelName(tag.getFirstLevelName());
+        result.setSecondLevelName(tag.getSecondLevelName());
+        result.setTagName(tag.getTagName());
+        result.setTagDescription(tag.getTagDescription());
+        result.setParentTagId(tag.getParentTagId());
+        result.setFirstLevelSortOrder(tag.getFirstLevelSortOrder());
+        result.setPersonCount(0L);
+        return result;
+    }
+
+    /**
+     * 删除人物标签（仅删除 tag 表记录，人员档案上的 person_tags 中同名仍保留，筛选树中不再展示）
+     */
+    @Transactional
+    public boolean deleteTag(Long tagId) {
+        if (tagId == null || !tagRepository.existsById(tagId)) {
+            return false;
+        }
+        tagRepository.deleteById(tagId);
+        log.info("删除标签: tagId={}", tagId);
+        return true;
     }
     
     /**

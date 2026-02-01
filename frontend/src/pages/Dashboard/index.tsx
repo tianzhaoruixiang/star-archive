@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Card, Row, Col, Statistic, Spin, Tabs, Tooltip, Modal, Pagination, Empty } from 'antd';
+import { Card, Row, Col, Statistic, Tabs, Tooltip, Modal, Pagination, Empty } from 'antd';
 import {
   TeamOutlined,
   StarOutlined,
@@ -14,6 +14,7 @@ import { fetchStatistics } from '@/store/slices/dashboardSlice';
 import { dashboardAPI, personAPI, type OrganizationRankItem, type VisaTypeRankItem, type ProvinceRanksDTO, type TravelTrendDTO, type PersonListFilter } from '@/services/api';
 import PersonCard from '@/components/PersonCard';
 import type { PersonCardData } from '@/components/PersonCard';
+import { DashboardSkeleton, PageCardGridSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
 const PERSON_LIST_PAGE_SIZE = 12;
@@ -296,11 +297,7 @@ function Dashboard() {
   }, [chinaGeoLoaded, provinceRanks?.all]);
 
   if (loading && !statistics) {
-    return (
-      <div className="dashboard-loading">
-        <Spin size="large" tip="加载中..." />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -609,7 +606,7 @@ function Dashboard() {
       >
         {personListLoading ? (
           <div className="dashboard-person-list-loading">
-            <Spin tip="加载中..." />
+            <PageCardGridSkeleton title={false} count={6} />
           </div>
         ) : personListData.content.length === 0 ? (
           <Empty description="暂无人员" />

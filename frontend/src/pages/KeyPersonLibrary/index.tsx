@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Row, Col, Pagination, Spin, Empty, message } from 'antd';
+import { Row, Col, Pagination, Empty, message } from 'antd';
 import { StarFilled, FolderOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { keyPersonLibraryAPI, type KeyPersonCategory, type KeyPersonCategoriesResponse } from '@/services/api';
 import PersonCard, { type PersonCardData } from '@/components/PersonCard';
+import { PageCardGridSkeleton, InlineSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
 const PAGE_SIZE = 30;
@@ -101,24 +102,16 @@ const KeyPersonLibrary: React.FC = () => {
   return (
     <div className="page-wrapper key-person-page">
       <div className="key-person-header">
-        <div className="key-person-header-icon">
-          <StarFilled />
-        </div>
         <div>
-          <h1 className="key-person-title">重点人员</h1>
           <p className="key-person-subtitle">管理并查看重点监测人员档案</p>
         </div>
       </div>
 
       <div className="key-person-body">
         <aside className="key-person-sidebar">
-          <div className="key-person-sidebar-title">
-            <FolderOutlined className="key-person-sidebar-title-icon" />
-            类别
-          </div>
           {categoriesLoading ? (
             <div className="key-person-sidebar-loading">
-              <Spin size="small" />
+              <InlineSkeleton lines={6} />
             </div>
           ) : (
             <ul className="key-person-category-list">
@@ -155,7 +148,7 @@ const KeyPersonLibrary: React.FC = () => {
 
           {loading ? (
             <div className="key-person-loading">
-              <Spin size="large" />
+              <PageCardGridSkeleton title={false} count={6} />
             </div>
           ) : list.length === 0 ? (
             <div className="key-person-empty">

@@ -1,8 +1,8 @@
 /* 人员档案详情页 - 简历式两栏布局，适配数据库字段 */
 
 .page-wrapper.person-detail-page {
-  width: 75%;
-  max-width: 75%;
+  width: 100%;
+  max-width: var(--content-max-width);
   margin-left: auto;
   margin-right: auto;
 }
@@ -506,11 +506,11 @@
 }
 
 .person-detail-travel-icon-flight {
-  color: #1890ff;
+  color: var(--primary);
 }
 
 .person-detail-travel-icon-train {
-  color: #52c41a;
+  color: var(--accent-green);
 }
 
 .person-detail-social-list .content {

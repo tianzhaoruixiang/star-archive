@@ -1,6 +1,8 @@
 package com.stararchive.personmonitor.controller;
 
 import com.stararchive.personmonitor.common.ApiResponse;
+import com.stararchive.personmonitor.common.PageResponse;
+import com.stararchive.personmonitor.dto.PersonCardDTO;
 import com.stararchive.personmonitor.dto.PredictionModelDTO;
 import com.stararchive.personmonitor.service.ModelManagementService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,22 @@ public class ModelManagementController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(ApiResponse.success(dto));
+    }
+
+    /**
+     * 分页查询模型命中（锁定）的人员列表，按可见性过滤（公开或当前用户为创建人）
+     */
+    @GetMapping("/{modelId}/locked-persons")
+    public ResponseEntity<ApiResponse<PageResponse<PersonCardDTO>>> getLockedPersons(
+            @PathVariable String modelId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(value = "X-Username", required = false) String currentUser) {
+        if (modelManagementService.getById(modelId) == null) {
+            return ResponseEntity.notFound().build();
+        }
+        PageResponse<PersonCardDTO> result = modelManagementService.getLockedPersons(modelId, page, size, currentUser);
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @PostMapping

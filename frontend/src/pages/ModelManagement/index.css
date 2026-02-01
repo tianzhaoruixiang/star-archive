@@ -123,13 +123,13 @@
 }
 
 .model-management-card-status-running {
-  background: rgba(82, 196, 26, 0.2) !important;
-  color: #52c41a !important;
+  background: rgba(52, 199, 89, 0.2) !important;
+  color: var(--accent-green) !important;
 }
 
 .model-management-card-status-paused {
-  background: rgba(250, 173, 20, 0.2) !important;
-  color: #faad14 !important;
+  background: rgba(255, 149, 0, 0.2) !important;
+  color: var(--accent-amber) !important;
 }
 
 .model-management-card-desc {

@@ -34,4 +34,11 @@ public class SystemConfigDTO {
     private Boolean navSystemConfig;
     /** 人物详情页 是否展示编辑功能 */
     private Boolean showPersonDetailEdit;
+
+    /** 人物档案融合 · 大模型调用基础 URL（兼容 OpenAI 的接口地址） */
+    private String llmBaseUrl;
+    /** 人物档案融合 · 大模型名称（如 qwen-plus、gpt-4） */
+    private String llmModel;
+    /** 人物档案融合 · 大模型 API Key */
+    private String llmApiKey;
 }

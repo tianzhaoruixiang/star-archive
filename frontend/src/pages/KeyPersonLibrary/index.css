@@ -1,7 +1,7 @@
 /* 重点人员 - Apple Design 风格 */
 
 .key-person-page {
-  max-width: 1400px;
+  max-width: var(--content-max-width);
   margin-left: auto;
   margin-right: auto;
 }
@@ -28,18 +28,19 @@
 }
 
 .key-person-title {
-  margin: 0 0 4px 0;
-  font-size: 28px;
-  font-weight: 600;
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-title);
+  font-weight: var(--font-weight-title);
   color: var(--text-primary);
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: var(--line-height-tight);
 }
 
 .key-person-subtitle {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-body);
   color: var(--text-muted);
+  line-height: var(--line-height-body);
 }
 
 /* 主体：侧边栏 + 主内容 */
@@ -154,13 +155,13 @@
 }
 
 .key-person-main-title {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: var(--font-section);
+  font-weight: var(--font-weight-subtitle);
   color: var(--text-primary);
 }
 
 .key-person-main-total {
-  font-size: 15px;
+  font-size: var(--font-body);
   color: var(--text-muted);
 }
 

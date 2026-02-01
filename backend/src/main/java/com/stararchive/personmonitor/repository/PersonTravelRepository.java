@@ -49,33 +49,33 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
     List<Object[]> findVisaTypeCountsTop15();
 
     /**
-     * 各地排名-全部：按目的地省份统计人员到达数量（destination_province），数量降序
+     * 各地排名-全部：按目的地省份统计档案人数（去重 person_id），数量降序
      */
-    @Query(value = "SELECT destination_province, COUNT(*) AS cnt FROM person_travel WHERE destination_province IS NOT NULL AND destination_province != '' GROUP BY destination_province ORDER BY cnt DESC", nativeQuery = true)
+    @Query(value = "SELECT destination_province, COUNT(DISTINCT person_id) AS cnt FROM person_travel WHERE destination_province IS NOT NULL AND destination_province != '' GROUP BY destination_province ORDER BY cnt DESC", nativeQuery = true)
     List<Object[]> findProvinceTotalCounts();
 
     /**
-     * 昨日新增：昨日到达各省份的人员数量（event_time 在昨日，按 destination_province 分组）
+     * 昨日新增：昨日到达各省份的档案人数（去重 person_id）
      */
-    @Query(value = "SELECT destination_province, COUNT(*) AS cnt FROM person_travel WHERE destination_province IS NOT NULL AND destination_province != '' AND event_time >= :start AND event_time < :end GROUP BY destination_province ORDER BY cnt DESC", nativeQuery = true)
+    @Query(value = "SELECT destination_province, COUNT(DISTINCT person_id) AS cnt FROM person_travel WHERE destination_province IS NOT NULL AND destination_province != '' AND event_time >= :start AND event_time < :end GROUP BY destination_province ORDER BY cnt DESC", nativeQuery = true)
     List<Object[]> findProvinceYesterdayArrivalCounts(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     /**
-     * 昨日流出：昨日离开各省份的人员数量（event_time 在昨日，按 departure_province 分组）
+     * 昨日流出：昨日离开各省份的档案人数（去重 person_id）
      */
-    @Query(value = "SELECT departure_province, COUNT(*) AS cnt FROM person_travel WHERE departure_province IS NOT NULL AND departure_province != '' AND event_time >= :start AND event_time < :end GROUP BY departure_province ORDER BY cnt DESC", nativeQuery = true)
+    @Query(value = "SELECT departure_province, COUNT(DISTINCT person_id) AS cnt FROM person_travel WHERE departure_province IS NOT NULL AND departure_province != '' AND event_time >= :start AND event_time < :end GROUP BY departure_province ORDER BY cnt DESC", nativeQuery = true)
     List<Object[]> findProvinceYesterdayDepartureCounts(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     /**
-     * 按目的地省份统计累计到达人数（用于驻留计算）
+     * 按目的地省份统计累计到达人数（用于驻留计算，去重 person_id）
      */
-    @Query(value = "SELECT destination_province, COUNT(*) AS cnt FROM person_travel WHERE destination_province IS NOT NULL AND destination_province != '' GROUP BY destination_province", nativeQuery = true)
+    @Query(value = "SELECT destination_province, COUNT(DISTINCT person_id) AS cnt FROM person_travel WHERE destination_province IS NOT NULL AND destination_province != '' GROUP BY destination_province", nativeQuery = true)
     List<Object[]> findProvinceArrivalCounts();
 
     /**
-     * 按出发地省份统计累计离开人数（用于驻留计算）
+     * 按出发地省份统计累计离开人数（用于驻留计算，去重 person_id）
      */
-    @Query(value = "SELECT departure_province, COUNT(*) AS cnt FROM person_travel WHERE departure_province IS NOT NULL AND departure_province != '' GROUP BY departure_province", nativeQuery = true)
+    @Query(value = "SELECT departure_province, COUNT(DISTINCT person_id) AS cnt FROM person_travel WHERE departure_province IS NOT NULL AND departure_province != '' GROUP BY departure_province", nativeQuery = true)
     List<Object[]> findProvinceDepartureCounts();
 
     /**
@@ -92,7 +92,8 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
     long countDistinctPersonIdByDestinationProvince(@Param("province") String province);
 
     /**
-     * 指定省份涉及人员 ID 分页（有目的地为该省行程的人员，按人员更新时间降序）
+     * 指定省份涉及人员 ID 分页（有目的地为该省行程的人员，按人员更新时间降序）。
+     * 不按可见性过滤，供统计等场景使用。
      */
     @Query(
             value = "SELECT p.person_id FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
@@ -100,6 +101,18 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
             nativeQuery = true
     )
     Page<Object[]> findPersonIdsByDestinationProvince(@Param("province") String province, Pageable pageable);
+
+    /**
+     * 指定省份涉及人员 ID 分页（仅返回当前用户可见的档案：公开或 created_by = :user）。
+     * 用于首页/省份页点击“档案人数”时列表与分页一致。
+     * 使用两列返回避免单列时驱动返回 String 导致 ClassCastException。
+     */
+    @Query(
+            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user))",
+            nativeQuery = true
+    )
+    Page<Object[]> findPersonIdsByDestinationProvinceVisible(@Param("province") String province, @Param("user") String user, Pageable pageable);
 
     /**
      * 指定省份行程记录总数（目的地为该省）

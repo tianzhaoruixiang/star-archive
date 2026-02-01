@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 标签数据访问接口
@@ -39,4 +40,20 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
      */
     @Query("SELECT t FROM Tag t ORDER BY COALESCE(t.firstLevelSortOrder, 999), t.firstLevelName, t.secondLevelName, t.tagName")
     List<Tag> findAllOrderByHierarchy();
+
+    /**
+     * 获取当前最大 tag_id，用于新增时生成主键
+     */
+    @Query("SELECT COALESCE(MAX(t.tagId), 0) FROM Tag t")
+    long findMaxTagId();
+
+    /**
+     * 按标签名称查询（用于校验重名）
+     */
+    boolean existsByTagName(String tagName);
+
+    /**
+     * 按标签名称查询（用于按二级分类分组筛选）
+     */
+    Optional<Tag> findByTagName(String tagName);
 }

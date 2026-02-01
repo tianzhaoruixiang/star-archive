@@ -1,4 +1,13 @@
-/* 工作区 - 使用统一深色主题变量 */
+/* 工作区 - 与全站设计变量一致 */
+
+.workspace-page .workspace-card {
+  border-radius: var(--card-radius-lg);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  padding: var(--card-padding);
+  overflow: hidden;
+}
 
 .workspace-page .ant-card {
   border-radius: var(--card-radius);
@@ -90,31 +99,46 @@
   padding: 0 4px;
 }
 
+.workspace-tags {
+  padding: 0;
+}
+
+.workspace-tags-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 .workspace-fusion-header {
   margin-bottom: 20px;
 }
 
 .workspace-fusion-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary, #1f2937);
-  margin-bottom: 8px;
+  font-size: var(--font-body);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .workspace-fusion-desc {
-  font-size: 13px;
-  color: var(--text-muted, #6b7280);
-  line-height: 1.6;
+  font-size: var(--font-caption);
+  color: var(--text-muted);
+  line-height: var(--line-height-relaxed);
   margin: 0;
 }
 
 /* 合并上传框：拖拽区 + 已选列表 + 开始上传 */
 .workspace-fusion-upload-box {
-  margin-bottom: 24px;
-  border: 1px solid var(--card-border, #e5e7eb);
-  border-radius: 8px;
+  margin-bottom: var(--spacing-xl);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--card-bg, #fff);
+  background: var(--card-bg);
 }
 
 .workspace-fusion-dragger.ant-upload-wrapper {
@@ -124,19 +148,19 @@
 .workspace-fusion-dragger .ant-upload-drag {
   border: none;
   border-radius: 0;
-  border-bottom: 1px dashed var(--input-border, #e5e7eb);
-  background: var(--input-bg, #fafafa);
-  padding: 32px 24px;
+  border-bottom: 1px dashed var(--input-border);
+  background: var(--input-bg);
+  padding: var(--spacing-2xl) var(--spacing-xl);
   margin: 0;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
 .workspace-fusion-dragger .ant-upload-drag:hover {
-  background: var(--primary-hover, #e6f4ff);
+  background: var(--primary-hover);
 }
 
 .workspace-fusion-dragger .ant-upload-drag.ant-upload-drag-hover {
-  background: var(--primary-hover, #e6f4ff);
+  background: var(--primary-hover);
 }
 
 .workspace-fusion-dragger-inner {
@@ -151,15 +175,15 @@
 }
 
 .workspace-fusion-dragger-text {
-  font-size: 15px;
-  color: var(--text-primary, #1f2937);
-  margin: 0 0 4px;
+  font-size: var(--font-body);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs);
   font-weight: 500;
 }
 
 .workspace-fusion-dragger-hint {
-  font-size: 13px;
-  color: var(--text-muted, #6b7280);
+  font-size: var(--font-caption);
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -171,10 +195,10 @@
 }
 
 .workspace-fusion-dragger .ant-upload-list {
-  padding: 12px 16px;
+  padding: var(--spacing-md) var(--spacing-lg);
   max-height: 200px;
   overflow-y: auto;
-  background: var(--card-bg, #fff);
+  background: var(--card-bg);
 }
 
 .workspace-fusion-dragger .ant-upload-list-item {
@@ -188,10 +212,10 @@
 .workspace-fusion-upload-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: var(--input-bg, #f9fafb);
-  border-top: 1px solid var(--card-border, #e5e7eb);
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: var(--input-bg);
+  border-top: 1px solid var(--card-border);
 }
 
 .workspace-fusion-upload-btn {
@@ -199,9 +223,9 @@
 }
 
 .workspace-fusion-table-wrap {
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--card-border, #e5e7eb);
-  border-radius: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -209,27 +233,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--input-bg, #f9fafb);
-  border-bottom: 1px solid var(--card-border, #e5e7eb);
-  font-size: 14px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--input-bg);
+  border-bottom: 1px solid var(--card-border);
+  font-size: var(--font-body);
   font-weight: 500;
-  color: var(--text-secondary, #374151);
+  color: var(--text-secondary);
 }
 
 .workspace-fusion-table-total {
-  font-size: 12px;
-  color: var(--text-muted, #6b7280);
+  font-size: var(--font-caption);
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .workspace-fusion-progress-hint {
   margin: 0;
-  padding: 8px 16px;
-  font-size: 13px;
-  color: var(--primary, #1890ff);
-  background: rgba(24, 144, 255, 0.06);
-  border-bottom: 1px solid var(--card-border, #e5e7eb);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-caption);
+  color: var(--primary);
+  background: var(--primary-light);
+  border-bottom: 1px solid var(--card-border);
 }
 
 .workspace-fusion-table .ant-table {
@@ -262,7 +286,7 @@
 
 /* ========== 档案融合详情页 ImportDetail ========== */
 .import-detail-page {
-  max-width: 1400px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -299,14 +323,14 @@
 }
 
 .import-detail-extracting-text {
-  font-size: 15px;
-  color: var(--text-primary, #1f2937);
-  margin: 0 0 8px;
+  font-size: var(--font-body);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm);
 }
 
 .import-detail-extracting-hint {
-  font-size: 13px;
-  color: var(--text-muted, #6b7280);
+  font-size: var(--font-caption);
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -315,10 +339,10 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px 0;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--card-border, #e5e7eb);
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) 0;
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--card-border);
 }
 
 .import-detail-toolbar-left {
@@ -329,7 +353,7 @@
 }
 
 .import-detail-back-btn {
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
   padding-left: 0;
 }
 
@@ -341,9 +365,9 @@
 }
 
 .import-detail-task-name {
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text-primary, #1f2937);
+  font-weight: var(--font-weight-subtitle);
+  font-size: var(--font-body);
+  color: var(--text-primary);
   max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -351,15 +375,15 @@
 }
 
 .import-detail-task-meta {
-  font-size: 13px;
-  color: var(--text-muted, #6b7280);
+  font-size: var(--font-caption);
+  color: var(--text-muted);
 }
 
 .import-detail-toolbar-divider {
   width: 1px;
-  height: 16px;
-  background: var(--card-border, #e5e7eb);
-  margin: 0 4px;
+  height: var(--spacing-lg);
+  background: var(--card-border);
+  margin: 0 var(--spacing-xs);
 }
 
 .import-detail-toolbar-right {
@@ -370,8 +394,8 @@
 }
 
 .import-detail-batch-tags-label {
-  font-size: 13px;
-  color: var(--text-secondary, #595959);
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -399,18 +423,18 @@
 
 .import-detail-card {
   height: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .import-detail-card .ant-card-head {
-  padding: 12px 16px;
+  padding: var(--spacing-md) var(--spacing-lg);
   font-weight: 500;
-  font-size: 14px;
+  font-size: var(--font-body);
 }
 
 .import-detail-card .ant-card-body {
-  padding: 16px;
+  padding: var(--spacing-lg);
 }
 
 .import-detail-card-original {
@@ -460,14 +484,14 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  font-size: 12px;
-  line-height: 1.6;
+  font-size: var(--font-caption);
+  line-height: var(--line-height-relaxed);
   white-space: pre-wrap;
   word-break: break-word;
-  background: var(--input-bg, #f9fafb);
-  padding: 16px;
-  border-radius: 6px;
-  color: var(--text-secondary, #4b5563);
+  background: var(--input-bg);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
 }
 
 .import-detail-results-body {
@@ -481,9 +505,9 @@
 }
 
 .import-detail-result-card {
-  margin-bottom: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--card-border, #e5e7eb);
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
 }
 
 .import-detail-result-card:last-child {
@@ -497,8 +521,8 @@
 }
 
 .import-detail-result-checked {
-  color: #52c41a;
-  margin-top: 4px;
+  color: var(--accent-green);
+  margin-top: var(--spacing-xs);
   font-size: 16px;
 }
 
@@ -518,9 +542,9 @@
 
 .import-detail-result-meta {
   display: inline-block;
-  margin-left: 12px;
-  font-size: 12px;
-  color: var(--text-muted, #6b7280);
+  margin-left: var(--spacing-md);
+  font-size: var(--font-caption);
+  color: var(--text-muted);
 }
 
 .import-detail-result-meta span + span {
@@ -559,11 +583,11 @@
 }
 
 .import-detail-resume-avatar-placeholder {
-  background: var(--input-bg, #f3f4f6);
+  background: var(--input-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-muted);
   font-size: 24px;
 }
 
@@ -573,15 +597,15 @@
 }
 
 .import-detail-similar {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--card-border, #e5e7eb);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px dashed var(--card-border);
 }
 
 .import-detail-similar-title {
-  font-size: 12px;
-  color: var(--text-muted, #6b7280);
-  margin-bottom: 8px;
+  font-size: var(--font-caption);
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-sm);
 }
 
 .import-detail-similar-list {
@@ -592,14 +616,14 @@
 
 .import-detail-similar-card {
   width: 180px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
 .import-detail-similar-card:hover {
   border-color: var(--primary);
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .import-detail-similar-card-inner {
@@ -621,11 +645,11 @@
 }
 
 .import-detail-similar-avatar-placeholder {
-  background: var(--input-bg, #f3f4f6);
+  background: var(--input-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-muted);
 }
 
 .import-detail-similar-info {
@@ -635,17 +659,17 @@
 
 .import-detail-similar-name {
   font-weight: 500;
-  font-size: 13px;
-  color: var(--text-primary, #1f2937);
+  font-size: var(--font-caption);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .import-detail-similar-id {
-  font-size: 11px;
-  color: var(--text-muted, #6b7280);
-  margin-top: 2px;
+  font-size: var(--font-caption);
+  color: var(--text-muted);
+  margin-top: var(--spacing-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -30,11 +30,27 @@ const initialState: PersonState = {
   error: null,
 };
 
+/** 分页数据结构（与后端 PageResponse 一致） */
+interface PagePayload {
+  content?: unknown[];
+  page?: number;
+  size?: number;
+  totalElements?: number;
+}
+
+function toPagePayload(response: unknown): PagePayload {
+  const data = response && typeof response === 'object' && 'data' in response
+    ? (response as { data?: PagePayload }).data
+    : (response as PagePayload);
+  if (data && typeof data === 'object') return data;
+  return { content: [], page: 0, size: 20, totalElements: 0 };
+}
+
 export const fetchPersonList = createAsyncThunk(
   'person/fetchList',
   async ({ page, size }: { page: number; size: number }) => {
-    const response = await personAPI.getPersonList(page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
-    return response?.data ?? response;
+    const response = await personAPI.getPersonList(page, size);
+    return toPagePayload(response);
   }
 );
 
@@ -42,28 +58,29 @@ export const fetchPersonDetail = createAsyncThunk(
   'person/fetchDetail',
   async (personId: string) => {
     const response = await personAPI.getPersonDetail(personId) as { data?: unknown };
-    return response?.data ?? response;
+    return response?.data ?? response ?? null;
   }
 );
 
 export const fetchTags = createAsyncThunk('person/fetchTags', async () => {
   const response = await personAPI.getTags() as { data?: unknown };
-  return response?.data ?? response;
+  const raw = response?.data ?? response;
+  return Array.isArray(raw) ? raw : [];
 });
 
 export const fetchPersonListByTag = createAsyncThunk(
   'person/fetchListByTag',
   async ({ tag, page, size }: { tag: string; page: number; size: number }) => {
-    const response = await personAPI.getPersonListByTags([tag], page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
-    return response?.data ?? response;
+    const response = await personAPI.getPersonListByTags([tag], page, size);
+    return toPagePayload(response);
   }
 );
 
 export const fetchPersonListByTags = createAsyncThunk(
   'person/fetchListByTags',
   async ({ tags, page, size }: { tags: string[]; page: number; size: number }) => {
-    const response = await personAPI.getPersonListByTags(tags, page, size) as { data?: { content?: unknown[]; page?: number; size?: number; totalElements?: number } };
-    return response?.data ?? response;
+    const response = await personAPI.getPersonListByTags(tags, page, size);
+    return toPagePayload(response);
   }
 );
 
@@ -80,16 +97,12 @@ const personSlice = createSlice({
       })
       .addCase(fetchPersonList.fulfilled, (state, action) => {
         state.loading = false;
-        // @ts-ignore
-        state.list = action.payload.content;
-        // @ts-ignore
+        const p = action.payload as PagePayload;
+        state.list = Array.isArray(p?.content) ? p.content : [];
         state.pagination = {
-          // @ts-ignore
-          page: action.payload.page,
-          // @ts-ignore        
-          size: action.payload.size,
-          // @ts-ignore
-          total: action.payload.totalElements,
+          page: typeof p?.page === 'number' ? p.page : 0,
+          size: typeof p?.size === 'number' ? p.size : 20,
+          total: typeof p?.totalElements === 'number' ? p.totalElements : 0,
         };
       })
       .addCase(fetchPersonList.rejected, (state, action) => {
@@ -102,7 +115,7 @@ const personSlice = createSlice({
       })
       .addCase(fetchPersonDetail.fulfilled, (state, action) => {
         state.loading = false;
-        state.detail = action.payload;
+        state.detail = action.payload ?? null;
       })
       .addCase(fetchPersonDetail.rejected, (state, action) => {
         state.loading = false;
@@ -114,8 +127,7 @@ const personSlice = createSlice({
       })
       .addCase(fetchTags.fulfilled, (state, action) => {
         state.tagsLoading = false;
-        // @ts-ignore
-        state.tags = action.payload;
+        state.tags = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchTags.rejected, (state) => {
         state.tagsLoading = false;
@@ -126,15 +138,12 @@ const personSlice = createSlice({
       })
       .addCase(fetchPersonListByTag.fulfilled, (state, action) => {
         state.loading = false;
-        // @ts-ignore
-        state.list = action.payload.content;
+        const p = action.payload as PagePayload;
+        state.list = Array.isArray(p?.content) ? p.content : [];
         state.pagination = {
-          // @ts-ignore
-          page: action.payload.page,
-          // @ts-ignore
-          size: action.payload.size,
-          // @ts-ignore
-          total: action.payload.totalElements,
+          page: typeof p?.page === 'number' ? p.page : 0,
+          size: typeof p?.size === 'number' ? p.size : 20,
+          total: typeof p?.totalElements === 'number' ? p.totalElements : 0,
         };
       })
       .addCase(fetchPersonListByTag.rejected, (state, action) => {
@@ -147,15 +156,12 @@ const personSlice = createSlice({
       })
       .addCase(fetchPersonListByTags.fulfilled, (state, action) => {
         state.loading = false;
-        // @ts-ignore
-        state.list = action.payload.content;
+        const p = action.payload as PagePayload;
+        state.list = Array.isArray(p?.content) ? p.content : [];
         state.pagination = {
-          // @ts-ignore
-          page: action.payload.page,
-          // @ts-ignore
-          size: action.payload.size,
-          // @ts-ignore
-          total: action.payload.totalElements,
+          page: typeof p?.page === 'number' ? p.page : 0,
+          size: typeof p?.size === 'number' ? p.size : 20,
+          total: typeof p?.totalElements === 'number' ? p.totalElements : 0,
         };
       })
       .addCase(fetchPersonListByTags.rejected, (state, action) => {

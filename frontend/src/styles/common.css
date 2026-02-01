@@ -18,11 +18,28 @@
   font-weight: var(--font-weight-title);
   color: var(--text-primary);
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: var(--line-height-tight);
 }
 
 .page-title-accent {
   color: var(--primary);
+}
+
+/* 区块标题（二级标题） */
+.page-section-title {
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-section);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: var(--line-height-tight);
+}
+
+.page-subtitle {
+  margin: 0 0 var(--spacing-lg);
+  font-size: var(--font-body);
+  color: var(--text-muted);
+  line-height: var(--line-height-body);
 }
 
 .page-card {

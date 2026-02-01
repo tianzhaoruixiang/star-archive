@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Card, Row, Col, Button, Tag, message, Modal, Form, Input, Spin } from 'antd';
-import { SyncOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Button, Tag, message, Modal, Form, Input, Pagination, Empty } from 'antd';
+import { SyncOutlined, TeamOutlined } from '@ant-design/icons';
 import { modelAPI, type PredictionModelDTO } from '@/services/api';
 import { formatDateTime } from '@/utils/date';
+import PersonCard, { type PersonCardData } from '@/components/PersonCard';
+import { PageCardGridSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
 type ModelStatusDisplay = 'running' | 'paused';
@@ -28,6 +30,13 @@ const ModelManagement: React.FC = () => {
   const [ruleConfigText, setRuleConfigText] = useState('');
   const [form] = Form.useForm();
   const [ruleForm] = Form.useForm();
+  /** 查看命中人员弹窗 */
+  const [lockedModalModel, setLockedModalModel] = useState<PredictionModelDTO | null>(null);
+  const [lockedList, setLockedList] = useState<PersonCardData[]>([]);
+  const [lockedLoading, setLockedLoading] = useState(false);
+  const [lockedPage, setLockedPage] = useState(0);
+  const [lockedSize] = useState(12);
+  const [lockedTotal, setLockedTotal] = useState(0);
 
   const fetchList = useCallback(() => {
     setLoading(true);
@@ -109,6 +118,35 @@ const ModelManagement: React.FC = () => {
     setRuleViewVisible(true);
   };
 
+  const handleViewLockedPersons = useCallback((model: PredictionModelDTO) => {
+    setLockedModalModel(model);
+    setLockedPage(0);
+    setLockedList([]);
+    setLockedTotal(0);
+  }, []);
+
+  const fetchLockedPersons = useCallback(() => {
+    if (!lockedModalModel) return;
+    setLockedLoading(true);
+    modelAPI
+      .getLockedPersons(lockedModalModel.modelId, lockedPage, lockedSize)
+      .then((res: unknown) => {
+        const raw = res != null && typeof res === 'object' && 'data' in res ? (res as { data?: unknown }).data : res;
+        const data = raw && typeof raw === 'object' && raw !== null ? raw as { content?: unknown[]; totalElements?: number } : null;
+        setLockedList(Array.isArray(data?.content) ? (data.content as PersonCardData[]) : []);
+        setLockedTotal(typeof data?.totalElements === 'number' ? data.totalElements : 0);
+      })
+      .catch(() => {
+        setLockedList([]);
+        setLockedTotal(0);
+      })
+      .finally(() => setLockedLoading(false));
+  }, [lockedModalModel, lockedPage, lockedSize]);
+
+  useEffect(() => {
+    if (lockedModalModel) fetchLockedPersons();
+  }, [lockedModalModel, fetchLockedPersons]);
+
   const handleEditRule = (model: PredictionModelDTO) => {
     setRuleModel(model);
     setRuleConfigText(model.ruleConfig ?? '');
@@ -167,14 +205,13 @@ const ModelManagement: React.FC = () => {
 
   return (
     <div className="page-wrapper model-management-page">
-      <h1 className="page-title model-management-title">模型管理</h1>
       <p className="model-management-desc">
         通过建模的方式锁定关键人群，创建和管理预测模型。规则为语义规则（自然语言），启动后将根据语义规则自动调用大模型匹配人物档案，锁定人数将更新。
       </p>
 
       {loading ? (
         <div className="model-management-loading">
-          <Spin size="large" tip="加载中..." />
+          <PageCardGridSkeleton title count={6} />
         </div>
       ) : (
         <>
@@ -216,6 +253,17 @@ const ModelManagement: React.FC = () => {
                       </div>
                     </div>
                     <div className="model-management-card-actions">
+                      {(model.lockedCount ?? 0) > 0 && (
+                        <Button
+                          type="primary"
+                          size="small"
+                          className="model-management-card-btn"
+                          icon={<TeamOutlined />}
+                          onClick={() => handleViewLockedPersons(model)}
+                        >
+                          查看命中人员
+                        </Button>
+                      )}
                       <Button
                         type="default"
                         size="small"
@@ -400,6 +448,45 @@ const ModelManagement: React.FC = () => {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 查看命中人员弹窗 */}
+      <Modal
+        title={`命中人员 - ${lockedModalModel?.name ?? ''}（共 ${lockedTotal} 人）`}
+        open={!!lockedModalModel}
+        onCancel={() => setLockedModalModel(null)}
+        footer={null}
+        width={900}
+        destroyOnClose
+      >
+        {lockedLoading ? (
+          <div className="model-management-loading" style={{ minHeight: 200 }}>
+            <PageCardGridSkeleton title={false} count={6} />
+          </div>
+        ) : lockedList.length === 0 ? (
+          <Empty description="暂无命中人员" />
+        ) : (
+          <>
+            <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+              {lockedList.map((person) => (
+                <Col xs={24} sm={12} md={8} key={person.personId}>
+                  <PersonCard person={person} clickable showActionLink showRemove={false} />
+                </Col>
+              ))}
+            </Row>
+            {lockedTotal > lockedSize && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+                <Pagination
+                  current={lockedPage + 1}
+                  pageSize={lockedSize}
+                  total={lockedTotal}
+                  showSizeChanger={false}
+                  onChange={(page) => setLockedPage(page - 1)}
+                />
+              </div>
+            )}
+          </>
+        )}
       </Modal>
     </div>
   );

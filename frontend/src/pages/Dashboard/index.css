@@ -145,7 +145,7 @@
 
 /* 三栏主区域：占满剩余高度且不超出，置于背景之上 */
 .dashboard-main {
-  margin-top: 0;
+  margin-top: 6px;
   flex: 1;
   min-height: 0;
   max-height: 100%;
@@ -673,9 +673,7 @@
 }
 .dashboard-person-list-modal .ant-modal-body::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.12);
-}
-
-.dashboard-person-list-loading {
+}.dashboard-person-list-loading {
   display: flex;
   justify-content: center;
   align-items: center;

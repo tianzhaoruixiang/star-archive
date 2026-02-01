@@ -1,8 +1,12 @@
 /**
  * Apple Design 风格 - 设计变量
- * 简洁、留白、柔和阴影、圆润
+ * 简洁、留白、柔和阴影、圆润；全站统一字体、间距与布局
  */
 :root {
+  /* 字体栈 - 系统字体 + 中英文 fallback */
+  --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+    'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+
   /* 主背景 - 浅灰白 */
   --page-bg: #f5f5f7;
   --page-bg-alt: #ffffff;
@@ -42,6 +46,7 @@
   --accent-green: #34c759;
   --accent-red: #ff3b30;
   --accent-amber: #ff9500;
+  --color-error: #ff3b30;
 
   /* 间距 - 8pt 基准 */
   --page-padding: 24px;
@@ -54,6 +59,9 @@
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
 
+  /* 布局 - 内容区最大宽度 */
+  --content-max-width: 1400px;
+
   /* 圆角 - Apple 风格 */
   --radius-sm: 8px;
   --radius-md: 10px;
@@ -62,11 +70,17 @@
 
   /* 字号 */
   --font-title: 28px;
+  --font-section: 20px;
   --font-subtitle: 17px;
   --font-body: 15px;
   --font-caption: 13px;
   --font-weight-title: 600;
   --font-weight-subtitle: 600;
+
+  /* 行高 */
+  --line-height-tight: 1.25;
+  --line-height-body: 1.47;
+  --line-height-relaxed: 1.6;
 
   /* 过渡 - Apple 0.3s */
   --transition-fast: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);

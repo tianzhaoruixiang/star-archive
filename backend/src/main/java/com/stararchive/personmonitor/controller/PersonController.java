@@ -6,6 +6,7 @@ import com.stararchive.personmonitor.dto.PersonCardDTO;
 import com.stararchive.personmonitor.dto.PersonDetailDTO;
 import com.stararchive.personmonitor.dto.PersonEditHistoryDTO;
 import com.stararchive.personmonitor.dto.PersonUpdateDTO;
+import com.stararchive.personmonitor.dto.TagCreateDTO;
 import com.stararchive.personmonitor.dto.TagDTO;
 import com.stararchive.personmonitor.service.PersonService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
@@ -126,5 +128,25 @@ public class PersonController {
     public ResponseEntity<ApiResponse<List<TagDTO>>> getTagTree() {
         List<TagDTO> tags = personService.getTagTree();
         return ResponseEntity.ok(ApiResponse.success(tags));
+    }
+
+    /**
+     * 新增人物标签（复用 tag 表，用于人员档案筛选与 person_tags）
+     */
+    @PostMapping("/tags")
+    public ResponseEntity<ApiResponse<TagDTO>> createTag(@RequestBody @Valid TagCreateDTO dto) {
+        TagDTO created = personService.createTag(dto);
+        return ResponseEntity.ok(ApiResponse.success("新增成功", created));
+    }
+
+    /**
+     * 删除人物标签（仅删除 tag 表记录，筛选树中不再展示）
+     */
+    @DeleteMapping("/tags/{tagId}")
+    public ResponseEntity<ApiResponse<Void>> deleteTag(@PathVariable Long tagId) {
+        if (!personService.deleteTag(tagId)) {
+            return ResponseEntity.ok(ApiResponse.error("标签不存在或已删除"));
+        }
+        return ResponseEntity.ok(ApiResponse.success("删除成功", null));
     }
 }

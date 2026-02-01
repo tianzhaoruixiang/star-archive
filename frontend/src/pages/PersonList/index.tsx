@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Card, Row, Col, Tag, Pagination, Spin, Empty, Input } from 'antd';
+import { Card, Row, Col, Tag, Pagination, Empty, Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonList, fetchTags, fetchPersonListByTags } from '@/store/slices/personSlice';
 import PersonCard, { type PersonCardData } from '@/components/PersonCard';
+import { PageCardGridSkeleton, InlineSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
 /** 标签项（与后端 tag 表 /persons/tags 一致） */
@@ -82,21 +83,30 @@ const PersonList = () => {
   const tagTree = useMemo(() => buildTagTree((tags || []) as TagItem[]), [tags]);
 
   const filteredList = useMemo(() => {
-    if (!searchKeyword.trim()) return list;
+    const safeList = Array.isArray(list) ? list : [];
+    if (!searchKeyword.trim()) return safeList;
     const kw = searchKeyword.trim().toLowerCase();
-    return (list as { chineseName?: string; originalName?: string; idCardNumber?: string; personId?: string }[]).filter(
-      (p) =>
+    return (safeList as { chineseName?: string; originalName?: string; idCardNumber?: string; personId?: string }[]).filter(
+        (p) =>
         (p.chineseName && p.chineseName.toLowerCase().includes(kw)) ||
         (p.originalName && p.originalName.toLowerCase().includes(kw)) ||
         (p.idCardNumber && p.idCardNumber.includes(kw))
     );
   }, [list, searchKeyword]);
 
+  const safePagination = useMemo(
+    () => ({
+      page: typeof pagination?.page === 'number' ? pagination.page : 0,
+      size: typeof pagination?.size === 'number' ? pagination.size : 20,
+      total: typeof pagination?.total === 'number' ? pagination.total : 0,
+    }),
+    [pagination]
+  );
+
   return (
     <div className="page-wrapper person-list-page">
       {/* 顶部：标题 + 搜索 + 右侧图标 */}
       <div className="person-list-top">
-        <h1 className="page-title person-list-title">人员档案</h1>
         <div className="person-list-top-right">
           <Input
             placeholder="搜索姓名、身份证号..."
@@ -114,7 +124,7 @@ const PersonList = () => {
         <div className="person-list-filter-title">筛选标签</div>
         {tagsLoading ? (
           <div className="person-list-filter-loading">
-            <Spin size="small" tip="标签加载中..." />
+            <InlineSkeleton lines={4} />
           </div>
         ) : (
         <>
@@ -200,7 +210,7 @@ const PersonList = () => {
       {/* 结果列表 */}
       {loading ? (
         <div className="person-list-loading">
-          <Spin size="large" tip="加载中..." />
+          <PageCardGridSkeleton title={false} count={8} />
         </div>
       ) : filteredList.length === 0 ? (
         <Card className="person-list-result-card">
@@ -223,9 +233,9 @@ const PersonList = () => {
           {!searchKeyword && (
             <div className="page-pagination person-list-pagination">
               <Pagination
-                current={pagination.page + 1}
-                pageSize={pagination.size}
-                total={pagination.total}
+                current={safePagination.page + 1}
+                pageSize={safePagination.size}
+                total={safePagination.total}
                 onChange={handlePageChange}
                 showSizeChanger
                 showQuickJumper

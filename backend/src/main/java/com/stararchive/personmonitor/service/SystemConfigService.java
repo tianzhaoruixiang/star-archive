@@ -32,6 +32,9 @@ public class SystemConfigService {
     private static final String KEY_NAV_SITUATION = "nav_situation";
     private static final String KEY_NAV_SYSTEM_CONFIG = "nav_system_config";
     private static final String KEY_SHOW_PERSON_DETAIL_EDIT = "show_person_detail_edit";
+    private static final String KEY_LLM_BASE_URL = "llm_base_url";
+    private static final String KEY_LLM_MODEL = "llm_model";
+    private static final String KEY_LLM_API_KEY = "llm_api_key";
 
     private final SystemConfigRepository systemConfigRepository;
 
@@ -67,6 +70,9 @@ public class SystemConfigService {
         map.put(KEY_NAV_SITUATION, Boolean.TRUE.equals(dto.getNavSituation()) ? "true" : "false");
         map.put(KEY_NAV_SYSTEM_CONFIG, Boolean.TRUE.equals(dto.getNavSystemConfig()) ? "true" : "false");
         map.put(KEY_SHOW_PERSON_DETAIL_EDIT, Boolean.TRUE.equals(dto.getShowPersonDetailEdit()) ? "true" : "false");
+        map.put(KEY_LLM_BASE_URL, dto.getLlmBaseUrl() != null ? dto.getLlmBaseUrl().trim() : "");
+        map.put(KEY_LLM_MODEL, dto.getLlmModel() != null ? dto.getLlmModel().trim() : "");
+        map.put(KEY_LLM_API_KEY, dto.getLlmApiKey() != null ? dto.getLlmApiKey() : "");
 
         LocalDateTime now = LocalDateTime.now();
         for (Map.Entry<String, String> e : map.entrySet()) {
@@ -104,6 +110,9 @@ public class SystemConfigService {
         dto.setNavSituation("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SITUATION, "true")));
         dto.setNavSystemConfig("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SYSTEM_CONFIG, "true")));
         dto.setShowPersonDetailEdit("true".equalsIgnoreCase(map.getOrDefault(KEY_SHOW_PERSON_DETAIL_EDIT, "true")));
+        dto.setLlmBaseUrl(map.getOrDefault(KEY_LLM_BASE_URL, ""));
+        dto.setLlmModel(map.getOrDefault(KEY_LLM_MODEL, ""));
+        dto.setLlmApiKey(map.getOrDefault(KEY_LLM_API_KEY, ""));
         return dto;
     }
 }

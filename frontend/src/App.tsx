@@ -8,8 +8,12 @@ import PersonDetail from './pages/PersonDetail';
 import KeyPersonLibrary from './pages/KeyPersonLibrary';
 import SituationAwareness from './pages/SituationAwareness';
 import NewsDetail from './pages/SituationAwareness/NewsDetail';
-import Workspace from './pages/Workspace';
+import WorkspaceLayout from './pages/Workspace';
+import WorkspaceFusion from './pages/Workspace/Fusion';
+import WorkspaceTags from './pages/Workspace/Tags';
+import WorkspaceData from './pages/Workspace/Data';
 import WorkspaceImportDetail from './pages/Workspace/ImportDetail';
+import WorkspacePreview from './pages/Workspace/Preview';
 import ModelManagement from './pages/ModelManagement';
 import SystemConfig from './pages/SystemConfig';
 import Login from './pages/Login';
@@ -35,9 +39,16 @@ function App() {
         <Route path="situation" element={<SituationAwareness />} />
         <Route path="situation/news/:newsId" element={<NewsDetail />} />
         <Route path="key-person-library" element={<KeyPersonLibrary />} />
-        <Route path="workspace" element={<Workspace />} />
-        <Route path="workspace/fusion/:taskId" element={<WorkspaceImportDetail />} />
-        <Route path="model-management" element={<ModelManagement />} />
+        <Route path="workspace" element={<WorkspaceLayout />}>
+          <Route index element={<Navigate to="/workspace/fusion" replace />} />
+          <Route path="fusion" element={<WorkspaceFusion />} />
+          <Route path="tags" element={<WorkspaceTags />} />
+          <Route path="data" element={<WorkspaceData />} />
+          <Route path="models" element={<ModelManagement />} />
+          <Route path="fusion/:taskId" element={<WorkspaceImportDetail />} />
+          <Route path="fusion/:taskId/preview" element={<WorkspacePreview />} />
+        </Route>
+        <Route path="model-management" element={<Navigate to="/workspace/models" replace />} />
         <Route path="system-config" element={<AdminOnlyRoute><SystemConfig /></AdminOnlyRoute>} />
       </Route>
     </Routes>

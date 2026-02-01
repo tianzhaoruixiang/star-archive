@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Tag, Button, Spin, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message } from 'antd';
+import { Card, Tag, Button, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined, ShareAltOutlined, HistoryOutlined, SendOutlined, CarOutlined } from '@ant-design/icons';
@@ -9,6 +9,7 @@ import { fetchPersonDetail } from '@/store/slices/personSlice';
 import { personAPI, systemConfigAPI, type PersonUpdatePayload, type PersonEditHistoryItem, type SystemConfigDTO } from '@/services/api';
 import type { PersonTravelItem, SocialDynamicItem } from '@/types/person';
 import { formatDateOnly, formatDateTime } from '@/utils/date';
+import { PageDetailSkeleton, InlineSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
 /** 教育/工作经历单项（支持 start_time/start_date、end_time/end_date、position/job 等） */
@@ -284,7 +285,7 @@ const PersonDetail = () => {
     return (
       <div className="page-wrapper person-detail-page">
         <div className="person-detail-loading">
-          <Spin size="large" tip="加载中..." />
+          <PageDetailSkeleton />
         </div>
       </div>
     );
@@ -651,7 +652,7 @@ const PersonDetail = () => {
               </div>
               {historyLoading ? (
                 <div className="person-detail-history-loading">
-                  <Spin size="small" />
+                  <InlineSkeleton lines={3} />
                 </div>
               ) : editHistory.length === 0 ? (
                 <div className="person-detail-resume-empty">

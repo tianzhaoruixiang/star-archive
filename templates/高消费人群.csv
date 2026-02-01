@@ -1,0 +1,3 @@
+﻿name,idCard,age,gender,occupation,hometown,region,phone,status,nationality,visaType,institution,tags,educationHistory,workHistory,visitRecords,flightRecords,trainRecords
+张三,1.10101E+17,30,男,教师,北京市,北京市,13800138000,正常,中国,,,"重点人员,教师",北京大学|本科|计算机科学|2010-09|2014-06,北京市第一中学|教师|负责数学教学工作|2014-09|至今,上海市|2024-01-15|出差,,
+李四,1.10101E+17,25,女,医生,上海市,上海市,13800138001,正常,中国,,,同性恋,,,,,
