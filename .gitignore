@@ -93,3 +93,4 @@ instance/
 .hypothesis/
 docker/data
 docker/seaweedfs
+docker/images
