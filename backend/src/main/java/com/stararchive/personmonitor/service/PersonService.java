@@ -73,7 +73,9 @@ public class PersonService {
             Boolean isKeyPerson, String organization, String visaType, String belongingGroup,
             String destinationProvince, String destinationCity,
             String currentUser) {
+        // JPQL 使用实体属性名 updatedTime；原生 SQL 使用数据库列名 updated_time
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedTime"));
+        Pageable pageableNativeSort = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updated_time"));
         String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
 
         if (destinationProvince != null && !destinationProvince.isBlank()) {
@@ -82,16 +84,16 @@ public class PersonService {
             boolean visibilityInQuery = false;
             if (destinationCity != null && !destinationCity.isBlank()) {
                 log.info("按目的地省份+城市查询: province={}, city={}, page={}, size={}", province, destinationCity, page, size);
-                idPage = travelRepository.findPersonIdsByDestinationProvinceAndCity(province, destinationCity.trim(), pageable);
+                idPage = travelRepository.findPersonIdsByDestinationProvinceAndCity(province, destinationCity.trim(), pageableNativeSort);
             } else if (visaType != null && !visaType.isBlank()) {
                 log.info("按目的地省份+签证类型查询: province={}, visaType={}, page={}, size={}", province, visaType, page, size);
-                idPage = travelRepository.findPersonIdsByDestinationProvinceAndVisaType(province, visaType.trim(), pageable);
+                idPage = travelRepository.findPersonIdsByDestinationProvinceAndVisaType(province, visaType.trim(), pageableNativeSort);
             } else if (organization != null && !organization.isBlank()) {
                 log.info("按目的地省份+机构查询: province={}, organization={}, page={}, size={}", province, organization, page, size);
-                idPage = travelRepository.findPersonIdsByDestinationProvinceAndOrganization(province, organization.trim(), pageable);
+                idPage = travelRepository.findPersonIdsByDestinationProvinceAndOrganization(province, organization.trim(), pageableNativeSort);
             } else if (belongingGroup != null && !belongingGroup.isBlank()) {
                 log.info("按目的地省份+所属群体查询: province={}, belongingGroup={}, page={}, size={}", province, belongingGroup, page, size);
-                idPage = travelRepository.findPersonIdsByDestinationProvinceAndBelongingGroup(province, belongingGroup.trim(), pageable);
+                idPage = travelRepository.findPersonIdsByDestinationProvinceAndBelongingGroup(province, belongingGroup.trim(), pageableNativeSort);
             } else {
                 log.info("按目的地省份查询人员列表（可见性分页）: destinationProvince={}, page={}, size={}", province, page, size);
                 Pageable pageableNoSort = PageRequest.of(page, size);

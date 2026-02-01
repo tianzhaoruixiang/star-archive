@@ -15,6 +15,8 @@ RUN mvn package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 RUN apk add --no-cache dumb-init
 WORKDIR /app
+RUN mkdir -p /app/logs
+RUN chmod -R 755 /app/logs
 
 # 从构建阶段复制 jar（Spring Boot 打出 fat jar）
 COPY --from=builder /build/target/person-monitor-*.jar ./app.jar

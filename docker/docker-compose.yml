@@ -200,6 +200,8 @@ services:
       dockerfile: Dockerfile
     image: star-archive-backend:latest
     container_name: archive-backend
+    volumes:
+      - ./data/logs:/app/logs
     networks:
       archive-network:
         ipv4_address: 172.20.80.30

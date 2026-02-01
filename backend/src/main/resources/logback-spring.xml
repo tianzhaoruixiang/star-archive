@@ -3,8 +3,8 @@
   <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
   <!-- 日志目录与主文件路径（可通过 application.yml logging.file.name 覆盖） -->
-  <springProperty name="LOG_PATH" source="logging.file.path" defaultValue="logs"/>
-  <springProperty name="LOG_FILE" source="logging.file.name" defaultValue="logs/application.log"/>
+  <springProperty name="LOG_PATH" source="logging.file.path" defaultValue="/app/logs"/>
+  <springProperty name="LOG_FILE" source="logging.file.name" defaultValue="/app/logs/application.log"/>
 
   <!-- 控制台输出 -->
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
