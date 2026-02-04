@@ -24,7 +24,7 @@
 
 .login-card .ant-card-head-title {
   text-align: center;
-  font-size: 22px;
+  font-size: var(--font-title);
   font-weight: 600;
   color: var(--text-primary);
   padding: 24px 0;
@@ -69,7 +69,7 @@
 
 .login-card .ant-btn-primary {
   height: 48px;
-  font-size: 17px;
+  font-size: var(--font-subtitle);
   font-weight: 500;
   background: var(--accent-btn) !important;
   border: none !important;

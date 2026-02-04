@@ -44,7 +44,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: var(--font-body);
   color: #fff;
 }
 
@@ -57,8 +57,8 @@
 
 .logo-text {
   color: var(--text-primary);
-  font-size: 17px;
-  font-weight: 600;
+  font-size: var(--font-subtitle);
+  font-weight: var(--font-weight-title);
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
@@ -69,6 +69,7 @@
   border-bottom: none !important;
   background: transparent !important;
   line-height: 50px !important;
+  font-family: var(--font-family);
 }
 
 .menu.ant-menu-light,
@@ -78,12 +79,15 @@
   color: var(--text-muted) !important;
 }
 
+/* 一级导航：字号 16px、字重 500，与设计变量 --font-subtitle 一致 */
 .menu .ant-menu-item {
   margin: 0 4px;
   padding: 0 16px;
   border-radius: 8px;
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: var(--font-subtitle);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
   transition: all var(--transition-fast);
 }
 
@@ -95,15 +99,26 @@
 .menu .ant-menu-item-selected {
   color: var(--primary) !important;
   background: var(--primary-light) !important;
-}
-
-.menu .ant-menu-item .anticon {
-  font-size: 16px;
-  margin-right: 8px;
+  font-weight: var(--font-weight-medium);
 }
 
 .menu .ant-menu-submenu-title {
   color: var(--text-muted) !important;
+  font-size: var(--font-subtitle) !important;
+  font-weight: var(--font-weight-medium) !important;
+  font-family: var(--font-family) !important;
+  letter-spacing: 0.02em;
+  margin: 0 4px;
+  padding: 0 16px;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+}
+
+/* 一级菜单（含工作区子菜单标题）图标统一大小，与文字 16px 匹配 */
+.menu .ant-menu-item .anticon,
+.menu .ant-menu-submenu-title .anticon {
+  font-size: 1.125em;
+  margin-right: 8px;
 }
 
 .menu .ant-menu-submenu-open > .ant-menu-submenu-title {
@@ -142,7 +157,7 @@
 }
 
 .username {
-  font-size: 14px;
+  font-size: var(--font-body);
   font-weight: 500;
   max-width: 120px;
   overflow: hidden;
@@ -151,7 +166,7 @@
 }
 
 .logout-btn {
-  font-size: 12px;
+  font-size: var(--font-caption);
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 6px;
@@ -166,13 +181,13 @@
 }
 
 .header-user-dropdown-name {
-  font-size: 13px;
+  font-size: var(--font-aux);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .header-user-dropdown-role {
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -189,7 +204,7 @@
 
 .header-user-dropdown.ant-dropdown .ant-dropdown-menu-item {
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 .content {

@@ -115,6 +115,7 @@ const SystemConfigPage = () => {
             llmModel: (data as SystemConfigDTO).llmModel ?? '',
             llmApiKey: (data as SystemConfigDTO).llmApiKey ?? '',
             llmExtractPrompt: (data as SystemConfigDTO).llmExtractPrompt ?? '',
+            llmExtractPromptDefault: (data as SystemConfigDTO).llmExtractPromptDefault ?? '',
             onlyofficeDocumentServerUrl: (data as SystemConfigDTO).onlyofficeDocumentServerUrl ?? '',
             onlyofficeDocumentDownloadBase: (data as SystemConfigDTO).onlyofficeDocumentDownloadBase ?? '',
           });
@@ -176,6 +177,10 @@ const SystemConfigPage = () => {
 
   return (
     <div className="page-wrapper system-config-page">
+      <div className="page-header">
+        <h1 className="page-header-title">系统配置</h1>
+        <p className="page-header-desc">系统配置 · 导航与功能</p>
+      </div>
       <Card
         title={
           <span>
@@ -310,7 +315,7 @@ const SystemConfigPage = () => {
               <Form.Item
                 name="llmExtractPrompt"
                 label="人物档案提取提示词"
-                extra="大模型抽取单人档案时的系统提示词，留空则使用内置默认；用于控制抽取字段与格式"
+                extra="大模型抽取单人档案时的系统提示词，留空则使用下方内置默认；用于控制抽取字段与格式"
               >
                 <Input.TextArea
                   placeholder="留空则使用内置默认提示词"
@@ -318,6 +323,13 @@ const SystemConfigPage = () => {
                   maxLength={4000}
                   showCount
                 />
+              </Form.Item>
+              <Form.Item
+                name="llmExtractPromptDefault"
+                label="内置默认提示词"
+                extra="留空自定义提示词时，档案融合将使用此默认内容（只读）"
+              >
+                <Input.TextArea readOnly rows={8} className="system-config-default-prompt" />
               </Form.Item>
             </div>
           </Form.Item>

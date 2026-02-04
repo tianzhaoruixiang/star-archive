@@ -54,6 +54,22 @@ public class ModelManagementController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    /**
+     * 实时语义命中：根据模型语义规则 Text2Sql 查询，返回命中人数与分页列表（仅语义模型且有规则时有效）。
+     */
+    @GetMapping("/{modelId}/semantic-hit")
+    public ResponseEntity<ApiResponse<PageResponse<PersonCardDTO>>> getSemanticHit(
+            @PathVariable String modelId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(value = "X-Username", required = false) String currentUser) {
+        if (modelManagementService.getById(modelId) == null) {
+            return ResponseEntity.notFound().build();
+        }
+        PageResponse<PersonCardDTO> result = modelManagementService.getSemanticHitPersons(modelId, page, size, currentUser);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<PredictionModelDTO>> create(@RequestBody PredictionModelDTO dto) {
         if (dto.getName() == null || dto.getName().isBlank()) {

@@ -34,7 +34,7 @@ public class PersonController {
     private final PersonPortraitService personPortraitService;
     
     /**
-     * 分页查询人员列表，支持按重点人员/机构/签证类型/所属群体筛选；按可见性过滤（公开档案或 X-Username 为创建人）
+     * 分页查询人员列表，支持按重点人员/机构/签证类型/所属群体筛选；支持标签 + 姓名/证件号检索（可同时使用）；按可见性过滤（公开档案或 X-Username 为创建人）
      */
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PersonCardDTO>>> getPersonList(
@@ -47,10 +47,20 @@ public class PersonController {
             @RequestParam(required = false) String departureProvince,
             @RequestParam(required = false) String destinationProvince,
             @RequestParam(required = false) String destinationCity,
+            @RequestParam(required = false) List<String> tags,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Boolean matchAny,
             @RequestHeader(value = "X-Username", required = false) String currentUser
     ) {
+        List<String> tagList = tags != null ? tags : List.of();
+        if (tagList.size() == 1 && tagList.get(0) != null && tagList.get(0).contains(",")) {
+            tagList = java.util.Arrays.stream(tagList.get(0).split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+        }
         PageResponse<PersonCardDTO> result = personService.getPersonListFiltered(
-                page, size, isKeyPerson, organization, visaType, belongingGroup, departureProvince, destinationProvince, destinationCity, currentUser);
+                page, size, isKeyPerson, organization, visaType, belongingGroup, departureProvince, destinationProvince, destinationCity, tagList, keyword, Boolean.TRUE.equals(matchAny), currentUser);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
     
@@ -64,7 +74,7 @@ public class PersonController {
             @RequestParam(defaultValue = "20") int size,
             @RequestHeader(value = "X-Username", required = false) String currentUser
     ) {
-        PageResponse<PersonCardDTO> result = personService.getPersonListByTags(List.of(tag), page, size, false, currentUser);
+        PageResponse<PersonCardDTO> result = personService.getPersonListByTags(List.of(tag), page, size, false, null, currentUser);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
@@ -89,7 +99,7 @@ public class PersonController {
                     .filter(s -> !s.isEmpty())
                     .toList();
         }
-        PageResponse<PersonCardDTO> result = personService.getPersonListByTags(tagList, page, size, Boolean.TRUE.equals(matchAny), currentUser);
+        PageResponse<PersonCardDTO> result = personService.getPersonListByTags(tagList, page, size, Boolean.TRUE.equals(matchAny), null, currentUser);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
     

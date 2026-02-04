@@ -91,6 +91,10 @@ const KeyPersonLibrary: React.FC = () => {
   return (
     <div className="page-wrapper key-person-page">
       <div className="key-person-card">
+        <div className="page-header">
+          <h1 className="page-header-title">重点人员</h1>
+          <p className="page-header-desc">重点人员库 · 重点标签人员</p>
+        </div>
         <div className="key-person-body">
         <aside className="key-person-sidebar">
           <div className="key-person-sidebar-title">
@@ -180,8 +184,7 @@ const KeyPersonLibrary: React.FC = () => {
                   >
                     <PersonCard
                       person={person}
-                      showActionLink
-                      actionLinkText="查看详情"
+                      clickable
                     />
                   </Col>
                 ))}

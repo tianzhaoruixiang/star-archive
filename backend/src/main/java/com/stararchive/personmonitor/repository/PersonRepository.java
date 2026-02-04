@@ -118,4 +118,14 @@ public interface PersonRepository extends JpaRepository<Person, String>, PersonR
 
     @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.belongingGroup = :belongingGroup " + NOT_DELETED_JPQL)
     Page<Person> findByBelongingGroupAndVisible(@Param("belongingGroup") String belongingGroup, Pageable pageable, @Param("currentUser") String currentUser);
+
+    /**
+     * 按可见性 + 姓名/证件号关键词分页查询（支持同时选标签时由 Service 用原生 SQL 组合）。
+     */
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " " + NOT_DELETED_JPQL
+            + " AND (LOWER(COALESCE(p.chineseName, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))"
+            + " OR LOWER(COALESCE(p.originalName, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))"
+            + " OR COALESCE(p.idNumber, '') LIKE CONCAT('%', :keyword, '%')"
+            + " OR COALESCE(p.idCardNumber, '') LIKE CONCAT('%', :keyword, '%'))")
+    Page<Person> findVisibleByKeyword(@Param("keyword") String keyword, Pageable pageable, @Param("currentUser") String currentUser);
 }

@@ -44,8 +44,8 @@ public class SeaweedFSService {
         String base = properties.getFilerUrl().replaceAll("/$", "");
         URI uri = URI.create(base + "/" + path);
 
+        // 不手动设置 Content-Type，由 RestTemplate 的 FormHttpMessageConverter 自动生成带 boundary 的 multipart/form-data
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
             @Override
@@ -87,7 +87,6 @@ public class SeaweedFSService {
         URI uri = URI.create(base + "/" + path);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new org.springframework.core.io.ByteArrayResource(data) {
             @Override
@@ -131,7 +130,6 @@ public class SeaweedFSService {
 
         byte[] bytes = file.getBytes();
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new org.springframework.core.io.ByteArrayResource(bytes) {
             @Override
@@ -169,7 +167,6 @@ public class SeaweedFSService {
         URI uri = URI.create(base + "/" + path);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         final String filenameExt = ext;
         body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {

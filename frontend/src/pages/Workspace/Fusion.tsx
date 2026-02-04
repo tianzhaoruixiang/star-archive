@@ -8,7 +8,6 @@ import type { ArchiveImportTaskDTO, PageResponse } from '@/types/archiveFusion';
 import { SIMILAR_MATCH_FIELD_OPTIONS } from '@/types/archiveFusion';
 import { useAppSelector } from '@/store/hooks';
 import { formatDateTime } from '@/utils/date';
-import { TableSkeleton } from '@/components/SkeletonPresets';
 
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
   PENDING: { color: 'default', text: '待提取' },
@@ -205,12 +204,13 @@ const WorkspaceFusion = () => {
   return (
     <>
       <div className="workspace-fusion">
-        <div className="workspace-fusion-header">
-          <div className="workspace-fusion-title">人员档案导入融合</div>
-          <p className="workspace-fusion-desc">
-            支持 Word(.doc/.docx)、Excel(.xls/.xlsx)、CSV、PDF。上传成功后立即返回，大模型在后台异步提取，状态变为「成功」后可在详情页对比并批量确认导入。
-          </p>
+        <div className="page-header">
+          <h1 className="page-header-title">档案融合</h1>
+          <p className="page-header-desc">工作区 · 人员档案导入融合</p>
         </div>
+        <p className="workspace-fusion-desc">
+          支持 Word(.doc/.docx)、Excel(.xls/.xlsx)、CSV、PDF。上传成功后立即返回，大模型在后台异步提取，状态变为「成功」后可在详情页对比并批量确认导入。
+        </p>
         <div className="workspace-fusion-similar-match-row">
           <span className="workspace-fusion-similar-match-label">查询相似档案时使用的属性：</span>
           <Checkbox.Group

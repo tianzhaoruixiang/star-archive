@@ -40,8 +40,10 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -84,14 +86,6 @@ public class ArchiveExtractionAsyncExecutor {
     private ArchiveFusionService archiveFusionService;
 
     private static final AtomicLong matchIdGenerator = new AtomicLong(System.currentTimeMillis() * 1000);
-
-    /** 大模型抽取单人时系统提示（系统配置为空时使用此默认） */
-    private static final String DEFAULT_EXTRACT_ONE_SYSTEM_PROMPT =
-            "你是一个人物档案抽取助手。从用户提供的文本中抽取**一个人物**的档案信息。"
-                    + "按以下字段提取（与人物表 person 结构一致），无法确定的填空字符串或空数组："
-                    + "chinese_name(中文姓名)、original_name(原始姓名)、alias_names(别名数组)、gender(性别)、id_number(证件号码)、birth_date(出生日期 yyyy-MM-dd)、nationality(国籍)、nationality_code(国籍三字码)、household_address(户籍地址)、highest_education(最高学历)、phone_numbers(手机号数组)、emails(邮箱数组)、passport_numbers(护照号数组)、passport_number(主护照号)、passport_type(护照类型：普通护照/外交护照/公务护照/旅行证等)、id_card_number(身份证号)、person_tags(标签数组)、work_experience(工作经历JSON字符串)、education_experience(教育经历JSON字符串)、remark(备注)。"
-                    + "**重要：person_tags（人物标签）必须根据【上传文件的文件名】与【人物档案文本内容】综合推断，且只能从用户消息中提供的「参考标签表」里选择（可多选），标签名必须与参考表完全一致；若无法匹配则 person_tags 返回空数组 []。**"
-                    + "请严格以 JSON 格式返回，**只返回一个 JSON 对象**，直接包含上述字段（不要包在 persons 数组里）。字符串用双引号，数组用 []，日期格式 yyyy-MM-dd。";
 
     /**
      * 异步执行大模型提取：从 SeaweedFS 拉取文件，解析并抽取，更新任务状态与提取结果。
@@ -511,7 +505,7 @@ public class ArchiveExtractionAsyncExecutor {
         if (cfg.getLlmExtractPrompt() != null && !cfg.getLlmExtractPrompt().isBlank()) {
             return cfg.getLlmExtractPrompt().trim();
         }
-        return DEFAULT_EXTRACT_ONE_SYSTEM_PROMPT;
+        return SystemConfigService.getDefaultExtractPrompt();
     }
 
     /**
@@ -732,10 +726,14 @@ public class ArchiveExtractionAsyncExecutor {
         return rowTexts;
     }
 
+    /**
+     * 解析 CSV 为多行文本。优先 UTF-8 解码，若出现替换符或解码异常则使用 GBK（常见于 Windows 导出的中文 CSV），避免中文乱码。
+     */
     private List<String> parseCsvToLines(MultipartFile file) throws Exception {
+        byte[] bytes = file.getBytes();
+        String content = decodeCsvContent(bytes);
         List<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new StringReader(content))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String trimmed = line.trim();
@@ -747,14 +745,47 @@ public class ArchiveExtractionAsyncExecutor {
         return lines;
     }
 
+    /** 常见中文 CSV 编码：先 UTF-8，含替换符或异常时用 GBK */
+    private static final Charset GBK = Charset.forName("GBK");
+
+    private String decodeCsvContent(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return "";
+        // 先按 UTF-8 解码
+        String utf8 = new String(bytes, StandardCharsets.UTF_8);
+        if (!utf8.contains("\uFFFD")) {
+            return stripBomUtf8(utf8);
+        }
+        // 出现替换符说明可能为 GBK 等编码，用 GBK 重解
+        return new String(bytes, GBK);
+    }
+
+    private static String stripBomUtf8(String s) {
+        if (s != null && s.startsWith("\uFEFF")) {
+            return s.substring(1);
+        }
+        return s != null ? s : "";
+    }
+
+    private static final DataFormatter DATA_FORMATTER = new DataFormatter();
+
+    /** 取单元格显示值，避免公式/数字按公式或整数取导致中文或格式丢失 */
     private String getCellString(Cell cell) {
-        return switch (cell.getCellType()) {
-            case STRING -> cell.getStringCellValue();
-            case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
-            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            case FORMULA -> cell.getCellFormula();
-            default -> null;
-        };
+        if (cell == null) return null;
+        CellType type = cell.getCellType();
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+        switch (type) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+            case FORMULA:
+                return DATA_FORMATTER.formatCellValue(cell);
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            default:
+                return null;
+        }
     }
 
     private String parseDocx(MultipartFile file) throws Exception {

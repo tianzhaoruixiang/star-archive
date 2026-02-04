@@ -6,7 +6,8 @@ import { newsAPI, type NewsItem, NEWS_CATEGORIES } from '@/services/api';
 import { formatDateTime, parseDate } from '@/utils/date';
 import './index.css';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 /** 分类 Tab：全部 + 政治、经济、文化、社会民生 */
 const CATEGORY_TAB_ALL = '全部';
@@ -73,29 +74,28 @@ const SituationAwareness: React.FC = () => {
   const [list, setList] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [total, setTotal] = useState(0);
 
   const loadList = useCallback(async () => {
     setLoading(true);
     try {
       const categoryParam = category === CATEGORY_TAB_ALL ? undefined : category;
-      const res = (await newsAPI.getNewsList(
+      const res = await newsAPI.getNewsList(
         page - 1,
-        PAGE_SIZE,
+        pageSize,
         keyword || undefined,
         categoryParam
-      )) as { data?: { content?: NewsItem[]; list?: NewsItem[]; totalElements?: number; total?: number } };
-      const data = res?.data ?? res;
-      // @ts-ignore
-      const content = data?.content ?? data?.list ?? [];
-      // @ts-ignore
-      const totalCount = data?.totalElements ?? data?.total ?? 0;
+      );
+      const payload = res && typeof res === 'object' && 'data' in res ? (res as { data?: { content?: NewsItem[]; totalElements?: number } }).data : undefined;
+      const content = Array.isArray(payload?.content) ? payload.content : [];
+      const totalCount = Number(payload?.totalElements ?? 0);
       setList(Array.isArray(content) ? content : []);
       setTotal(Number(totalCount));
     } finally {
       setLoading(false);
     }
-  }, [page, keyword, category]);
+  }, [page, pageSize, keyword, category]);
 
   useEffect(() => {
     loadList();
@@ -111,9 +111,10 @@ const SituationAwareness: React.FC = () => {
     setPage(1);
   }, []);
 
-  const handlePageChange = useCallback((p: number) => {
+  const handlePageChange = useCallback((p: number, size?: number) => {
     setPage(p);
-  }, []);
+    if (size != null && size !== pageSize) setPageSize(size);
+  }, [pageSize]);
 
   const handleTitleClick = useCallback(
     (newsId: string) => {
@@ -122,14 +123,12 @@ const SituationAwareness: React.FC = () => {
     [navigate]
   );
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
   return (
     <div className="page-wrapper situation-awareness">
       <div className="situation-awareness-card">
-        <div className="news-page-header">
-          <h1 className="news-page-title">新闻动态</h1>
-          <p className="news-page-desc">态势感知 · 新闻资讯</p>
+        <div className="page-header">
+          <h1 className="page-header-title">新闻动态</h1>
+          <p className="page-header-desc">态势感知 · 新闻资讯</p>
         </div>
 
         <Tabs
@@ -175,18 +174,18 @@ const SituationAwareness: React.FC = () => {
                 </li>
               ))}
             </ul>
-            {totalPages > 1 && (
-              <div className="news-pagination">
-                <Pagination
-                  current={page}
-                  total={total}
-                  pageSize={PAGE_SIZE}
-                  onChange={handlePageChange}
-                  showSizeChanger={false}
-                  showTotal={(t) => `共 ${t} 条`}
-                />
-              </div>
-            )}
+            <div className="news-pagination">
+              <Pagination
+                current={page}
+                total={total}
+                pageSize={pageSize}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                onChange={handlePageChange}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(t) => `共 ${t} 条`}
+              />
+            </div>
           </>
         )}
         </div>

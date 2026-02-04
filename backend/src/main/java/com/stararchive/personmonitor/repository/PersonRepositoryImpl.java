@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -55,5 +56,28 @@ public class PersonRepositoryImpl implements PersonRepositoryCustom {
         if (safe.contains("gender")) query.setParameter("gender", gender);
         if (safe.contains("nationality")) query.setParameter("nationality", nationality);
         return query.getResultList();
+    }
+
+    private static final Pattern LIMIT_PATTERN = Pattern.compile("\\s+LIMIT\\s+\\d+\\s*$", Pattern.CASE_INSENSITIVE);
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<String> executeSelectPersonIds(String sql, int limit) {
+        if (sql == null || sql.isBlank() || limit <= 0) {
+            return List.of();
+        }
+        String s = LIMIT_PATTERN.matcher(sql.trim()).replaceFirst("");
+        String runSql = s + " LIMIT " + Math.min(limit, 10000);
+        Query query = entityManager.createNativeQuery(runSql);
+        List<?> rows = query.getResultList();
+        List<String> ids = new ArrayList<>();
+        for (Object row : rows) {
+            if (row instanceof String) {
+                ids.add((String) row);
+            } else if (row != null) {
+                ids.add(row.toString());
+            }
+        }
+        return ids;
     }
 }

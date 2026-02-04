@@ -47,6 +47,8 @@ public class SystemConfigDTO {
     private String llmApiKey;
     /** 人物档案融合 · 大模型提取人物档案的系统提示词（为空则使用内置默认） */
     private String llmExtractPrompt;
+    /** 人物档案融合 · 内置默认提示词（只读，供前端展示） */
+    private String llmExtractPromptDefault;
 
     /** OnlyOffice · 前端加载脚本的地址（document-server-url） */
     private String onlyofficeDocumentServerUrl;

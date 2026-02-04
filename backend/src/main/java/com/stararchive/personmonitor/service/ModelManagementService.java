@@ -38,6 +38,7 @@ public class ModelManagementService {
     private final PersonRepository personRepository;
     private final PersonService personService;
     private final SemanticModelMatchService semanticModelMatchService;
+    private final SemanticText2SqlService semanticText2SqlService;
 
     public List<PredictionModelDTO> list() {
         return predictionModelRepository.findAllByOrderByUpdatedTimeDesc().stream()
@@ -60,8 +61,8 @@ public class ModelManagementService {
                 .description(dto.getDescription() != null ? dto.getDescription().trim() : null)
                 .status(STATUS_PAUSED)
                 .ruleConfig(dto.getRuleConfig())
-                .lockedCount(dto.getLockedCount() != null ? dto.getLockedCount() : 0)
-                .accuracy(dto.getAccuracy())
+                .lockedCount(0)
+                .accuracy(null)
                 .createdTime(LocalDateTime.now())
                 .updatedTime(LocalDateTime.now())
                 .build();
@@ -76,8 +77,6 @@ public class ModelManagementService {
         if (entity == null) return null;
         if (dto.getName() != null) entity.setName(dto.getName().trim());
         if (dto.getDescription() != null) entity.setDescription(dto.getDescription().trim());
-        if (dto.getAccuracy() != null) entity.setAccuracy(dto.getAccuracy());
-        if (dto.getLockedCount() != null) entity.setLockedCount(dto.getLockedCount());
         if (dto.getRuleConfig() != null) entity.setRuleConfig(dto.getRuleConfig());
         entity.setUpdatedTime(LocalDateTime.now());
         entity = predictionModelRepository.save(entity);
@@ -168,6 +167,48 @@ public class ModelManagementService {
         entity = predictionModelRepository.save(entity);
         log.info("更新模型规则配置: modelId={}", modelId);
         return toDTO(entity);
+    }
+
+    private static final int SEMANTIC_HIT_MAX_IDS = 10000;
+
+    /**
+     * 实时语义命中：根据模型语义规则 Text2Sql 查询 person 表，按可见性过滤后分页返回命中人数与列表。
+     * 无规则或 Text2Sql 失败时返回 0 与空列表。
+     */
+    public PageResponse<PersonCardDTO> getSemanticHitPersons(String modelId, int page, int size, String currentUser) {
+        PredictionModel model = predictionModelRepository.findById(modelId).orElse(null);
+        if (model == null) {
+            return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
+        }
+        String ruleConfig = model.getRuleConfig();
+        if (ruleConfig == null || ruleConfig.isBlank()) {
+            return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
+        }
+        String sql = semanticText2SqlService.generateSql(ruleConfig);
+        if (sql == null) {
+            return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
+        }
+        List<String> ids = personRepository.executeSelectPersonIds(sql, SEMANTIC_HIT_MAX_IDS);
+        if (ids.isEmpty()) {
+            return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
+        }
+        List<Person> persons = personRepository.findAllById(ids);
+        String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
+        List<Person> visible = persons.stream()
+                .filter(p -> Boolean.TRUE.equals(p.getIsPublic())
+                        || (user != null && user.equals(p.getCreatedBy())))
+                .toList();
+        long total = visible.size();
+        int from = page * size;
+        int to = Math.min(from + size, (int) total);
+        if (from >= total) {
+            return PageResponse.of(new ArrayList<>(), page, size, total);
+        }
+        List<Person> pageList = visible.subList(from, to);
+        List<PersonCardDTO> cards = pageList.stream()
+                .map(personService::toCardDTO)
+                .collect(Collectors.toList());
+        return PageResponse.of(cards, page, size, total);
     }
 
     private PredictionModelDTO toDTO(PredictionModel e) {

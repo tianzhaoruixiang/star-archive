@@ -35,7 +35,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: var(--font-title);
   flex-shrink: 0;
 }
 
@@ -80,7 +80,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--font-aux);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -90,7 +90,7 @@
 }
 
 .key-person-sidebar-title-icon {
-  font-size: 14px;
+  font-size: var(--font-body);
   color: var(--primary);
 }
 
@@ -102,7 +102,7 @@
 
 .key-person-sidebar-empty {
   padding: 16px;
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-muted);
   line-height: 1.5;
 }
@@ -112,7 +112,7 @@
   width: 100%;
   margin-bottom: 8px;
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--primary);
   background: var(--primary-light);
   border: none;
@@ -157,7 +157,7 @@
   cursor: pointer;
   transition: background var(--transition-fast), color var(--transition-fast);
   color: var(--text-primary);
-  font-size: 15px;
+  font-size: var(--font-body-lg);
 }
 
 .key-person-tag-item:hover {
@@ -181,7 +181,7 @@
 }
 
 .key-person-tag-count {
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -212,7 +212,7 @@
 }
 
 .key-person-pagination-info {
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-muted);
   margin-bottom: var(--spacing-lg);
 }

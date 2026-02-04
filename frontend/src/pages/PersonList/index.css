@@ -58,7 +58,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: var(--font-section);
   cursor: pointer;
   position: relative;
   transition: background 0.2s, color 0.2s;
@@ -77,16 +77,63 @@
   height: 18px;
   line-height: 18px;
   padding: 0 4px;
-  font-size: 11px;
+  font-size: var(--font-xs);
   color: #fff;
   background: var(--accent-red);
   border-radius: 9px;
   text-align: center;
 }
 
-/* 筛选标签区域 - 字体略小、排版更紧凑 */
+/* 筛选标签区域 - 可收起，字体略小、排版更紧凑 */
 .person-list-filter {
   margin-bottom: 14px;
+  border: 1px solid var(--card-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+.person-list-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.person-list-filter-header:hover {
+  background: var(--primary-light);
+}
+
+.person-list-filter-title {
+  font-size: var(--font-body);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-secondary);
+}
+
+.person-list-filter-toggle {
+  font-size: var(--font-aux);
+  color: var(--text-muted);
+}
+
+.person-list-filter-collapsed .person-list-filter-header {
+  margin-bottom: 0;
+}
+
+.person-list-filter:not(.person-list-filter-collapsed) .person-list-filter-header {
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--card-border-subtle);
+}
+
+.person-list-filter:not(.person-list-filter-collapsed) .person-list-filter-block:first-child,
+.person-list-filter:not(.person-list-filter-collapsed) .person-list-filter-loading {
+  margin-top: 10px;
+}
+
+.person-list-filter:not(.person-list-filter-collapsed) .person-list-filter-loading {
+  padding-bottom: 10px;
 }
 
 .person-list-filter-loading {
@@ -94,17 +141,11 @@
   align-items: center;
   justify-content: center;
   min-height: 80px;
+  padding: 0 14px;
   color: var(--text-secondary);
 }
 .person-list-filter-loading .ant-spin-text {
   margin-left: 8px;
-}
-
-.person-list-filter-title {
-  font-size: 14px;
-  font-weight: var(--font-weight-subtitle);
-  color: var(--text-secondary);
-  margin-bottom: 8px;
 }
 
 .person-list-filter-block {
@@ -112,10 +153,16 @@
   flex-direction: column;
   gap: 0;
   margin-bottom: 8px;
+  padding: 0 14px 8px;
+}
+
+.person-list-filter-block:first-child {
+  padding-top: 4px;
 }
 
 .person-list-filter-block:last-child {
   margin-bottom: 0;
+  padding-bottom: 12px;
 }
 
 .person-list-filter-category {
@@ -135,7 +182,7 @@
 }
 
 .person-list-filter-category-label {
-  font-size: 13px;
+  font-size: var(--font-aux);
   font-weight: var(--font-weight-subtitle);
   color: var(--text-secondary);
 }
@@ -176,19 +223,50 @@
 }
 
 .person-list-filter-second-label {
-  font-size: 12px;
+  font-size: var(--font-caption);
   font-weight: var(--font-weight-subtitle);
   color: var(--text-secondary);
 }
 
-/* 三级标签：紧接在二级分类后面，同一行排列，小字体；过多时换行 */
+/* 三级标签：与一级/二级分类字体和颜色风格统一（font-caption、font-weight-subtitle、text-secondary） */
 .person-list-filter-tags-third {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 3px 5px;
+  gap: 4px 8px;
   flex: 1;
   min-width: 0;
+}
+
+.person-list-filter-tags-third .person-list-tag.person-list-tag-third {
+  font-size: var(--font-caption) !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  background: var(--input-bg) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--input-border) !important;
+}
+
+.person-list-filter-tags-third .person-list-tag.person-list-tag-third:hover {
+  background: var(--primary-light) !important;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+.person-list-filter-tags-third .person-list-tag.person-list-tag-third.person-list-tag-selected {
+  background: var(--primary) !important;
+  color: #fff !important;
+  border-color: var(--primary) !important;
+}
+
+.person-list-filter-tags-third .person-list-tag-count {
+  font-size: var(--font-caption);
+  color: inherit;
+  opacity: 0.85;
+}
+
+.person-list-filter-tags-third .person-list-tag.person-list-tag-third.person-list-tag-selected .person-list-tag-count {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .person-list-filter-row {
@@ -204,7 +282,7 @@
 }
 
 .person-list-filter-sub-label {
-  font-size: 12px;
+  font-size: var(--font-caption);
   color: var(--text-placeholder);
   flex-shrink: 0;
   padding-top: 2px;
@@ -220,7 +298,7 @@
 .person-list-tag {
   margin: 0 !important;
   padding: 4px 12px !important;
-  font-size: 13px !important;
+  font-size: var(--font-aux) !important;
   border-radius: 20px !important;
   border: none !important;
   background: var(--primary-light) !important;
@@ -238,39 +316,11 @@
   color: #fff !important;
 }
 
-/* 三级标签：字体略小、样式紧凑，可展示更多标签 */
-.person-list-filter-tags-third .person-list-tag {
-  font-size: 11px !important;
-  padding: 1px 6px !important;
-  border-radius: 10px !important;
-  flex-shrink: 0;
-}
-
-.person-list-filter-tags-third .person-list-tag-count {
-  font-size: 10px;
-}
-
-/* 三级标签选中态：优化配色与对比度 */
-.person-list-filter-tags-third .person-list-tag-selected {
-  background: var(--accent-btn-hover, #0284c7) !important;
-  color: #fff !important;
-  font-weight: 500;
-  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.3);
-}
-
-.person-list-filter-tags-third .person-list-tag-selected .person-list-tag-count {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.person-list-filter-tags-third .person-list-tag-selected:hover {
-  background: var(--accent-btn-hover, #0284c7) !important;
-  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.35);
-}
 
 .person-list-tag-count {
   margin-left: 1px;
   color: var(--text-placeholder);
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 
 .person-list-tag-selected .person-list-tag-count {
@@ -290,7 +340,7 @@
 
 .person-list-selected-label {
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: var(--font-body);
   font-weight: 500;
   color: var(--text-secondary);
   line-height: 28px;
@@ -307,7 +357,7 @@
 .person-list-selected-tag {
   margin: 0 !important;
   padding: 4px 10px !important;
-  font-size: 13px !important;
+  font-size: var(--font-aux) !important;
   border-radius: 20px !important;
   background: var(--primary) !important;
   color: #fff !important;
@@ -316,12 +366,12 @@
 
 .person-list-selected-tag .anticon-close {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 10px;
+  font-size: var(--font-xs);
 }
 
 .person-list-selected-clear {
   padding: 4px 12px;
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-muted);
   background: transparent;
   border: 1px dashed var(--input-border);

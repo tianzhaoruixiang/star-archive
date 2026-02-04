@@ -19,7 +19,8 @@ import './index.css';
 
 const PERSON_LIST_PAGE_SIZE = 12;
 
-const CHINA_GEO_JSON_URL = 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json';
+/** 中国全图 GeoJSON：仅从本地加载，支持离线展示 */
+const CHINA_GEO_JSON_PATH = '/littlesmall/geo/100000_full.json';
 
 /** 机构/地区/类型 排行项 */
 interface RankItem {
@@ -113,8 +114,11 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch(CHINA_GEO_JSON_URL)
-      .then((res) => res.json())
+    fetch(CHINA_GEO_JSON_PATH)
+      .then((res) => {
+        if (!res.ok) throw new Error('china geo not found');
+        return res.json();
+      })
       .then((geoJson: unknown) => {
         if (geoJson && typeof geoJson === 'object') {
           echarts.registerMap('china', geoJson as Parameters<typeof echarts.registerMap>[1]);
@@ -188,15 +192,21 @@ function Dashboard() {
         geo: {
           map: 'china',
           roam: true,
-          layoutCenter: ['50%', '60%'],
-          layoutSize: '110%',
+          layoutCenter: ['50%', '70%'],
+          layoutSize: '145%',
           silent: false,
           itemStyle: {
             borderColor: '#d1d5db',
             borderWidth: 1.5,
             areaColor: '#e0f2fe',
           },
-          label: { show: false },
+          label: {
+            show: true,
+            fontSize: 14,
+            fontWeight: 500,
+            color: '#334155',
+            fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
+          },
           emphasis: {
             itemStyle: {
               areaColor: '#a5b4fc',
@@ -255,7 +265,7 @@ function Dashboard() {
             <Statistic
               title="监测人员总数"
               value={totalPerson}
-              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
+              valueStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
               valueRender={(node) => (
                 <span
                   className="dashboard-stat-value-clickable"
@@ -278,7 +288,7 @@ function Dashboard() {
             <Statistic
               title="重点人员"
               value={keyPerson}
-              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
+              valueStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
               valueRender={(node) => (
                 <span
                   className="dashboard-stat-value-clickable"
@@ -301,7 +311,7 @@ function Dashboard() {
             <Statistic
               title="活跃区域"
               value={activeRegions}
-              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
+              valueStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
             />
           </Card>
         </Col>
@@ -313,7 +323,7 @@ function Dashboard() {
             <Statistic
               title="今日流动记录"
               value={todayMovement}
-              valueStyle={{ color: 'var(--text-primary)', fontSize: 20, fontWeight: 600 }}
+              valueStyle={{ color: 'var(--text-primary)', fontWeight: 600 }}
             />
           </Card>
         </Col>
@@ -542,7 +552,6 @@ function Dashboard() {
                 <PersonCard
                   key={person.personId}
                   person={person}
-                  showActionLink
                   minWidth={180}
                   maxWidth={280}
                 />

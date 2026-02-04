@@ -38,9 +38,6 @@ export interface PersonCardProps {
   person: PersonCardData;
   /** 点击卡片跳转详情，默认 true */
   clickable?: boolean;
-  /** 底部是否展示「查看详情」链接（可选，身份证式布局下可不展示） */
-  showActionLink?: boolean;
-  actionLinkText?: string;
   /** 是否展示移除按钮（如重点人员从目录移除） */
   showRemove?: boolean;
   onRemove?: (e: React.MouseEvent, personId: string) => void;
@@ -74,8 +71,6 @@ function getDisplayIdNumber(person: PersonCardData): string {
 const PersonCard: FC<PersonCardProps> = ({
   person,
   clickable = true,
-  showActionLink,
-  actionLinkText = '查看详情',
   showRemove = false,
   onRemove,
   removing = false,
@@ -108,14 +103,29 @@ const PersonCard: FC<PersonCardProps> = ({
           </div>
           <div className="person-card-id-category">{getPersonCategory(person.isKeyPerson)}</div>
         </div>
-        {/* 右侧：姓名、所属、性别、国籍、出生日期、证件号 */}
+        {/* 右侧：姓名、所属机构、性别、国籍、出生日期、证件号（带 label） */}
         <div className="person-card-id-right">
           <div className="person-card-id-name">{displayName}</div>
-          <div className="person-card-id-row">{getOrgOrGroup(person)}</div>
-          <div className="person-card-id-row">{person.gender || '—'}</div>
-          <div className="person-card-id-row">{person.nationality || '—'}</div>
-          <div className="person-card-id-row">{birthStr || '—'}</div>
-          <div className="person-card-id-row person-card-id-idno">{getDisplayIdNumber(person)}</div>
+          <div className="person-card-id-row">
+            <span className="person-card-id-label">所属机构</span>
+            <span className="person-card-id-value">{getOrgOrGroup(person)}</span>
+          </div>
+          <div className="person-card-id-row">
+            <span className="person-card-id-label">性别</span>
+            <span className="person-card-id-value">{person.gender || '—'}</span>
+          </div>
+          <div className="person-card-id-row">
+            <span className="person-card-id-label">国籍</span>
+            <span className="person-card-id-value">{person.nationality || '—'}</span>
+          </div>
+          <div className="person-card-id-row">
+            <span className="person-card-id-label">出生日期</span>
+            <span className="person-card-id-value">{birthStr || '—'}</span>
+          </div>
+          <div className="person-card-id-row person-card-id-idno">
+            <span className="person-card-id-label">证件号</span>
+            <span className="person-card-id-value">{getDisplayIdNumber(person)}</span>
+          </div>
         </div>
       </div>
       {/* 底部：标签，超出省略 */}
@@ -128,13 +138,6 @@ const PersonCard: FC<PersonCardProps> = ({
               </Tag>
             ))}
           </div>
-        </div>
-      )}
-      {showActionLink && clickable && (
-        <div className="person-card-id-action">
-          <span role="button" tabIndex={0} className="person-card-link" onClick={(e) => { e.stopPropagation(); navigate(`/persons/${person.personId}`); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/persons/${person.personId}`); } }}>
-            {actionLinkText}
-          </span>
         </div>
       )}
       {showRemove && onRemove && (

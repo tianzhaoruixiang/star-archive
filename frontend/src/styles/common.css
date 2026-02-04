@@ -43,6 +43,28 @@
   line-height: var(--line-height-body);
 }
 
+/** 一级导航页标题区（与态势感知一致：主标题 + 副标题「导航 · 描述」） */
+.page-header {
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.page-header-title {
+  font-size: var(--font-section);
+  font-weight: var(--font-weight-title);
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  line-height: var(--line-height-tight);
+}
+
+.page-header-desc {
+  font-size: var(--font-body);
+  color: var(--text-muted);
+  margin: 0;
+  line-height: var(--line-height-body);
+}
+
 .page-card {
   border-radius: var(--card-radius-lg);
   border: 1px solid var(--card-border-subtle);

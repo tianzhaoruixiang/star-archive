@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 人物数据访问扩展：支持按选定属性组合查询相似档案。
+ * 人物数据访问扩展：支持按选定属性组合查询相似档案；支持执行 Text2Sql 生成的 SELECT person_id 语句。
  */
 public interface PersonRepositoryCustom {
 
@@ -27,4 +27,13 @@ public interface PersonRepositoryCustom {
             LocalDate birthDate,
             String gender,
             String nationality);
+
+    /**
+     * 执行仅查询 person_id 的 SELECT 语句（由 Text2Sql 生成并校验），返回 person_id 列表，最多 limit 条。
+     *
+     * @param sql   已校验的 SELECT person_id FROM person WHERE ... 语句
+     * @param limit 最大返回条数
+     * @return person_id 列表
+     */
+    List<String> executeSelectPersonIds(String sql, int limit);
 }

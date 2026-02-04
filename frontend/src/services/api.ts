@@ -19,7 +19,7 @@ export function setApiUsername(username: string | null) {
   apiUsername = username ?? null;
 }
 
-/** 每次请求前确保 X-Username：优先用内存中的 apiUsername，刷新后未恢复 Redux 时从 sessionStorage 同步，避免首轮请求无用户信息 */
+/** 每次请求前确保 X-Username；若 body 为 FormData 则移除 Content-Type，由浏览器自动设置 multipart/form-data; boundary=... */
 apiClient.interceptors.request.use((config) => {
   let username = apiUsername;
   if (!username) {
@@ -31,6 +31,9 @@ apiClient.interceptors.request.use((config) => {
   }
   if (username) {
     config.headers['X-Username'] = username;
+  }
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
   }
   return config;
 });
@@ -178,18 +181,24 @@ export interface PersonEditHistoryItem {
   changes: PersonEditHistoryChangeItem[];
 }
 
-/** 人员列表筛选（可选；目的地省份可与 destinationCity/visaType/organization/belongingGroup 组合；流动线为 departureProvince + destinationProvince） */
+/** 人员列表筛选（可选；支持同时选标签 + 检索姓名/证件号；目的地省份可与 destinationCity/visaType 等组合） */
 export interface PersonListFilter {
   isKeyPerson?: boolean;
   organization?: string;
   visaType?: string;
   belongingGroup?: string;
-  /** 出发省份（与 destinationProvince 同时使用时表示流动线：从 A 到 B 的人员） */
+  /** 出发省份（与 destinationProvince 同时使用时表示流动线） */
   departureProvince?: string;
-  /** 目的地省份（有该省行程的人员） */
+  /** 目的地省份 */
   destinationProvince?: string;
   /** 目的地城市（须与 destinationProvince 同时使用） */
   destinationCity?: string;
+  /** 标签名列表，与 keyword 可同时使用 */
+  tags?: string[];
+  /** 姓名/证件号检索关键词，与 tags 可同时使用 */
+  keyword?: string;
+  /** 标签匹配方式：true=命中任一标签，false=须同时命中（默认 true） */
+  matchAny?: boolean;
 }
 
 export interface GetPersonListOptions {
@@ -209,6 +218,9 @@ export const personAPI = {
         ...(filter?.departureProvince && { departureProvince: filter.departureProvince }),
         ...(filter?.destinationProvince && { destinationProvince: filter.destinationProvince }),
         ...(filter?.destinationCity && { destinationCity: filter.destinationCity }),
+        ...(filter?.tags?.length && { tags: filter.tags }),
+        ...(filter?.keyword != null && filter.keyword.trim() !== '' && { keyword: filter.keyword.trim() }),
+        ...(filter?.matchAny !== undefined && { matchAny: filter.matchAny }),
       },
       ...(options?.signal && { signal: options.signal }),
     }),
@@ -358,6 +370,8 @@ export interface SystemConfigDTO {
   llmApiKey?: string;
   /** 人物档案融合 · 大模型提取人物档案的系统提示词（为空则使用内置默认） */
   llmExtractPrompt?: string;
+  /** 人物档案融合 · 内置默认提示词（只读，供前端展示） */
+  llmExtractPromptDefault?: string;
   /** OnlyOffice · 前端加载脚本的地址（document-server-url） */
   onlyofficeDocumentServerUrl?: string;
   /** OnlyOffice · 服务端拉取文档的基地址（document-download-base） */
@@ -452,7 +466,7 @@ export interface ModelLockedPersonsResponse {
 export const modelAPI = {
   list: () => apiClient.get<PredictionModelDTO[]>('/models'),
   getById: (modelId: string) => apiClient.get<PredictionModelDTO>(`/models/${modelId}`),
-  create: (dto: { name: string; description?: string; ruleConfig?: string; lockedCount?: number; accuracy?: string }) =>
+  create: (dto: { name: string; description?: string; ruleConfig?: string }) =>
     apiClient.post<PredictionModelDTO>('/models', dto),
   update: (modelId: string, dto: Partial<PredictionModelDTO>) =>
     apiClient.put<PredictionModelDTO>(`/models/${modelId}`, dto),
@@ -466,6 +480,9 @@ export const modelAPI = {
   /** 分页查询模型命中（锁定）的人员列表 */
   getLockedPersons: (modelId: string, page: number, size: number) =>
     apiClient.get<ModelLockedPersonsResponse>(`/models/${modelId}/locked-persons`, { params: { page, size } }),
+  /** 实时语义命中：Text2Sql 查询，返回命中人数与分页列表（仅语义模型且有规则时有效） */
+  getSemanticHit: (modelId: string, page: number, size: number) =>
+    apiClient.get<ModelLockedPersonsResponse>(`/models/${modelId}/semantic-hit`, { params: { page, size } }),
 };
 
 export const archiveFusionAPI = {

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { personAPI } from '@/services/api';
+import { personAPI, type PersonListFilter } from '@/services/api';
 import type { PersonDetailData } from '@/types/person';
 
 interface PersonState {
@@ -48,8 +48,8 @@ function toPagePayload(response: unknown): PagePayload {
 
 export const fetchPersonList = createAsyncThunk(
   'person/fetchList',
-  async ({ page, size }: { page: number; size: number }) => {
-    const response = await personAPI.getPersonList(page, size);
+  async ({ page, size, filter }: { page: number; size: number; filter?: PersonListFilter }) => {
+    const response = await personAPI.getPersonList(page, size, filter);
     return toPagePayload(response);
   }
 );

@@ -148,6 +148,10 @@ const WorkspaceTags = () => {
   return (
     <>
       <div className="workspace-tags">
+        <div className="page-header">
+          <h1 className="page-header-title">标签管理</h1>
+          <p className="page-header-desc">工作区 · 标签管理</p>
+        </div>
         <div className="workspace-tags-header">
           <span>人物标签用于人员档案筛选和确定重点人员</span>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddTagModalOpen(true)}>新增标签</Button>

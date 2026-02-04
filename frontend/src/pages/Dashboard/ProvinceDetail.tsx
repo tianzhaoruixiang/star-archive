@@ -445,7 +445,7 @@ const ProvinceDetail: FC = () => {
                 <PersonCard
                   key={person.personId}
                   person={person}
-                  showActionLink
+                  clickable
                   minWidth={180}
                   maxWidth={280}
                 />

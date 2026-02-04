@@ -1,11 +1,12 @@
 /**
  * 简洁白色主题 - 设计变量
  * 白底、浅灰边框、蓝色主色，干净易读
+ * 字号按前端设计规范统一，适配 2560×1080 等分辨率
  */
 :root {
-  /* 字体 */
-  --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-    'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  /* 字体族：中英文兼顾，优先系统无衬线 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', 'SF Pro Text',
+    'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
 
   /* 主背景 - 白色 / 浅灰 */
   --page-bg: #ffffff;
@@ -83,18 +84,27 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
 
-  /* 字号 */
-  --font-title: 28px;
-  --font-section: 20px;
-  --font-subtitle: 17px;
-  --font-body: 15px;
-  --font-caption: 13px;
+  /* 字号层级（rem，随根字号缩放，适配多宽度屏幕） */
+  --font-xs: 1rem;     /* 角标、极小辅助 ~11px */
+  --font-caption: 1.25rem;  /* 说明、标签、表格次要 12px */
+  --font-aux: 1.25rem;     /* 辅助正文、列表次要 ~13px */
+  --font-body: 1.25rem;    /* 正文（设计规范基准） 14px */
+  --font-body-lg: 1.3rem; /* 正文略大、输入框 15px */
+  --font-subtitle: 1.45rem;    /* 小标题、导航、卡片标题 16px */
+  --font-section: 1.45rem;  /* 区块标题 18px */
+  --font-card-title: 1.5rem; /* 卡片主标题、统计数字 20px */
+  --font-title: 1.5rem;     /* 页面主标题 24px */
+  --font-display: 1.5rem;   /* 大标题、人物名等 28px */
+  --font-hero: 3rem;        /* 空状态大数字、营销区 48px */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
   --font-weight-title: 600;
   --font-weight-subtitle: 600;
+  --font-weight-bold: 700;
 
   /* 行高 */
   --line-height-tight: 1.25;
-  --line-height-body: 1.47;
+  --line-height-body: 1.5;
   --line-height-relaxed: 1.6;
 
   /* 过渡 */
@@ -102,11 +112,17 @@
   --transition-normal: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* 1920 宽屏：内容区加宽，更好利用横向空间 */
+/* 1920 宽屏：内容区加宽、字号略大，更好利用横向空间 */
 @media (min-width: 1920px) {
   :root {
     --content-max-width: 1600px;
     --content-side-padding: 48px;
+    --font-body: 0.9375rem;
+    --font-aux: 0.875rem;
+    --font-caption: 0.8125rem;
+    --font-subtitle: 1.0625rem;
+    --font-section: 1.1875rem;
+    --font-title: 1.5625rem;
   }
 }
 
@@ -126,3 +142,4 @@
     --spacing-2xl: 28px;
   }
 }
+

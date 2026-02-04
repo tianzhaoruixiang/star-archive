@@ -1,10 +1,13 @@
 /**
- * 下载常用省份的 GeoJSON 文件到 public/geo/ 目录
- * 运行: node scripts/download-geo.js
+ * 下载中国全图及常用省份的 GeoJSON 到 public/geo/，支持离线地图展示
+ * 运行: node scripts/download-geo.cjs
  */
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+
+/** 中国全图（adcode 100000），用于首页全国地图 */
+const CHINA_FULL = { adcode: '100000_full', name: '中国全图' };
 
 const PROVINCES = {
   '110000': '北京市',
@@ -48,10 +51,11 @@ if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-function downloadFile(adcode, name) {
+function downloadFile(adcode, name, filename) {
+  const outputName = filename != null ? filename : `${adcode}.json`;
   return new Promise((resolve, reject) => {
-    const url = `${CDN_BASE}/${adcode}_full.json`;
-    const outputPath = path.join(OUTPUT_DIR, `${adcode}.json`);
+    const url = `${CDN_BASE}/${adcode}.json`;
+    const outputPath = path.join(OUTPUT_DIR, outputName);
 
     // 如果文件已存在，跳过
     if (fs.existsSync(outputPath)) {
@@ -80,20 +84,28 @@ function downloadFile(adcode, name) {
 }
 
 async function downloadAll() {
-  console.log('开始下载省份 GeoJSON 文件...\n');
+  console.log('开始下载 GeoJSON（中国全图 + 省份）...\n');
+
+  // 1. 中国全图（100000_full.json）
+  try {
+    await downloadFile('100000_full', CHINA_FULL.name, '100000_full.json');
+    await new Promise((r) => setTimeout(r, 100));
+  } catch (e) {
+    console.error(`✗ ${CHINA_FULL.name} - 失败:`, e.message);
+  }
+
+  // 2. 各省份（{adcode}_full.json -> {adcode}.json）
   const entries = Object.entries(PROVINCES);
-  
   for (let i = 0; i < entries.length; i++) {
     const [adcode, name] = entries[i];
     try {
-      await downloadFile(adcode, name);
-      // 延迟 100ms 避免请求过快
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await downloadFile(`${adcode}_full`, name, `${adcode}.json`);
+      await new Promise((r) => setTimeout(r, 100));
     } catch (error) {
       console.error(`✗ ${name} (${adcode}) - 失败:`, error.message);
     }
   }
-  
+
   console.log('\n下载完成！');
 }
 

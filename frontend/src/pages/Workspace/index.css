@@ -111,7 +111,7 @@
   gap: 12px;
   margin-bottom: 16px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 .workspace-fusion-header {
@@ -185,7 +185,7 @@
 }
 
 .workspace-fusion-dragger-icon {
-  font-size: 48px;
+  font-size: var(--font-hero);
   color: var(--primary);
   margin-bottom: 12px;
   display: block;
@@ -205,7 +205,7 @@
 }
 
 .workspace-fusion-dragger-count {
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--primary);
   margin: 12px 0 0;
   font-weight: 500;
@@ -274,7 +274,7 @@
 }
 
 .workspace-fusion-table .ant-table {
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 .workspace-fusion-table .ant-table-container {
@@ -298,16 +298,18 @@
 
 .workspace-fusion-actions .ant-btn-link {
   padding: 0 6px;
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
-/* ========== 档案融合详情页 ImportDetail ========== */
+/* ========== 档案融合详情页 ImportDetail：撑满屏幕高度 ========== */
 .import-detail-page {
   max-width: var(--content-max-width);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  height: var(--content-available-height);
   min-height: var(--content-available-height);
+  overflow: hidden;
 }
 
 .import-detail-back,
@@ -425,14 +427,16 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .import-detail-content .ant-row {
   flex: 1;
   min-height: 0;
+  display: flex;
 }
 
-.import-detail-content .ant-col:first-child {
+.import-detail-content .ant-row .ant-col {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -464,13 +468,17 @@
 .import-detail-card-original .ant-card-body,
 .import-detail-card-results .ant-card-body {
   padding: 0;
-}
-
-.import-detail-card-original .ant-card-body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.import-detail-card-results {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .import-detail-original-body {
@@ -481,7 +489,7 @@
 }
 
 .import-detail-original-table {
-  font-size: 12px;
+  font-size: var(--font-caption);
 }
 
 .import-detail-original-onlyoffice {
@@ -512,7 +520,8 @@
 }
 
 .import-detail-results-body {
-  max-height: 560px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   padding: 16px;
 }
@@ -548,7 +557,7 @@
 .import-detail-result-checked {
   color: var(--accent-green);
   margin-top: var(--spacing-xs);
-  font-size: 16px;
+  font-size: var(--font-subtitle);
 }
 
 .import-detail-result-main {
@@ -557,7 +566,7 @@
 }
 
 .import-detail-result-title {
-  font-size: 14px;
+  font-size: var(--font-body);
   margin-right: 8px;
 }
 
@@ -582,7 +591,7 @@
 
 .import-detail-result-collapse .ant-collapse-header {
   padding: 8px 0;
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 /* 人物简历内：内容自上而下，照片在基本信息下面 */
@@ -613,7 +622,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 24px;
+  font-size: var(--font-title);
 }
 
 .import-detail-resume-content {

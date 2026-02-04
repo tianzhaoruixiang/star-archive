@@ -7,20 +7,45 @@
   box-sizing: border-box;
 }
 
+/* 根字号随视口缩放：窄屏 14px、宽屏 16px，整站 rem 字体自适应 */
 html {
   height: 100%;
+  font-family: var(--font-family);
+  font-size: clamp(14px, 1.2vw + 12px, 16px);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  font-family: var(--font-family);
-  font-size: var(--font-body);
+  font-family: inherit;
+  font-size: 1em;
   line-height: var(--line-height-body);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   color: var(--text-secondary);
   background: var(--page-bg-alt);
   min-height: 100vh;
   height: 100%;
+}
+
+/* 整站统一：Ant Design 组件继承设计变量中的字体与字号 */
+.ant-btn,
+.ant-input,
+.ant-select-selector,
+.ant-pagination-item,
+.ant-menu-item,
+.ant-table,
+.ant-modal-title,
+.ant-form-item-label {
+  font-family: var(--font-family);
+  font-size: var(--font-body);
+}
+
+.ant-card-head-title {
+  font-family: var(--font-family);
+  font-size: var(--font-section);
+}
+
+.ant-input::placeholder {
+  font-size: var(--font-body);
 }
 
 #root {

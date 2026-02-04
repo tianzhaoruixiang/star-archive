@@ -69,11 +69,11 @@ const ImportDetail: React.FC = () => {
   const [selectedResultIds, setSelectedResultIds] = useState<string[]>([]);
   const [batchTags, setBatchTags] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
-  /** 右侧提取结果分页：当前页数据、总数、当前页号、每页条数 */
+  /** 右侧提取结果分页：当前页数据、总数、当前页号、每页条数（默认 20，防止档案过多卡顿） */
   const [extractResultsPage, setExtractResultsPage] = useState<ArchiveExtractResultDTO[]>([]);
   const [extractResultsTotal, setExtractResultsTotal] = useState(0);
   const [extractPage, setExtractPage] = useState(0);
-  const EXTRACT_PAGE_SIZE = 20;
+  const [extractPageSize, setExtractPageSize] = useState(20);
   /** 导入档案可见性：公开=所有人可见，私有=仅创建人可见；仅系统管理员可选公开 */
   const [importAsPublic, setImportAsPublic] = useState<boolean>(false);
   /** 原始文档区 OnlyOffice 配置（页面加载时拉取，用于左侧对比阅读） */
@@ -140,15 +140,23 @@ const ImportDetail: React.FC = () => {
     setExtractPage(0);
   }, [taskId]);
 
-  /** 任务详情加载完成且状态为 SUCCESS 时加载第一页提取结果；切换页码时加载对应页 */
+  const handleExtractPaginationChange = useCallback((page: number, size: number) => {
+    setExtractPage(page - 1);
+    if (size !== extractPageSize) {
+      setExtractPageSize(size);
+      setExtractPage(0);
+    }
+  }, [extractPageSize]);
+
+  /** 任务详情加载完成且状态为 SUCCESS 时按页加载提取结果（默认分页，防止档案过多卡顿） */
   useEffect(() => {
     if (!taskId || !detail?.task || detail.task.status !== 'SUCCESS') {
       setExtractResultsPage([]);
       setExtractResultsTotal(0);
       return;
     }
-    loadExtractResultsPage(taskId, extractPage, EXTRACT_PAGE_SIZE);
-  }, [taskId, detail?.task?.status, extractPage, EXTRACT_PAGE_SIZE, loadExtractResultsPage]);
+    loadExtractResultsPage(taskId, extractPage, extractPageSize);
+  }, [taskId, detail?.task?.status, extractPage, extractPageSize, loadExtractResultsPage]);
 
   const isExtracting = detail?.task?.status === 'EXTRACTING' || detail?.task?.status === 'MATCHING';
 
@@ -250,14 +258,14 @@ const ImportDetail: React.FC = () => {
       message.success(res?.message ?? `已提交，共 ${totalQueued ?? unimportedCount} 条将后台导入`);
       setSelectedResultIds([]);
       loadDetail(detail.task.taskId);
-      loadExtractResultsPage(detail.task.taskId, extractPage, EXTRACT_PAGE_SIZE);
+      loadExtractResultsPage(detail.task.taskId, extractPage, extractPageSize);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } }; message?: string };
       message.error(err?.response?.data?.message ?? err?.message ?? '提交全部导入失败');
     } finally {
       setImporting(false);
     }
-  }, [detail?.task?.taskId, unimportedCount, batchTags, importAsPublic, isAdmin, loadDetail, loadExtractResultsPage, extractPage]);
+  }, [detail?.task?.taskId, unimportedCount, batchTags, importAsPublic, isAdmin, loadDetail, loadExtractResultsPage, extractPage, extractPageSize]);
 
   /** 从 rawJson 中取全部头像路径，生成头像代理 URL 列表（支持多头像展示） */
   const getExtractAvatarUrls = useCallback((rawJson: string | undefined): string[] => {
@@ -349,7 +357,7 @@ const ImportDetail: React.FC = () => {
                 <div className="import-detail-similar-title">库内相似档案</div>
                 <div className="import-detail-similar-list">
                   {r.similarPersons.map((p: PersonCardDTO) => (
-                    <PersonCard key={p.personId} person={p} clickable showActionLink={false} minWidth={280} maxWidth={320} />
+                    <PersonCard key={p.personId} person={p} clickable minWidth={280} maxWidth={320} />
                   ))}
                 </div>
               </div>
@@ -536,18 +544,17 @@ const ImportDetail: React.FC = () => {
                 {extractResultsPage.length > 0 ? (
                   <>
                     {extractResultsPage.map(renderExtractResult)}
-                    {extractResultsTotal > EXTRACT_PAGE_SIZE && (
-                      <div className="import-detail-results-pagination">
-                        <Pagination
-                          current={extractPage + 1}
-                          pageSize={EXTRACT_PAGE_SIZE}
-                          total={extractResultsTotal}
-                          showSizeChanger={false}
-                          showTotal={(total) => `共 ${total} 条`}
-                          onChange={(page) => setExtractPage(page - 1)}
-                        />
-                      </div>
-                    )}
+                    <div className="import-detail-results-pagination">
+                      <Pagination
+                        current={extractPage + 1}
+                        pageSize={extractPageSize}
+                        total={extractResultsTotal}
+                        showSizeChanger
+                        pageSizeOptions={[10, 20, 50]}
+                        showTotal={(total) => `共 ${total} 条`}
+                        onChange={handleExtractPaginationChange}
+                      />
+                    </div>
                   </>
                 ) : (
                   <Empty description="无提取结果" className="import-detail-empty" />

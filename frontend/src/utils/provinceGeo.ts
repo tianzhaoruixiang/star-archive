@@ -1,6 +1,6 @@
 /**
  * 省份名称 -> 行政区划 adcode（六位），用于加载省份 GeoJSON 地图
- * 优先从 /geo/{adcode}.json 离线加载，失败则从 DataV CDN 加载
+ * 仅从本地 /geo/{adcode}.json 加载，支持离线展示（不访问在线数据）
  */
 export const PROVINCE_ADCODE: Record<string, string> = {
   北京市: '110000',
@@ -111,8 +111,6 @@ export const PROVINCE_CENTER: Record<string, [number, number]> = {
   澳门: [113.55, 22.19], 澳门特别行政区: [113.55, 22.19],
 };
 
-const DATAV_CDN = 'https://geo.datav.aliyun.com/areas_v3/bound';
-
 /**
  * 获取省份 adcode，未找到返回空字符串
  */
@@ -130,15 +128,12 @@ export function getProvinceCenter(provinceName: string): [number, number] | unde
 }
 
 /**
- * 优先从本地 /geo/{adcode}.json 加载（离线），失败则从 DataV CDN 加载
+ * 从本地 /geo/{adcode}.json 加载省份 GeoJSON，仅支持离线（不访问在线数据）
  */
 export function fetchProvinceGeoJson(adcode: string): Promise<unknown> {
-  const offlineUrl = `/geo/${adcode}.json`;
-  const cdnUrl = `${DATAV_CDN}/${adcode}_full.json`;
-  return fetch(offlineUrl)
-    .then((res) => {
-      if (res.ok) return res.json();
-      throw new Error('offline not found');
-    })
-    .catch(() => fetch(cdnUrl).then((res) => res.json()));
+  const url = `/littlesmall/geo/${adcode}.json`;
+  return fetch(url).then((res) => {
+    if (!res.ok) throw new Error(`geo not found: ${adcode}`);
+    return res.json();
+  });
 }

@@ -234,6 +234,12 @@
   margin-top: 16px;
 }
 
+.system-config-default-prompt.ant-input {
+  background: var(--page-bg-alt);
+  cursor: default;
+  color: var(--text-secondary);
+}
+
 /* 用户管理卡片 */
 .system-config-users-card {
   margin-top: 16px;
@@ -255,7 +261,7 @@
 }
 
 .system-config-users-card .ant-table {
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 /* 表格在卡片内使用 common 的 ant-table 覆盖，此处补充分页等 */

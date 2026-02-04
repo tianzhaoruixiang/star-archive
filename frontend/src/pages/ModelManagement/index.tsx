@@ -66,8 +66,6 @@ const ModelManagement: React.FC = () => {
           name: values.name?.trim(),
           description: values.description?.trim() || undefined,
           ruleConfig: values.ruleConfig?.trim() || undefined,
-          accuracy: values.accuracy?.trim() || undefined,
-          lockedCount: values.lockedCount != null ? Number(values.lockedCount) : undefined,
         })
         .then((res) => {
           unwrap<PredictionModelDTO>(res);
@@ -85,8 +83,6 @@ const ModelManagement: React.FC = () => {
       name: model.name,
       description: model.description ?? '',
       ruleConfig: model.ruleConfig ?? '',
-      accuracy: model.accuracy ?? '',
-      lockedCount: model.lockedCount ?? 0,
     });
     setEditVisible(true);
   };
@@ -99,8 +95,6 @@ const ModelManagement: React.FC = () => {
           name: values.name?.trim(),
           description: values.description?.trim() || undefined,
           ruleConfig: values.ruleConfig?.trim() || undefined,
-          accuracy: values.accuracy?.trim() || undefined,
-          lockedCount: values.lockedCount != null ? Number(values.lockedCount) : undefined,
         })
         .then(() => {
           message.success('保存成功');
@@ -125,11 +119,15 @@ const ModelManagement: React.FC = () => {
     setLockedTotal(0);
   }, []);
 
+  /** 有语义规则时优先走实时 Text2Sql 命中，否则走锁定人员列表 */
   const fetchLockedPersons = useCallback(() => {
     if (!lockedModalModel) return;
     setLockedLoading(true);
-    modelAPI
-      .getLockedPersons(lockedModalModel.modelId, lockedPage, lockedSize)
+    const hasRule = (lockedModalModel.ruleConfig?.trim()?.length ?? 0) > 0;
+    const api = hasRule
+      ? modelAPI.getSemanticHit(lockedModalModel.modelId, lockedPage, lockedSize)
+      : modelAPI.getLockedPersons(lockedModalModel.modelId, lockedPage, lockedSize);
+    api
       .then((res: unknown) => {
         const raw = res != null && typeof res === 'object' && 'data' in res ? (res as { data?: unknown }).data : res;
         const data = raw && typeof raw === 'object' && raw !== null ? raw as { content?: unknown[]; totalElements?: number } : null;
@@ -137,8 +135,19 @@ const ModelManagement: React.FC = () => {
         setLockedTotal(typeof data?.totalElements === 'number' ? data.totalElements : 0);
       })
       .catch(() => {
-        setLockedList([]);
-        setLockedTotal(0);
+        if (hasRule) {
+          modelAPI.getLockedPersons(lockedModalModel.modelId, lockedPage, lockedSize)
+            .then((res: unknown) => {
+              const raw = res != null && typeof res === 'object' && 'data' in res ? (res as { data?: unknown }).data : res;
+              const data = raw && typeof raw === 'object' && raw !== null ? raw as { content?: unknown[]; totalElements?: number } : null;
+              setLockedList(Array.isArray(data?.content) ? (data.content as PersonCardData[]) : []);
+              setLockedTotal(typeof data?.totalElements === 'number' ? data.totalElements : 0);
+            })
+            .catch(() => { setLockedList([]); setLockedTotal(0); });
+        } else {
+          setLockedList([]);
+          setLockedTotal(0);
+        }
       })
       .finally(() => setLockedLoading(false));
   }, [lockedModalModel, lockedPage, lockedSize]);
@@ -205,8 +214,12 @@ const ModelManagement: React.FC = () => {
 
   return (
     <div className="page-wrapper model-management-page">
+      <div className="page-header">
+        <h1 className="page-header-title">模型管理</h1>
+        <p className="page-header-desc">工作区 · 模型管理</p>
+      </div>
       <p className="model-management-desc">
-        工作区模型管理，通过建模的方式锁定关键人群，创建和管理预测模型。模型的规则为语义规则（自然语言），启动后将根据语义规则自动调用大模型匹配人物档案，锁定人数将更新。
+        通过建模的方式锁定关键人群，创建和管理预测模型。模型的规则为语义规则（自然语言），启动后将根据语义规则自动调用大模型匹配人物档案，锁定人数将更新。
       </p>
 
       {loading ? (
@@ -234,15 +247,9 @@ const ModelManagement: React.FC = () => {
                     </p>
                     <div className="model-management-card-metrics">
                       <div className="model-management-card-metric">
-                        <span className="model-management-card-metric-label">锁定人数:</span>
+                        <span className="model-management-card-metric-label">命中人数:</span>
                         <span className="model-management-card-metric-value">
-                          {model.lockedCount ?? 0}
-                        </span>
-                      </div>
-                      <div className="model-management-card-metric">
-                        <span className="model-management-card-metric-label">准确率:</span>
-                        <span className="model-management-card-metric-value">
-                          {model.accuracy ?? '-'}
+                          {(model.ruleConfig?.trim()?.length ?? 0) > 0 ? '实时查询' : (model.lockedCount ?? 0)}
                         </span>
                       </div>
                       <div className="model-management-card-metric">
@@ -253,7 +260,7 @@ const ModelManagement: React.FC = () => {
                       </div>
                     </div>
                     <div className="model-management-card-actions">
-                      {(model.lockedCount ?? 0) > 0 && (
+                      {(model.ruleConfig?.trim()?.length ?? 0) > 0 && (
                         <Button
                           type="primary"
                           size="small"
@@ -360,12 +367,6 @@ const ModelManagement: React.FC = () => {
               rows={4}
             />
           </Form.Item>
-          <Form.Item name="accuracy" label="准确率">
-            <Input placeholder="例如：92.5%" maxLength={50} />
-          </Form.Item>
-          <Form.Item name="lockedCount" label="锁定人数" initialValue={0}>
-            <Input type="number" min={0} placeholder="0" />
-          </Form.Item>
         </Form>
       </Modal>
 
@@ -392,12 +393,6 @@ const ModelManagement: React.FC = () => {
               placeholder="例如：满足年龄大于20岁，并且具有高消费标签的所有人群"
               rows={4}
             />
-          </Form.Item>
-          <Form.Item name="accuracy" label="准确率">
-            <Input placeholder="例如：92.5%" maxLength={50} />
-          </Form.Item>
-          <Form.Item name="lockedCount" label="锁定人数">
-            <Input type="number" min={0} placeholder="0" />
           </Form.Item>
         </Form>
       </Modal>
@@ -450,7 +445,7 @@ const ModelManagement: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 查看命中人员弹窗 */}
+      {/* 查看命中人员弹窗（有语义规则时实时 Text2Sql 查询，支持刷新） */}
       <Modal
         title={`命中人员 - ${lockedModalModel?.name ?? ''}（共 ${lockedTotal} 人）`}
         open={!!lockedModalModel}
@@ -459,6 +454,19 @@ const ModelManagement: React.FC = () => {
         width={900}
         destroyOnClose
       >
+        {lockedModalModel && (
+          <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              type="default"
+              size="small"
+              icon={<SyncOutlined />}
+              loading={lockedLoading}
+              onClick={() => fetchLockedPersons()}
+            >
+              刷新
+            </Button>
+          </div>
+        )}
         {lockedLoading ? (
           <div className="model-management-loading" style={{ minHeight: 200 }}>
             <PageCardGridSkeleton title={false} count={6} />
@@ -470,7 +478,7 @@ const ModelManagement: React.FC = () => {
             <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
               {lockedList.map((person) => (
                 <Col xs={24} sm={12} md={8} key={person.personId}>
-                  <PersonCard person={person} clickable showActionLink showRemove={false} />
+                  <PersonCard person={person} clickable showRemove={false} />
                 </Col>
               ))}
             </Row>

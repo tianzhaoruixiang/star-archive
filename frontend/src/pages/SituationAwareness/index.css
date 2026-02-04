@@ -17,27 +17,7 @@
   overflow: hidden;
 }
 
-/* ========== 新闻列表页 ========== */
-.news-page-header {
-  margin-bottom: var(--spacing-xl);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--card-border);
-}
-
-.news-page-title {
-  font-size: var(--font-section);
-  font-weight: var(--font-weight-title);
-  color: var(--text-primary);
-  margin: 0 0 4px 0;
-  line-height: var(--line-height-tight);
-}
-
-.news-page-desc {
-  font-size: var(--font-body);
-  color: var(--text-muted);
-  margin: 0;
-  line-height: var(--line-height-body);
-}
+/* ========== 新闻列表页（标题区使用 common.css 的 .page-header / .page-header-title / .page-header-desc） ========== */
 
 /* 新闻分类 Tab：政治、经济、文化、社会民生 */
 .news-category-tabs.ant-tabs {
@@ -51,7 +31,7 @@
 .news-category-tabs .ant-tabs-tab {
   color: var(--text-placeholder);
   padding: 6px 14px;
-  font-size: 14px;
+  font-size: var(--font-body);
 }
 
 .news-category-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
@@ -143,7 +123,7 @@
 
 .news-list-card-title {
   margin: 0 0 8px 0;
-  font-size: 17px;
+  font-size: var(--font-subtitle);
   font-weight: 600;
   line-height: 1.4;
 }
@@ -193,7 +173,7 @@
 
 .news-list-card-icon {
   flex-shrink: 0;
-  font-size: 18px;
+  font-size: var(--font-section);
   color: var(--text-placeholder);
 }
 

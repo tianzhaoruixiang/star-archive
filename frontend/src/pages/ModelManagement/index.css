@@ -41,7 +41,7 @@
 }
 
 .model-management-subnav-icon {
-  font-size: 16px;
+  font-size: var(--font-subtitle);
 }
 
 /* 标题与描述 */
@@ -73,7 +73,7 @@
   border: 1px solid var(--input-border);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-aux);
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-all;
@@ -236,7 +236,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: var(--font-section);
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }

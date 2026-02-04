@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Card, Row, Col, Tag, Pagination, Empty, Input } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { SearchOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchPersonList, fetchTags, fetchPersonListByTags } from '@/store/slices/personSlice';
+import { fetchPersonList, fetchTags } from '@/store/slices/personSlice';
 import PersonCard, { type PersonCardData } from '@/components/PersonCard';
 import { PageCardGridSkeleton, InlineSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
@@ -36,28 +36,31 @@ const PersonList = () => {
   const { list, pagination, loading, tags, tagsLoading } = useAppSelector((state) => state.person);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [filterCollapsed, setFilterCollapsed] = useState(false);
 
   useEffect(() => {
     dispatch(fetchTags());
   }, [dispatch]);
 
+  /** 标签 + 姓名/证件号检索统一走 GET /persons，支持同时选标签和输入关键词 */
+  const listFilter = useMemo(
+    () => ({
+      ...(selectedTags.length > 0 && { tags: selectedTags }),
+      ...(searchKeyword.trim() !== '' && { keyword: searchKeyword.trim() }),
+      matchAny: true,
+    }),
+    [selectedTags, searchKeyword]
+  );
+
   useEffect(() => {
-    if (selectedTags.length > 0) {
-      dispatch(fetchPersonListByTags({ tags: selectedTags, page: 0, size: 20 }));
-    } else {
-      dispatch(fetchPersonList({ page: 0, size: 20 }));
-    }
-  }, [dispatch, selectedTags]);
+    dispatch(fetchPersonList({ page: 0, size: 20, filter: listFilter }));
+  }, [dispatch, listFilter]);
 
   const handlePageChange = useCallback(
     (page: number, size: number) => {
-      if (selectedTags.length > 0) {
-        dispatch(fetchPersonListByTags({ tags: selectedTags, page: page - 1, size }));
-      } else {
-        dispatch(fetchPersonList({ page: page - 1, size }));
-      }
+      dispatch(fetchPersonList({ page: page - 1, size, filter: listFilter }));
     },
-    [dispatch, selectedTags]
+    [dispatch, listFilter]
   );
 
   const handleTagClick = useCallback((tagName: string) => {
@@ -76,17 +79,7 @@ const PersonList = () => {
 
   const tagTree = useMemo(() => buildTagTree((tags || []) as TagItem[]), [tags]);
 
-  const filteredList = useMemo(() => {
-    const safeList = Array.isArray(list) ? list : [];
-    if (!searchKeyword.trim()) return safeList;
-    const kw = searchKeyword.trim().toLowerCase();
-    return (safeList as { chineseName?: string; originalName?: string; idCardNumber?: string; personId?: string }[]).filter(
-        (p) =>
-        (p.chineseName && p.chineseName.toLowerCase().includes(kw)) ||
-        (p.originalName && p.originalName.toLowerCase().includes(kw)) ||
-        (p.idCardNumber && p.idCardNumber.includes(kw))
-    );
-  }, [list, searchKeyword]);
+  const displayList = useMemo(() => (Array.isArray(list) ? list : []) as PersonCardData[], [list]);
 
   const safePagination = useMemo(
     () => ({
@@ -100,7 +93,11 @@ const PersonList = () => {
   return (
     <div className="page-wrapper person-list-page">
       <div className="person-list-card">
-      {/* 顶部：标题 + 搜索 + 右侧图标 */}
+      <div className="page-header">
+        <h1 className="page-header-title">人员档案</h1>
+        <p className="page-header-desc">人员档案 · 列表与筛选</p>
+      </div>
+      {/* 顶部：搜索 + 右侧图标 */}
       <div className="person-list-top">
         <div className="person-list-top-right">
           <Input
@@ -114,51 +111,66 @@ const PersonList = () => {
         </div>
       </div>
 
-      {/* 筛选标签：一级分类 -> 二级分类可点击 -> 点击后展示三级标签 */}
-      <div className="person-list-filter">
-        <div className="person-list-filter-title">筛选标签</div>
-        {tagsLoading ? (
-          <div className="person-list-filter-loading">
-            <InlineSkeleton lines={4} />
-          </div>
-        ) : (
-        <>
-        {Object.entries(tagTree).map(([firstLevelName, secondMap]) => (
-          <div key={firstLevelName} className="person-list-filter-block">
-            <div className="person-list-filter-category">
-              <span className="person-list-filter-bar" />
-              <span className="person-list-filter-category-label">{firstLevelName}</span>
-            </div>
-            <div className="person-list-filter-seconds-col">
-              {Object.entries(secondMap).map(([secondLevelName, items]) => {
-                const secondKey = `${firstLevelName}-${secondLevelName}`;
-                const displaySecondName = secondLevelName || '其他';
-                return (
-                  <div key={secondKey} className="person-list-filter-second-row">
-                    <div className="person-list-filter-second">
-                      <span className="person-list-filter-second-label">{displaySecondName}</span>
+      {/* 筛选标签：可收起；一级 -> 二级 -> 三级标签，风格统一 */}
+      <div className={`person-list-filter ${filterCollapsed ? 'person-list-filter-collapsed' : ''}`}>
+        <div
+          className="person-list-filter-header"
+          onClick={() => setFilterCollapsed((c) => !c)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setFilterCollapsed((c) => !c)}
+        >
+          <span className="person-list-filter-title">筛选标签</span>
+          <span className="person-list-filter-toggle">
+            {filterCollapsed ? <DownOutlined /> : <UpOutlined />}
+          </span>
+        </div>
+        {!filterCollapsed && (
+          <>
+            {tagsLoading ? (
+              <div className="person-list-filter-loading">
+                <InlineSkeleton lines={4} />
+              </div>
+            ) : (
+              <>
+                {Object.entries(tagTree).map(([firstLevelName, secondMap]) => (
+                  <div key={firstLevelName} className="person-list-filter-block">
+                    <div className="person-list-filter-category">
+                      <span className="person-list-filter-bar" />
+                      <span className="person-list-filter-category-label">{firstLevelName}</span>
                     </div>
-                    <div className="person-list-filter-tags person-list-filter-tags-third">
-                      {items.map((t) => (
-                        <Tag
-                          key={t.tagId}
-                          className={`person-list-tag ${selectedTags.includes(t.tagName) ? 'person-list-tag-selected' : ''}`}
-                          onClick={() => handleTagClick(t.tagName)}
-                        >
-                          {t.tagName}
-                          {t.personCount != null && (
-                            <span className="person-list-tag-count">({t.personCount})</span>
-                          )}
-                        </Tag>
-                      ))}
+                    <div className="person-list-filter-seconds-col">
+                      {Object.entries(secondMap).map(([secondLevelName, items]) => {
+                        const secondKey = `${firstLevelName}-${secondLevelName}`;
+                        const displaySecondName = secondLevelName || '其他';
+                        return (
+                          <div key={secondKey} className="person-list-filter-second-row">
+                            <div className="person-list-filter-second">
+                              <span className="person-list-filter-second-label">{displaySecondName}</span>
+                            </div>
+                            <div className="person-list-filter-tags person-list-filter-tags-third">
+                              {items.map((t) => (
+                                <Tag
+                                  key={t.tagId}
+                                  className={`person-list-tag person-list-tag-third ${selectedTags.includes(t.tagName) ? 'person-list-tag-selected' : ''}`}
+                                  onClick={() => handleTagClick(t.tagName)}
+                                >
+                                  {t.tagName}
+                                  {t.personCount != null && (
+                                    <span className="person-list-tag-count">({t.personCount})</span>
+                                  )}
+                                </Tag>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-        </>
+                ))}
+              </>
+            )}
+          </>
         )}
       </div>
 
@@ -196,38 +208,35 @@ const PersonList = () => {
         <div className="person-list-loading">
           <PageCardGridSkeleton title={false} count={8} />
         </div>
-      ) : filteredList.length === 0 ? (
+      ) : displayList.length === 0 ? (
         <Card className="person-list-result-card">
           <Empty description={searchKeyword ? '未找到匹配人员' : '暂无人员数据'} />
         </Card>
       ) : (
         <>
           <Row gutter={[16, 16]} className="person-list-grid">
-            {filteredList.map((person: PersonCardData) => (
+            {displayList.map((person: PersonCardData) => (
               <Col xs={24} sm={12} md={8} lg={6} className="person-list-col-five" key={person.personId}>
                 <PersonCard
                   person={person}
-                  showActionLink
-                  actionLinkText="查看详情"
+                  clickable
                 />
               </Col>
             ))}
           </Row>
 
-          {!searchKeyword && (
-            <div className="page-pagination person-list-pagination">
-              <Pagination
-                current={safePagination.page + 1}
-                pageSize={safePagination.size}
-                total={safePagination.total}
-                onChange={handlePageChange}
-                showSizeChanger
-                showQuickJumper
-                showTotal={(total) => `共 ${total} 条`}
-                className="person-list-pagination-inner"
-              />
-            </div>
-          )}
+          <div className="page-pagination person-list-pagination">
+            <Pagination
+              current={safePagination.page + 1}
+              pageSize={safePagination.size}
+              total={safePagination.total}
+              onChange={handlePageChange}
+              showSizeChanger
+              showQuickJumper
+              showTotal={(total) => `共 ${total} 条`}
+              className="person-list-pagination-inner"
+            />
+          </div>
         </>
       )}
       </div>

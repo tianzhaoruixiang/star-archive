@@ -100,7 +100,7 @@
   padding: 8px 16px;
   background: var(--primary);
   color: #fff;
-  font-size: 14px;
+  font-size: var(--font-body);
   font-weight: 700;
   letter-spacing: 2px;
   transform: rotate(-12deg);
@@ -113,7 +113,7 @@
 
 .person-detail-resume-name {
   margin: 0 0 6px 0;
-  font-size: 28px;
+  font-size: var(--font-display);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 1px;
@@ -232,7 +232,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: var(--font-body);
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 10px;
@@ -241,12 +241,12 @@
 }
 
 .person-detail-resume-block-title .anticon {
-  font-size: 16px;
+  font-size: var(--font-subtitle);
 }
 
 .person-detail-resume-remark {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-muted);
   line-height: 1.6;
 }
@@ -259,7 +259,7 @@
 
 .person-detail-resume-tag {
   margin: 0 !important;
-  font-size: 12px !important;
+  font-size: var(--font-caption) !important;
   border-radius: 4px !important;
   background: var(--input-bg) !important;
   border: 1px solid var(--input-border) !important;
@@ -302,12 +302,12 @@
 }
 
 .person-detail-resume-info-item .info-label {
-  font-size: 12px;
+  font-size: var(--font-caption);
   color: var(--text-placeholder);
 }
 
 .person-detail-resume-info-item .info-value {
-  font-size: 14px;
+  font-size: var(--font-body);
   color: var(--text-secondary);
   word-break: break-all;
 }
@@ -331,13 +331,13 @@
 
 .person-detail-resume-social-label {
   flex: 0 0 90px;
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-placeholder);
 }
 
 .person-detail-resume-social-value {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--font-body);
   color: var(--text-secondary);
   word-break: break-all;
 }
@@ -357,20 +357,20 @@
 }
 
 .person-detail-resume-exp-time {
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-muted);
   margin-bottom: 4px;
 }
 
 .person-detail-resume-exp-org {
-  font-size: 15px;
+  font-size: var(--font-body-lg);
   font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .person-detail-resume-exp-role {
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-muted);
 }
 
@@ -379,7 +379,7 @@
   display: flex;
   gap: 12px;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 .person-detail-resume-exp-full .person-detail-resume-exp-row:last-child {
   margin-bottom: 0;
@@ -398,7 +398,7 @@
 }
 
 .person-detail-resume-empty {
-  font-size: 13px;
+  font-size: var(--font-aux);
   color: var(--text-placeholder);
   padding: 16px 0;
 }
@@ -408,7 +408,7 @@
   padding: 12px;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--font-caption);
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--text-muted);
@@ -439,7 +439,7 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 .person-detail-history-time {
@@ -454,7 +454,7 @@
 .person-detail-history-changes {
   margin: 0;
   padding-left: 20px;
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 .person-detail-history-changes li {
@@ -519,7 +519,7 @@
 
 .person-detail-resume-extra-card .ant-card-head-title {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-body);
 }
 
 .person-detail-travel-list,
@@ -527,7 +527,7 @@
   margin: 0;
   padding-left: 20px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--font-aux);
 }
 
 .person-detail-travel-list li,
@@ -538,7 +538,7 @@
 .person-detail-travel-list .time,
 .person-detail-social-list .time {
   display: block;
-  font-size: 12px;
+  font-size: var(--font-caption);
   color: var(--text-placeholder);
   margin-top: 4px;
 }
@@ -588,7 +588,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: var(--font-section);
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }

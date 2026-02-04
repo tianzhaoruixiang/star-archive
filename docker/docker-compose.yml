@@ -39,7 +39,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2G # 限制容器总内存为 8GB
+          memory: 3G # 限制容器总内存为 8GB
     hostname: be
     networks:
       archive-network:

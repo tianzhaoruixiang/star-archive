@@ -66,11 +66,11 @@ public class PersonService {
      * 分页查询人员列表（无可见性过滤，供内部/统计使用）
      */
     public PageResponse<PersonCardDTO> getPersonList(int page, int size) {
-        return getPersonListFiltered(page, size, null, null, null, null, null, null, null, null);
+        return getPersonListFiltered(page, size, null, null, null, null, null, null, null, null, null, false, null);
     }
 
     /**
-     * 分页查询人员列表（支持按重点人员/机构/签证类型/所属群体/目的地省份筛选；按可见性过滤：公开档案或当前用户为创建人）
+     * 分页查询人员列表（支持按重点人员/机构/签证类型/所属群体/目的地省份筛选；支持标签 + 姓名/证件号检索；按可见性过滤：公开档案或当前用户为创建人）
      *
      * @param currentUser 当前登录用户名，为空时仅返回公开档案
      */
@@ -78,11 +78,25 @@ public class PersonService {
             int page, int size,
             Boolean isKeyPerson, String organization, String visaType, String belongingGroup,
             String departureProvince, String destinationProvince, String destinationCity,
+            List<String> tags, String keyword, boolean matchAny,
             String currentUser) {
-        // JPQL 使用实体属性名 updatedTime；原生 SQL 使用数据库列名 updated_time
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedTime"));
         Pageable pageableNativeSort = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updated_time"));
         String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
+
+        if (tags != null && !tags.isEmpty()) {
+            return getPersonListByTags(tags, page, size, matchAny, keyword, user);
+        }
+        boolean noOtherFilters = isKeyPerson == null && (organization == null || organization.isBlank())
+                && (visaType == null || visaType.isBlank()) && (belongingGroup == null || belongingGroup.isBlank())
+                && departureProvince == null && (destinationProvince == null || destinationProvince.isBlank())
+                && (destinationCity == null || destinationCity.isBlank());
+        if ((keyword != null && !keyword.isBlank()) && noOtherFilters) {
+            log.info("按姓名/证件号检索人员列表: keyword={}, page={}, size={}", keyword, page, size);
+            Page<Person> personPage = personRepository.findVisibleByKeyword(keyword.trim(), pageable, user);
+            List<PersonCardDTO> cards = personPage.getContent().stream().map(this::convertToCardDTO).collect(Collectors.toList());
+            return PageResponse.of(cards, page, size, personPage.getTotalElements());
+        }
 
         if (destinationProvince != null && !destinationProvince.isBlank()) {
             String province = destinationProvince.trim();
@@ -167,7 +181,7 @@ public class PersonService {
      * 根据单个标签查询人员（按可见性过滤）
      */
     public PageResponse<PersonCardDTO> getPersonListByTag(String tag, int page, int size, String currentUser) {
-        return getPersonListByTags(List.of(tag), page, size, false, currentUser);
+        return getPersonListByTags(List.of(tag), page, size, false, null, currentUser);
     }
 
     /**
@@ -177,20 +191,23 @@ public class PersonService {
      *
      * @param currentUser 当前登录用户名，为空时仅返回公开档案
      */
-    public PageResponse<PersonCardDTO> getPersonListByTags(List<String> tags, int page, int size, boolean matchAny, String currentUser) {
-        log.info("根据标签查询人员: tags={}, page={}, size={}, matchAny={}", tags, page, size, matchAny);
+    public PageResponse<PersonCardDTO> getPersonListByTags(List<String> tags, int page, int size, boolean matchAny, String keyword, String currentUser) {
+        log.info("根据标签查询人员: tags={}, page={}, size={}, matchAny={}, keyword={}", tags, page, size, matchAny, keyword);
         String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
 
         if (tags == null || tags.isEmpty()) {
-            return getPersonListFiltered(page, size, null, null, null, null, null, null, null, user);
+            return getPersonListFiltered(page, size, null, null, null, null, null, null, null, null, keyword, false, user);
         }
 
         TagFilterSpec spec = matchAny ? buildTagFilterSpecOr(tags) : buildTagFilterSpec(tags);
         String visibilityCondition = " (is_public = 1 OR (created_by = :currentUser AND :currentUser IS NOT NULL)) ";
         String notDeletedCondition = " AND (deleted = 0 OR deleted IS NULL) ";
-        String whereClause = "(" + spec.tagCondition + ") AND " + visibilityCondition + notDeletedCondition;
+        String keywordCondition = (keyword != null && !keyword.isBlank())
+                ? " AND (chinese_name LIKE :keywordPattern OR original_name LIKE :keywordPattern OR id_number LIKE :keywordPattern OR id_card_number LIKE :keywordPattern) "
+                : "";
+        String whereClause = "(" + spec.tagCondition + ") AND " + visibilityCondition + notDeletedCondition + keywordCondition;
         String orderBy = " ORDER BY updated_time DESC";
-        long total = countByTagSpec(spec, user);
+        long total = countByTagSpec(spec, user, keyword);
         int offset = page * size;
 
         Query dataQuery = entityManager.createNativeQuery(
@@ -201,6 +218,9 @@ public class PersonService {
             dataQuery.setParameter("tag" + i, spec.orderedTagNames.get(i));
         }
         dataQuery.setParameter("currentUser", user);
+        if (keyword != null && !keyword.isBlank()) {
+            dataQuery.setParameter("keywordPattern", "%" + keyword.trim() + "%");
+        }
         dataQuery.setFirstResult(offset);
         dataQuery.setMaxResults(size);
 
@@ -260,16 +280,22 @@ public class PersonService {
         return new TagFilterSpec(tagCondition, orderedTagNames);
     }
 
-    private long countByTagSpec(TagFilterSpec spec, String currentUser) {
+    private long countByTagSpec(TagFilterSpec spec, String currentUser, String keyword) {
         String visibilityCondition = " (is_public = 1 OR (created_by = :currentUser AND :currentUser IS NOT NULL)) ";
         String notDeletedCondition = " AND (deleted = 0 OR deleted IS NULL) ";
+        String keywordCondition = (keyword != null && !keyword.isBlank())
+                ? " AND (chinese_name LIKE :keywordPattern OR original_name LIKE :keywordPattern OR id_number LIKE :keywordPattern OR id_card_number LIKE :keywordPattern) "
+                : "";
         Query countQuery = entityManager.createNativeQuery(
-                "SELECT COUNT(*) FROM person WHERE (" + spec.tagCondition + ") AND " + visibilityCondition + notDeletedCondition
+                "SELECT COUNT(*) FROM person WHERE (" + spec.tagCondition + ") AND " + visibilityCondition + notDeletedCondition + keywordCondition
         );
         for (int i = 0; i < spec.orderedTagNames.size(); i++) {
             countQuery.setParameter("tag" + i, spec.orderedTagNames.get(i));
         }
         countQuery.setParameter("currentUser", currentUser);
+        if (keyword != null && !keyword.isBlank()) {
+            countQuery.setParameter("keywordPattern", "%" + keyword.trim() + "%");
+        }
         return ((Number) countQuery.getSingleResult()).longValue();
     }
 

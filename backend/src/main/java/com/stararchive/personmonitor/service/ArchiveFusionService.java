@@ -1,6 +1,9 @@
 package com.stararchive.personmonitor.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.stararchive.personmonitor.common.PageResponse;
 import com.stararchive.personmonitor.dto.*;
 import com.stararchive.personmonitor.entity.*;
@@ -388,9 +391,11 @@ public class ArchiveFusionService {
     }
 
     /**
-     * 人工确认后导入：将选中的提取结果写入 person 表；batchTags 不为空时为本批每个人物追加这些标签。
+     * 人工确认后导入：将选中的提取结果与库中档案合并后写入 person 表。
+     * 入库前先根据相似匹配查询库中已有档案，若有则与新增档案合并（单值以有值为主，多值合并去重），不覆盖已有有效属性；若无则新建人物。
+     * batchTags 不为空时为本批每个人物追加这些标签。
      *
-     * @param importAsPublic true=导入为公开档案（所有人可见），false=导入为私有档案（仅创建人可见）
+     * @param importAsPublic true=导入为公开档案（所有人可见），false=导入为私有档案（仅创建人可见）；合并到已有档案时不修改其公开性。
      */
     @Transactional(rollbackFor = Exception.class)
     public List<String> confirmImport(String taskId, List<String> resultIds, List<String> batchTags, boolean importAsPublic) {
@@ -413,19 +418,44 @@ public class ArchiveFusionService {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> map = objectMapper.readValue(result.getRawJson(), Map.class);
-                Person person = mapFromRawJsonToPerson(map);
-                if (person == null) continue;
-                if (!tagsToAdd.isEmpty()) {
-                    List<String> existing = person.getPersonTags() != null ? new ArrayList<>(person.getPersonTags()) : new ArrayList<>();
-                    java.util.Set<String> set = new java.util.LinkedHashSet<>(existing);
-                    set.addAll(tagsToAdd);
-                    person.setPersonTags(new ArrayList<>(set));
+                Person incoming = mapFromRawJsonToPerson(map);
+                if (incoming == null) continue;
+
+                // 先查库中相似档案：有则合并，无则新建
+                List<ArchiveSimilarMatch> matches = similarMatchRepository.findByResultId(resultId);
+                Person existing = null;
+                if (matches != null && !matches.isEmpty()) {
+                    String existingPersonId = matches.get(0).getPersonId();
+                    existing = personRepository.findById(existingPersonId).orElse(null);
                 }
-                person.setIsPublic(importAsPublic);
-                person.setCreatedBy(creatorUsername);
-                person.setCreatedTime(now);
-                person.setUpdatedTime(now);
-                personRepository.save(person);
+
+                Person person;
+                if (existing != null) {
+                    // 合并：单值以有值为主，多值合并去重；不覆盖已有档案的 personId/createdBy/createdTime/公开性等
+                    mergePersonData(existing, incoming);
+                    if (!tagsToAdd.isEmpty()) {
+                        List<String> merged = mergeAndDedupe(existing.getPersonTags(), tagsToAdd);
+                        existing.setPersonTags(merged);
+                    }
+                    existing.setUpdatedTime(now);
+                    personRepository.save(existing);
+                    person = existing;
+                } else {
+                    // 无相似档案，新建
+                    if (!tagsToAdd.isEmpty()) {
+                        List<String> existingTags = incoming.getPersonTags() != null ? new ArrayList<>(incoming.getPersonTags()) : new ArrayList<>();
+                        java.util.Set<String> set = new java.util.LinkedHashSet<>(existingTags);
+                        set.addAll(tagsToAdd);
+                        incoming.setPersonTags(new ArrayList<>(set));
+                    }
+                    incoming.setIsPublic(importAsPublic);
+                    incoming.setCreatedBy(creatorUsername);
+                    incoming.setCreatedTime(now);
+                    incoming.setUpdatedTime(now);
+                    personRepository.save(incoming);
+                    person = incoming;
+                }
+
                 result.setConfirmed(true);
                 result.setImported(true);
                 result.setImportedPersonId(person.getPersonId());
@@ -436,6 +466,122 @@ public class ArchiveFusionService {
             }
         }
         return importedPersonIds;
+    }
+
+    /**
+     * 合并规则：单值属性以有值的为主（保留已有非空值），多值属性合并后去重。
+     * 不修改 existing 的 personId、createdBy、createdTime、deleted、deletedTime、deletedBy、isPublic。
+     */
+    private void mergePersonData(Person existing, Person incoming) {
+        existing.setChineseName(preferNonEmpty(existing.getChineseName(), incoming.getChineseName()));
+        existing.setOriginalName(preferNonEmpty(existing.getOriginalName(), incoming.getOriginalName()));
+        existing.setOrganization(preferNonEmpty(existing.getOrganization(), incoming.getOrganization()));
+        existing.setBelongingGroup(preferNonEmpty(existing.getBelongingGroup(), incoming.getBelongingGroup()));
+        existing.setGender(preferNonEmpty(existing.getGender(), incoming.getGender()));
+        existing.setMaritalStatus(preferNonEmpty(existing.getMaritalStatus(), incoming.getMaritalStatus()));
+        existing.setIdNumber(preferNonEmpty(existing.getIdNumber(), incoming.getIdNumber()));
+        existing.setBirthDate(preferNonEmpty(existing.getBirthDate(), incoming.getBirthDate()));
+        existing.setNationality(preferNonEmpty(existing.getNationality(), incoming.getNationality()));
+        existing.setNationalityCode(preferNonEmpty(existing.getNationalityCode(), incoming.getNationalityCode()));
+        existing.setHouseholdAddress(preferNonEmpty(existing.getHouseholdAddress(), incoming.getHouseholdAddress()));
+        existing.setHighestEducation(preferNonEmpty(existing.getHighestEducation(), incoming.getHighestEducation()));
+        existing.setIdCardNumber(preferNonEmpty(existing.getIdCardNumber(), incoming.getIdCardNumber()));
+        existing.setPassportNumber(preferNonEmpty(existing.getPassportNumber(), incoming.getPassportNumber()));
+        existing.setPassportType(preferNonEmpty(existing.getPassportType(), incoming.getPassportType()));
+        existing.setVisaType(preferNonEmpty(existing.getVisaType(), incoming.getVisaType()));
+        existing.setVisaNumber(preferNonEmpty(existing.getVisaNumber(), incoming.getVisaNumber()));
+        existing.setWorkExperience(mergeJsonArrayField(existing.getWorkExperience(), incoming.getWorkExperience()));
+        existing.setEducationExperience(mergeJsonArrayField(existing.getEducationExperience(), incoming.getEducationExperience()));
+        existing.setRelatedPersons(mergeJsonArrayField(existing.getRelatedPersons(), incoming.getRelatedPersons()));
+        existing.setRemark(preferNonEmpty(existing.getRemark(), incoming.getRemark()));
+        existing.setIsKeyPerson(preferNonEmpty(existing.getIsKeyPerson(), incoming.getIsKeyPerson()));
+
+        existing.setAliasNames(mergeAndDedupe(existing.getAliasNames(), incoming.getAliasNames()));
+        existing.setAvatarFiles(mergeAndDedupe(existing.getAvatarFiles(), incoming.getAvatarFiles()));
+        existing.setPhoneNumbers(mergeAndDedupe(existing.getPhoneNumbers(), incoming.getPhoneNumbers()));
+        existing.setEmails(mergeAndDedupe(existing.getEmails(), incoming.getEmails()));
+        existing.setPassportNumbers(mergeAndDedupe(existing.getPassportNumbers(), incoming.getPassportNumbers()));
+        existing.setTwitterAccounts(mergeAndDedupe(existing.getTwitterAccounts(), incoming.getTwitterAccounts()));
+        existing.setLinkedinAccounts(mergeAndDedupe(existing.getLinkedinAccounts(), incoming.getLinkedinAccounts()));
+        existing.setFacebookAccounts(mergeAndDedupe(existing.getFacebookAccounts(), incoming.getFacebookAccounts()));
+        existing.setPersonTags(mergeAndDedupe(existing.getPersonTags(), incoming.getPersonTags()));
+    }
+
+    private static String preferNonEmpty(String existing, String incoming) {
+        if (existing != null && !existing.isBlank()) return existing;
+        return incoming;
+    }
+
+    private static LocalDateTime preferNonEmpty(LocalDateTime existing, LocalDateTime incoming) {
+        return existing != null ? existing : incoming;
+    }
+
+    private static Boolean preferNonEmpty(Boolean existing, Boolean incoming) {
+        return existing != null ? existing : incoming;
+    }
+
+    /** 多值属性：合并两个列表并去重（保持顺序，已有在前） */
+    private static List<String> mergeAndDedupe(List<String> existing, List<String> incoming) {
+        java.util.Set<String> set = new java.util.LinkedHashSet<>();
+        if (existing != null) set.addAll(existing);
+        if (incoming != null) {
+            for (String s : incoming) {
+                if (s != null && !s.isBlank()) set.add(s.trim());
+            }
+        }
+        return set.isEmpty() ? null : new ArrayList<>(set);
+    }
+
+    /**
+     * JSON 数组类字段（工作经历、教育经历、关系人）合并去重：将两段 JSON 解析为数组，合并后按结构去重，再序列化回字符串。
+     * 若任一侧非合法 JSON 或非数组/对象，则退化为单值以有值为主。
+     */
+    private String mergeJsonArrayField(String existingStr, String incomingStr) {
+        List<JsonNode> existingItems = parseJsonToNodeList(existingStr);
+        List<JsonNode> incomingItems = parseJsonToNodeList(incomingStr);
+        if (existingItems == null && incomingItems == null) return preferNonEmpty(existingStr, incomingStr);
+        if (existingItems == null) existingItems = new ArrayList<>();
+        if (incomingItems == null) incomingItems = new ArrayList<>();
+        List<JsonNode> merged = new ArrayList<>(existingItems);
+        for (JsonNode in : incomingItems) {
+            if (in == null || in.isNull()) continue;
+            boolean duplicate = false;
+            for (JsonNode ex : merged) {
+                if (ex != null && ex.equals(in)) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate) merged.add(in);
+        }
+        if (merged.isEmpty()) return null;
+        try {
+            ArrayNode array = objectMapper.createArrayNode();
+            merged.forEach(array::add);
+            String out = objectMapper.writeValueAsString(array);
+            return out.isEmpty() ? null : out;
+        } catch (Exception e) {
+            log.warn("合并 JSON 数组字段时序列化失败，退回以有值为主", e);
+            return preferNonEmpty(existingStr, incomingStr);
+        }
+    }
+
+    /** 将 JSON 字符串解析为节点列表：若为数组则返回元素列表，若为对象则包装为单元素列表，否则返回 null。 */
+    private List<JsonNode> parseJsonToNodeList(String jsonStr) {
+        if (jsonStr == null || jsonStr.isBlank()) return null;
+        try {
+            JsonNode node = objectMapper.readTree(jsonStr.trim());
+            if (node == null || node.isNull()) return null;
+            if (node.isArray()) {
+                List<JsonNode> list = new ArrayList<>();
+                node.forEach(list::add);
+                return list;
+            }
+            if (node.isObject()) return Collections.singletonList(node);
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
