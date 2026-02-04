@@ -1,5 +1,5 @@
-import { Button, Table, message, Form, Input, InputNumber, Popconfirm, Modal, AutoComplete } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Button, Table, message, Form, Input, InputNumber, Checkbox, Popconfirm, Modal, AutoComplete } from 'antd';
+import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { personAPI, type TagDTO, type TagCreateDTO } from '@/services/api';
 
@@ -32,8 +32,16 @@ const WorkspaceTags = () => {
   const [addTagModalOpen, setAddTagModalOpen] = useState(false);
   const [addTagSubmitting, setAddTagSubmitting] = useState(false);
   const [addTagForm] = Form.useForm<TagCreateDTO>();
+  
+  const [editTagModalOpen, setEditTagModalOpen] = useState(false);
+  const [editTagSubmitting, setEditTagSubmitting] = useState(false);
+  const [editTagForm] = Form.useForm<TagCreateDTO>();
+  const [editingTagId, setEditingTagId] = useState<number | null>(null);
+  
   const { firstLevelOptions, secondLevelOptionsByFirst } = useExistingCategories(tagList);
   const selectedFirstLevel = Form.useWatch('firstLevelName', addTagForm);
+  const selectedFirstLevelEdit = Form.useWatch('firstLevelName', editTagForm);
+  
   const secondLevelOptions = useMemo(() => {
     const first = (selectedFirstLevel ?? '').trim();
     if (first && secondLevelOptionsByFirst[first]) return secondLevelOptionsByFirst[first].map((v) => ({ value: v }));
@@ -41,6 +49,14 @@ const WorkspaceTags = () => {
     Object.values(secondLevelOptionsByFirst).forEach((arr) => arr.forEach((s) => allSecond.add(s)));
     return Array.from(allSecond).sort((a, b) => a.localeCompare(b)).map((v) => ({ value: v }));
   }, [selectedFirstLevel, secondLevelOptionsByFirst]);
+  
+  const secondLevelOptionsEdit = useMemo(() => {
+    const first = (selectedFirstLevelEdit ?? '').trim();
+    if (first && secondLevelOptionsByFirst[first]) return secondLevelOptionsByFirst[first].map((v) => ({ value: v }));
+    const allSecond = new Set<string>();
+    Object.values(secondLevelOptionsByFirst).forEach((arr) => arr.forEach((s) => allSecond.add(s)));
+    return Array.from(allSecond).sort((a, b) => a.localeCompare(b)).map((v) => ({ value: v }));
+  }, [selectedFirstLevelEdit, secondLevelOptionsByFirst]);
 
   const loadTags = useCallback(async () => {
     setTagLoading(true);
@@ -79,6 +95,42 @@ const WorkspaceTags = () => {
     [addTagForm, loadTags]
   );
 
+  const onEditTag = useCallback((record: TagDTO) => {
+    setEditingTagId(record.tagId);
+    editTagForm.setFieldsValue({
+      firstLevelName: record.firstLevelName ?? '',
+      secondLevelName: record.secondLevelName ?? '',
+      tagName: record.tagName,
+      tagDescription: record.tagDescription ?? '',
+      firstLevelSortOrder: record.firstLevelSortOrder ?? 999,
+      secondLevelSortOrder: record.secondLevelSortOrder ?? 999,
+      tagSortOrder: record.tagSortOrder ?? 999,
+      keyTag: record.keyTag ?? false,
+    });
+    setEditTagModalOpen(true);
+  }, [editTagForm]);
+
+  const onEditTagFinish = useCallback(
+    async (values: TagCreateDTO) => {
+      if (editingTagId === null) return;
+      setEditTagSubmitting(true);
+      try {
+        await personAPI.updateTag(editingTagId, values);
+        message.success('更新标签成功');
+        editTagForm.resetFields();
+        setEditTagModalOpen(false);
+        setEditingTagId(null);
+        loadTags();
+      } catch (e: unknown) {
+        const err = e as { response?: { data?: { message?: string }; status?: number }; message?: string };
+        message.error(err?.response?.data?.message ?? err?.message ?? '更新标签失败');
+      } finally {
+        setEditTagSubmitting(false);
+      }
+    },
+    [editingTagId, editTagForm, loadTags]
+  );
+
   const onDeleteTag = useCallback(
     async (tagId: number) => {
       try {
@@ -97,7 +149,7 @@ const WorkspaceTags = () => {
     <>
       <div className="workspace-tags">
         <div className="workspace-tags-header">
-          <span>人物标签用于人员档案筛选与 person_tags，与人员档案页筛选标签共用同一张表。</span>
+          <span>人物标签用于人员档案筛选和确定重点人员</span>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddTagModalOpen(true)}>新增标签</Button>
         </div>
         <Table<TagDTO>
@@ -110,26 +162,33 @@ const WorkspaceTags = () => {
             { title: '一级分类', dataIndex: 'firstLevelName', key: 'firstLevelName', width: 120, render: (v: string) => v || '—' },
             { title: '二级分类', dataIndex: 'secondLevelName', key: 'secondLevelName', width: 120, render: (v: string) => v || '—' },
             { title: '标签名称', dataIndex: 'tagName', key: 'tagName', width: 140, ellipsis: true },
+            { title: '一级顺序', dataIndex: 'firstLevelSortOrder', key: 'firstLevelSortOrder', width: 80, render: (v: number) => (v != null ? v : '—') },
+            { title: '二级顺序', dataIndex: 'secondLevelSortOrder', key: 'secondLevelSortOrder', width: 80, render: (v: number) => (v != null ? v : '—') },
+            { title: '三级顺序', dataIndex: 'tagSortOrder', key: 'tagSortOrder', width: 80, render: (v: number) => (v != null ? v : '—') },
             { title: '描述', dataIndex: 'tagDescription', key: 'tagDescription', ellipsis: true, render: (v: string) => v || '—' },
             { title: '关联人数', dataIndex: 'personCount', key: 'personCount', width: 100, render: (v: number) => (v != null ? v : '—') },
+            { title: '重点标签', dataIndex: 'keyTag', key: 'keyTag', width: 90, render: (v: boolean) => (v ? '是' : '否') },
             {
               title: '操作',
               key: 'action',
-              width: 90,
+              width: 140,
               render: (_: unknown, record: TagDTO) => (
-                <Popconfirm
-                  title="确定删除该标签？删除后筛选树中不再展示，已关联该标签的人员档案上标签名仍保留。"
-                  onConfirm={() => onDeleteTag(record.tagId)}
-                >
-                  <Button type="text" danger size="small" icon={<DeleteOutlined />}>删除</Button>
-                </Popconfirm>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button type="text" size="small" icon={<EditOutlined />} onClick={() => onEditTag(record)}>编辑</Button>
+                  <Popconfirm
+                    title="确定删除该标签？删除后筛选树中不再展示，已关联该标签的人员档案上标签名仍保留。"
+                    onConfirm={() => onDeleteTag(record.tagId)}
+                  >
+                    <Button type="text" danger size="small" icon={<DeleteOutlined />}>删除</Button>
+                  </Popconfirm>
+                </div>
               ),
             },
           ]}
         />
       </div>
       <Modal title="新增标签" open={addTagModalOpen} onCancel={() => { setAddTagModalOpen(false); addTagForm.resetFields(); }} footer={null} destroyOnClose>
-        <Form form={addTagForm} layout="vertical" onFinish={onAddTagFinish} initialValues={{ firstLevelSortOrder: 999 }}>
+        <Form form={addTagForm} layout="vertical" onFinish={onAddTagFinish} initialValues={{ firstLevelSortOrder: 999, secondLevelSortOrder: 999, tagSortOrder: 999 }}>
           <Form.Item label="一级分类" name="firstLevelName" extra="可选择已有分类与现有合并，或输入新分类名">
             <AutoComplete
               options={firstLevelOptions.map((v) => ({ value: v }))}
@@ -155,9 +214,75 @@ const WorkspaceTags = () => {
           <Form.Item label="一级展示顺序" name="firstLevelSortOrder" extra="数字越小越靠前，如 1基本属性 2身份属性 6异常行为">
             <InputNumber min={1} max={999} style={{ width: '100%' }} />
           </Form.Item>
+          <Form.Item label="二级展示顺序" name="secondLevelSortOrder" extra="同一级下多个二级分类的排序，数字越小越靠前">
+            <InputNumber min={1} max={999} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="三级展示顺序" name="tagSortOrder" extra="同二级下多个标签的排序，数字越小越靠前">
+            <InputNumber min={1} max={999} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="keyTag" valuePropName="checked" extra="勾选后该标签在「重点人员」页左侧展示，仅展示命中重点标签的人员">
+            <Checkbox>是否重点标签</Checkbox>
+          </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={addTagSubmitting} style={{ marginRight: 8 }}>确定</Button>
             <Button onClick={() => { setAddTagModalOpen(false); addTagForm.resetFields(); }}>取消</Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal 
+        title="编辑标签" 
+        open={editTagModalOpen} 
+        onCancel={() => { 
+          setEditTagModalOpen(false); 
+          editTagForm.resetFields(); 
+          setEditingTagId(null); 
+        }} 
+        footer={null} 
+        destroyOnClose
+      >
+        <Form form={editTagForm} layout="vertical" onFinish={onEditTagFinish}>
+          <Form.Item label="一级分类" name="firstLevelName" extra="可选择已有分类与现有合并，或输入新分类名">
+            <AutoComplete
+              options={firstLevelOptions.map((v) => ({ value: v }))}
+              placeholder="如：基本属性、身份属性，可选已有或输入新"
+              maxLength={100}
+              filterOption={(input, option) => (option?.value ?? '').toString().toLowerCase().includes((input || '').toLowerCase())}
+            />
+          </Form.Item>
+          <Form.Item label="二级分类" name="secondLevelName" extra="可选择该一级下已有二级分类合并，或输入新">
+            <AutoComplete
+              options={secondLevelOptionsEdit}
+              placeholder="如：年龄、性别，可为空"
+              maxLength={100}
+              filterOption={(input, option) => (option?.value ?? '').toString().toLowerCase().includes((input || '').toLowerCase())}
+            />
+          </Form.Item>
+          <Form.Item label="标签名称" name="tagName" rules={[{ required: true, message: '请输入标签名称' }, { max: 255, message: '最多 255 字' }]}>
+            <Input placeholder="用于人员档案 person_tags 与筛选" maxLength={255} />
+          </Form.Item>
+          <Form.Item label="描述" name="tagDescription">
+            <Input.TextArea placeholder="可选" rows={2} maxLength={2000} showCount />
+          </Form.Item>
+          <Form.Item label="一级展示顺序" name="firstLevelSortOrder" extra="数字越小越靠前，如 1基本属性 2身份属性 6异常行为">
+            <InputNumber min={1} max={999} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="二级展示顺序" name="secondLevelSortOrder" extra="同一级下多个二级分类的排序，数字越小越靠前">
+            <InputNumber min={1} max={999} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="三级展示顺序" name="tagSortOrder" extra="同二级下多个标签的排序，数字越小越靠前">
+            <InputNumber min={1} max={999} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="keyTag" valuePropName="checked" extra="勾选后该标签在「重点人员」页左侧展示，仅展示命中重点标签的人员">
+            <Checkbox>是否重点标签</Checkbox>
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={editTagSubmitting} style={{ marginRight: 8 }}>确定</Button>
+            <Button onClick={() => { 
+              setEditTagModalOpen(false); 
+              editTagForm.resetFields(); 
+              setEditingTagId(null); 
+            }}>取消</Button>
           </Form.Item>
         </Form>
       </Modal>

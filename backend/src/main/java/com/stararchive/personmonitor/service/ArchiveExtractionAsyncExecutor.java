@@ -27,6 +27,8 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFPictureData;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,8 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,6 +49,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import jakarta.persistence.Column;
 
 /**
  * 档案融合异步提取执行器：负责异步执行大模型抽取任务。
@@ -61,9 +67,6 @@ public class ArchiveExtractionAsyncExecutor {
     private static final String STATUS_SUCCESS = "SUCCESS";
     private static final String STATUS_FAILED = "FAILED";
 
-    /** 绑定每段原始文本与对应抽取结果 */
-    private record TextAndPerson(String originalText, Map<String, Object> person) {}
-
     private final ArchiveImportTaskRepository taskRepository;
     private final ArchiveExtractResultRepository extractResultRepository;
     private final ArchiveSimilarMatchRepository similarMatchRepository;
@@ -76,13 +79,17 @@ public class ArchiveExtractionAsyncExecutor {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Lazy
+    @Autowired
+    private ArchiveFusionService archiveFusionService;
+
     private static final AtomicLong matchIdGenerator = new AtomicLong(System.currentTimeMillis() * 1000);
 
-    /** 大模型抽取单人时系统提示 */
-    private static final String EXTRACT_ONE_SYSTEM_PROMPT =
+    /** 大模型抽取单人时系统提示（系统配置为空时使用此默认） */
+    private static final String DEFAULT_EXTRACT_ONE_SYSTEM_PROMPT =
             "你是一个人物档案抽取助手。从用户提供的文本中抽取**一个人物**的档案信息。"
                     + "按以下字段提取（与人物表 person 结构一致），无法确定的填空字符串或空数组："
-                    + "chinese_name(中文姓名)、original_name(原始姓名)、alias_names(别名数组)、gender(性别)、id_numbers(证件号数组)、birth_date(出生日期 yyyy-MM-dd)、nationality(国籍)、nationality_code(国籍三字码)、household_address(户籍地址)、highest_education(最高学历)、phone_numbers(手机号数组)、emails(邮箱数组)、passport_numbers(护照号数组)、id_card_number(身份证号)、person_tags(标签数组)、work_experience(工作经历JSON字符串)、education_experience(教育经历JSON字符串)、remark(备注)。"
+                    + "chinese_name(中文姓名)、original_name(原始姓名)、alias_names(别名数组)、gender(性别)、id_number(证件号码)、birth_date(出生日期 yyyy-MM-dd)、nationality(国籍)、nationality_code(国籍三字码)、household_address(户籍地址)、highest_education(最高学历)、phone_numbers(手机号数组)、emails(邮箱数组)、passport_numbers(护照号数组)、passport_number(主护照号)、passport_type(护照类型：普通护照/外交护照/公务护照/旅行证等)、id_card_number(身份证号)、person_tags(标签数组)、work_experience(工作经历JSON字符串)、education_experience(教育经历JSON字符串)、remark(备注)。"
                     + "**重要：person_tags（人物标签）必须根据【上传文件的文件名】与【人物档案文本内容】综合推断，且只能从用户消息中提供的「参考标签表」里选择（可多选），标签名必须与参考表完全一致；若无法匹配则 person_tags 返回空数组 []。**"
                     + "请严格以 JSON 格式返回，**只返回一个 JSON 对象**，直接包含上述字段（不要包在 persons 数组里）。字符串用双引号，数组用 []，日期格式 yyyy-MM-dd。";
 
@@ -161,7 +168,6 @@ public class ArchiveExtractionAsyncExecutor {
         log.info("【档案融合】开始解析文件: taskId={}, fileName={}, fileType={}", taskId, fileName, fileTypeUpper);
 
         try {
-            List<TextAndPerson> textAndPersons = new ArrayList<>();
             List<Tag> allTags = tagRepository.findAllOrderByHierarchy();
             log.info("【档案融合】已加载参考标签数量: {}", allTags.size());
 
@@ -176,9 +182,12 @@ public class ArchiveExtractionAsyncExecutor {
                     return;
                 }
                 task.setOriginalText(String.join("\n\n------\n\n", rowTexts));
+                int totalRows = rowTexts.size() - 1;
+                task.setTotalExtractCount(totalRows > 0 ? totalRows : 0);
+                task.setExtractCount(0);
                 taskRepository.save(task);
                 
-                // 从第2行开始（跳过表头）
+                int savedIndex = 0;
                 for (int i = 1; i < rowTexts.size(); i++) {
                     String rowText = rowTexts.get(i);
                     if (rowText == null || rowText.isBlank()) continue;
@@ -187,9 +196,10 @@ public class ArchiveExtractionAsyncExecutor {
                     try {
                         List<Map<String, Object>> one = extractOnePersonByQwen(rowText, fileName, allTags, taskId);
                         if (!one.isEmpty()) {
-                            textAndPersons.add(new TextAndPerson(rowText, one.get(0)));
-                            log.info("【档案融合】Excel 第{}行提取成功: taskId={}, 提取姓名={}", 
-                                    i + 1, taskId, one.get(0).get("original_name"));
+                            task = taskRepository.findById(taskId).orElse(task);
+                            saveOneExtractAndUpdateProgress(task, savedIndex, rowText, one.get(0));
+                            savedIndex++;
+                            log.info("【档案融合】Excel 第{}行提取成功: taskId={}, 提取姓名={}", i + 1, taskId, one.get(0).get("original_name"));
                         } else {
                             log.warn("【档案融合】Excel 第{}行未提取到人物: taskId={}", i + 1, taskId);
                         }
@@ -197,6 +207,13 @@ public class ArchiveExtractionAsyncExecutor {
                         log.warn("【档案融合】Excel 第{}行提取失败，已跳过: taskId={}, 错误={}", i + 1, taskId, e.getMessage(), e);
                     }
                 }
+                task = taskRepository.findById(taskId).orElse(task);
+                task.setStatus(STATUS_SUCCESS);
+                LocalDateTime now = LocalDateTime.now();
+                task.setUpdatedTime(now);
+                task.setCompletedTime(now);
+                taskRepository.save(task);
+                log.info("【档案融合】任务完成: taskId={}, extractCount={}", taskId, task.getExtractCount());
             } else if ("CSV".equals(fileTypeUpper)) {
                 log.info("【档案融合】开始解析 CSV 文件: taskId={}", taskId);
                 List<String> lineTexts = parseCsvToLines(file);
@@ -208,8 +225,12 @@ public class ArchiveExtractionAsyncExecutor {
                     return;
                 }
                 task.setOriginalText(String.join("\n\n--- 下一行 ---\n\n", lineTexts));
+                int totalLines = lineTexts.size() - 1;
+                task.setTotalExtractCount(totalLines > 0 ? totalLines : 0);
+                task.setExtractCount(0);
                 taskRepository.save(task);
                 
+                int savedIndex = 0;
                 for (int i = 1; i < lineTexts.size(); i++) {
                     String lineText = lineTexts.get(i);
                     if (lineText == null || lineText.isBlank()) continue;
@@ -218,9 +239,10 @@ public class ArchiveExtractionAsyncExecutor {
                     try {
                         List<Map<String, Object>> one = extractOnePersonByQwen(lineText, fileName, allTags, taskId);
                         if (!one.isEmpty()) {
-                            textAndPersons.add(new TextAndPerson(lineText, one.get(0)));
-                            log.info("【档案融合】CSV 第{}行提取成功: taskId={}, 提取姓名={}", 
-                                    i + 1, taskId, one.get(0).get("original_name"));
+                            task = taskRepository.findById(taskId).orElse(task);
+                            saveOneExtractAndUpdateProgress(task, savedIndex, lineText, one.get(0));
+                            savedIndex++;
+                            log.info("【档案融合】CSV 第{}行提取成功: taskId={}, 提取姓名={}", i + 1, taskId, one.get(0).get("original_name"));
                         } else {
                             log.warn("【档案融合】CSV 第{}行未提取到人物: taskId={}", i + 1, taskId);
                         }
@@ -228,8 +250,14 @@ public class ArchiveExtractionAsyncExecutor {
                         log.warn("【档案融合】CSV 第{}行提取失败，已跳过: taskId={}, 错误={}", i + 1, taskId, e.getMessage(), e);
                     }
                 }
+                task = taskRepository.findById(taskId).orElse(task);
+                task.setStatus(STATUS_SUCCESS);
+                LocalDateTime now = LocalDateTime.now();
+                task.setUpdatedTime(now);
+                task.setCompletedTime(now);
+                taskRepository.save(task);
+                log.info("【档案融合】任务完成: taskId={}, extractCount={}", taskId, task.getExtractCount());
             } else {
-                // Word / PDF 等整份文档
                 log.info("【档案融合】开始解析文档文件: taskId={}, fileType={}", taskId, fileTypeUpper);
                 String text = parseFileToText(file, task.getFileType());
                 
@@ -241,13 +269,11 @@ public class ArchiveExtractionAsyncExecutor {
                 
                 log.info("【档案融合】文档解析完成: taskId={}, 文本长度={}", taskId, text.length());
                 task.setOriginalText(text);
+                task.setTotalExtractCount(1);
+                task.setExtractCount(0);
                 taskRepository.save(task);
                 
-                // 提取图片
-                log.info("【档案融合】开始提取文档中的图片: taskId={}", taskId);
                 List<String> avatarPaths = extractAndUploadImagesFromFile(file, task.getFileType(), taskId);
-                log.info("【档案融合】图片提取完成: taskId={}, 图片数量={}", taskId, avatarPaths.size());
-                
                 log.info("【档案融合】开始大模型提取人物信息: taskId={}", taskId);
                 List<Map<String, Object>> one = extractOnePersonByQwen(text, fileName, allTags, taskId);
                 if (!one.isEmpty()) {
@@ -255,88 +281,52 @@ public class ArchiveExtractionAsyncExecutor {
                     if (!avatarPaths.isEmpty()) {
                         personMap.put("avatar_files", avatarPaths);
                     }
-                    textAndPersons.add(new TextAndPerson(text, personMap));
+                    task = taskRepository.findById(taskId).orElse(task);
+                    saveOneExtractAndUpdateProgress(task, 0, text, personMap);
                     log.info("【档案融合】文档提取成功: taskId={}, 提取姓名={}", taskId, personMap.get("original_name"));
                 } else {
                     log.warn("【档案融合】文档未提取到人物信息: taskId={}", taskId);
                 }
-            }
-            
-            if (textAndPersons.isEmpty()) {
+                task = taskRepository.findById(taskId).orElse(task);
                 task.setStatus(STATUS_SUCCESS);
-                task.setExtractCount(0);
-                task.setUpdatedTime(LocalDateTime.now());
+                LocalDateTime now = LocalDateTime.now();
+                task.setUpdatedTime(now);
+                task.setCompletedTime(now);
                 taskRepository.save(task);
-                log.info("【档案融合】任务完成(无抽取结果): taskId={}", taskId);
-                return;
+                log.info("【档案融合】任务完成: taskId={}, extractCount={}", taskId, task.getExtractCount());
             }
-
-            // 更新状态为匹配中
-            task.setStatus(STATUS_MATCHING);
-            task.setUpdatedTime(LocalDateTime.now());
-            taskRepository.save(task);
-            log.info("【档案融合】任务状态更新为 MATCHING: taskId={}, 待保存提取结果数={}", taskId, textAndPersons.size());
-
-            // 保存提取结果并匹配相似人物
-            int index = 0;
-            for (TextAndPerson tp : textAndPersons) {
-                Map<String, Object> p = tp.person();
-                String resultId = UUID.randomUUID().toString().replace("-", "");
-                String originalName = stringOrNull(p.get("original_name"));
-                String birthDateStr = stringOrNull(p.get("birth_date"));
-                String gender = stringOrNull(p.get("gender"));
-                String nationality = stringOrNull(p.get("nationality"));
-                LocalDate birthDate = parseBirthDate(birthDateStr);
-
-                String rawJson = objectMapper.writeValueAsString(p);
-
-                ArchiveExtractResult result = ArchiveExtractResult.builder()
-                        .resultId(resultId)
-                        .taskId(taskId)
-                        .extractIndex(index)
-                        .originalName(originalName)
-                        .birthDate(birthDate)
-                        .gender(gender)
-                        .nationality(nationality)
-                        .originalText(tp.originalText())
-                        .rawJson(rawJson)
-                        .confirmed(false)
-                        .imported(false)
-                        .importedPersonId(null)
-                        .createdTime(LocalDateTime.now())
-                        .build();
-                extractResultRepository.save(result);
-                log.info("【档案融合】保存提取结果: taskId={}, resultId={}, originalName={}, index={}", 
-                        taskId, resultId, originalName, index);
-
-                // 查找相似人物
-                List<Person> similar = findSimilarPersons(originalName, birthDate, gender, nationality, task.getCreatorUsername());
-                log.info("【档案融合】相似人物匹配: taskId={}, resultId={}, 相似人物数={}", taskId, resultId, similar.size());
-                
-                for (Person person : similar) {
-                    ArchiveSimilarMatch match = ArchiveSimilarMatch.builder()
-                            .matchId(matchIdGenerator.incrementAndGet())
-                            .taskId(taskId)
-                            .resultId(resultId)
-                            .personId(person.getPersonId())
-                            .createdTime(LocalDateTime.now())
-                            .build();
-                    similarMatchRepository.save(match);
-                }
-                index++;
-            }
-
-            // 更新任务为成功
-            task.setStatus(STATUS_SUCCESS);
-            task.setExtractCount(index);
-            task.setUpdatedTime(LocalDateTime.now());
-            taskRepository.save(task);
-            log.info("【档案融合】任务完成: taskId={}, extractCount={}", taskId, index);
             
         } catch (Exception e) {
             log.error("【档案融合】任务执行异常: taskId={}", taskId, e);
             markTaskFailed(task, e.getMessage() != null ? e.getMessage() : "未知错误");
         }
+    }
+
+    private static final int CONFIRM_IMPORT_CHUNK_SIZE = 100;
+
+    /**
+     * 异步执行「全部导入」：将 resultIds 分批调用 ArchiveFusionService.confirmImport，每批 {@value #CONFIRM_IMPORT_CHUNK_SIZE} 条。
+     * 此方法必须从其他 Bean 调用才能触发 @Async 代理。
+     */
+    @Async
+    public void runConfirmImportAllAsync(String taskId, List<String> resultIds, List<String> tags, boolean importAsPublic) {
+        if (resultIds == null || resultIds.isEmpty()) {
+            return;
+        }
+        log.info("【档案融合】开始异步全部导入: taskId={}, 共 {} 条", taskId, resultIds.size());
+        int totalImported = 0;
+        for (int i = 0; i < resultIds.size(); i += CONFIRM_IMPORT_CHUNK_SIZE) {
+            int to = Math.min(i + CONFIRM_IMPORT_CHUNK_SIZE, resultIds.size());
+            List<String> chunk = resultIds.subList(i, to);
+            try {
+                List<String> imported = archiveFusionService.confirmImport(taskId, chunk, tags, importAsPublic);
+                totalImported += imported.size();
+                log.info("【档案融合】全部导入进度: taskId={}, 本批 {} 条, 累计 {} 条", taskId, chunk.size(), totalImported);
+            } catch (Exception e) {
+                log.warn("【档案融合】全部导入某批失败: taskId={}, chunkSize={}", taskId, chunk.size(), e);
+            }
+        }
+        log.info("【档案融合】异步全部导入完成: taskId={}, 共导入 {} 条", taskId, totalImported);
     }
 
     /**
@@ -345,7 +335,9 @@ public class ArchiveExtractionAsyncExecutor {
     private void markTaskFailed(ArchiveImportTask task, String errorMessage) {
         task.setStatus(STATUS_FAILED);
         task.setErrorMessage(errorMessage);
-        task.setUpdatedTime(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        task.setUpdatedTime(now);
+        task.setCompletedTime(now);
         taskRepository.save(task);
         log.error("【档案融合】任务标记为失败: taskId={}, errorMessage={}", task.getTaskId(), errorMessage);
     }
@@ -362,7 +354,7 @@ public class ArchiveExtractionAsyncExecutor {
         if (!fromLlm.isEmpty()) {
             return fromLlm;
         }
-        return mockExtractOne(text, fileName, allTags != null ? allTags : List.of(), taskId);
+        throw new IllegalArgumentException("大模型提取错误");
     }
 
     /**
@@ -396,8 +388,12 @@ public class ArchiveExtractionAsyncExecutor {
 
         Map<String, Object> body = new HashMap<>();
         body.put("model", model);
+        String basePrompt = resolveExtractPrompt();
+        String structurePart = buildPersonTableStructureDescription();
+        String systemPrompt = basePrompt + "\n\n【当前人物表 person 结构】\n" + structurePart
+                + "\n请严格按上述字段名与类型返回一个 JSON 对象，只返回一个对象不要包在数组里。";
         body.put("messages", List.of(
-                Map.of("role", "system", "content", EXTRACT_ONE_SYSTEM_PROMPT),
+                Map.of("role", "system", "content", systemPrompt),
                 Map.of("role", "user", "content", userContent.toString())
         ));
         body.put("response_format", Map.of("type", "json_object"));
@@ -509,49 +505,150 @@ public class ArchiveExtractionAsyncExecutor {
         return bailianProperties.getModel() != null ? bailianProperties.getModel() : "qwen-plus";
     }
 
-    /**
-     * Mock 抽取：大模型不可用时返回占位数据
-     */
-    private List<Map<String, Object>> mockExtractOne(String text, String fileName, List<Tag> allTags, String taskId) {
-        List<Map<String, Object>> fromLlm = callLlmExtractOnePerson(text, fileName, allTags != null ? allTags : List.of(), taskId);
-        if (!fromLlm.isEmpty()) {
-            return fromLlm;
+    /** 人物档案提取提示词：优先使用系统配置，为空则使用内置默认 */
+    private String resolveExtractPrompt() {
+        SystemConfigDTO cfg = systemConfigService.getConfig();
+        if (cfg.getLlmExtractPrompt() != null && !cfg.getLlmExtractPrompt().isBlank()) {
+            return cfg.getLlmExtractPrompt().trim();
         }
-        log.warn("【档案融合】大模型抽取未返回有效结果，使用占位数据: taskId={}", taskId);
-        Map<String, Object> one = new HashMap<>();
-        one.put("chinese_name", "（抽取失败-占位）");
-        one.put("original_name", "（抽取失败-占位）");
-        one.put("birth_date", "1990-01-01");
-        one.put("gender", "男");
-        one.put("nationality", "中国");
-        one.put("nationality_code", "CHN");
-        one.put("household_address", "");
-        one.put("highest_education", "");
-        one.put("alias_names", Collections.emptyList());
-        one.put("id_numbers", Collections.emptyList());
-        one.put("phone_numbers", Collections.emptyList());
-        one.put("emails", Collections.emptyList());
-        one.put("passport_numbers", Collections.emptyList());
-        one.put("id_card_number", "");
-        one.put("person_tags", Collections.emptyList());
-        one.put("work_experience", "");
-        one.put("education_experience", "");
-        one.put("remark", "");
-        return List.of(one);
+        return DEFAULT_EXTRACT_ONE_SYSTEM_PROMPT;
     }
 
     /**
-     * 相似档案查询
+     * 实时根据 Person 实体生成人物表结构描述，供大模型提示词使用。
+     * 排除系统字段：person_id、is_public、created_by、created_time、updated_time。
      */
-    private List<Person> findSimilarPersons(String originalName, LocalDate birthDate, String gender, String nationality, String currentUsername) {
-        if (originalName == null || originalName.isBlank()
-                || birthDate == null
-                || gender == null || gender.isBlank()
-                || nationality == null || nationality.isBlank()) {
+    private String buildPersonTableStructureDescription() {
+        Set<String> excludeColumns = Set.of("person_id", "is_key_person", "is_public", "created_by", "created_time", "updated_time");
+        List<String> lines = new ArrayList<>();
+        for (Field field : Person.class.getDeclaredFields()) {
+            if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
+                continue;
+            }
+            Column col = field.getAnnotation(Column.class);
+            if (col == null) continue;
+            String columnName = col.name() != null && !col.name().isBlank() ? col.name() : camelToSnake(field.getName());
+            if (excludeColumns.contains(columnName)) continue;
+
+            String typeDesc = typeDescription(field.getType());
+            if (typeDesc == null) continue;
+            lines.add("- " + columnName + "(" + typeDesc + ")");
+        }
+        return lines.isEmpty() ? "（无法获取表结构）" : String.join("\n", lines);
+    }
+
+    private static String typeDescription(Class<?> type) {
+        if (type == String.class) return "字符串";
+        if (type == Boolean.class || type == boolean.class) return "布尔";
+        if (type == LocalDateTime.class) return "日期 yyyy-MM-dd";
+        if (List.class.isAssignableFrom(type)) return "JSON数组";
+        return null;
+    }
+
+    private static String camelToSnake(String camel) {
+        if (camel == null || camel.isEmpty()) return camel;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < camel.length(); i++) {
+            char c = camel.charAt(i);
+            if (Character.isUpperCase(c)) {
+                if (sb.length() > 0) sb.append('_');
+                sb.append(Character.toLowerCase(c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 保存单条提取结果、相似匹配，并更新任务已提取数量与进度（立即入库）
+     */
+    private void saveOneExtractAndUpdateProgress(ArchiveImportTask task, int extractIndex, String originalText,
+                                                 Map<String, Object> personMap) {
+        String taskId = task.getTaskId();
+        String resultId = UUID.randomUUID().toString().replace("-", "");
+        String originalName = stringOrNull(personMap.get("original_name"));
+        String birthDateStr = stringOrNull(personMap.get("birth_date"));
+        String gender = stringOrNull(personMap.get("gender"));
+        String nationality = stringOrNull(personMap.get("nationality"));
+        LocalDate birthDate = parseBirthDate(birthDateStr);
+
+        try {
+            String rawJson = objectMapper.writeValueAsString(personMap);
+            ArchiveExtractResult result = ArchiveExtractResult.builder()
+                    .resultId(resultId)
+                    .taskId(taskId)
+                    .extractIndex(extractIndex)
+                    .originalName(originalName)
+                    .birthDate(birthDate)
+                    .gender(gender)
+                    .nationality(nationality)
+                    .originalText(originalText)
+                    .rawJson(rawJson)
+                    .confirmed(false)
+                    .imported(false)
+                    .importedPersonId(null)
+                    .createdTime(LocalDateTime.now())
+                    .build();
+            extractResultRepository.save(result);
+            log.info("【档案融合】保存提取结果: taskId={}, resultId={}, originalName={}, index={}", taskId, resultId, originalName, extractIndex);
+
+            Set<String> matchFields = parseSimilarMatchFields(task.getSimilarMatchFields());
+            List<Person> similar = findSimilarPersons(matchFields, originalName, birthDate, gender, nationality, task.getCreatorUsername());
+            for (Person person : similar) {
+                ArchiveSimilarMatch match = ArchiveSimilarMatch.builder()
+                        .matchId(matchIdGenerator.incrementAndGet())
+                        .taskId(taskId)
+                        .resultId(resultId)
+                        .personId(person.getPersonId())
+                        .createdTime(LocalDateTime.now())
+                        .build();
+                similarMatchRepository.save(match);
+            }
+
+            int newCount = (task.getExtractCount() != null ? task.getExtractCount() : 0) + 1;
+            task.setExtractCount(newCount);
+            task.setUpdatedTime(LocalDateTime.now());
+            taskRepository.save(task);
+            log.info("【档案融合】进度更新: taskId={}, 已提取={}/{}", taskId, newCount, task.getTotalExtractCount() != null ? task.getTotalExtractCount() : "?");
+        } catch (Exception e) {
+            log.warn("【档案融合】保存单条结果失败: taskId={}, index={}, error={}", taskId, extractIndex, e.getMessage());
+        }
+    }
+
+    private static final Set<String> SIMILAR_MATCH_ALLOWED = Set.of("originalName", "birthDate", "gender", "nationality");
+
+    private static Set<String> parseSimilarMatchFields(String similarMatchFields) {
+        if (similarMatchFields == null || similarMatchFields.isBlank()) {
+            return Set.of("originalName", "birthDate", "gender", "nationality");
+        }
+        return Arrays.stream(similarMatchFields.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && SIMILAR_MATCH_ALLOWED.contains(s))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 相似档案查询：按任务配置的属性组合匹配
+     */
+    private List<Person> findSimilarPersons(Set<String> matchFields, String originalName, LocalDate birthDate,
+                                            String gender, String nationality, String currentUsername) {
+        if (matchFields == null || matchFields.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Person> all = personRepository.findSimilarByOriginalNameAndBirthDateAndGenderAndNationality(
-                originalName, birthDate, gender, nationality);
+        if (matchFields.contains("originalName") && (originalName == null || originalName.isBlank())) {
+            return Collections.emptyList();
+        }
+        if (matchFields.contains("birthDate") && birthDate == null) {
+            return Collections.emptyList();
+        }
+        if (matchFields.contains("gender") && (gender == null || gender.isBlank())) {
+            return Collections.emptyList();
+        }
+        if (matchFields.contains("nationality") && (nationality == null || nationality.isBlank())) {
+            return Collections.emptyList();
+        }
+        List<Person> all = personRepository.findSimilarByFields(matchFields, originalName, birthDate, gender, nationality);
         String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
         return all.stream()
                 .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
@@ -573,28 +670,64 @@ public class ArchiveExtractionAsyncExecutor {
         }
     }
 
+    /**
+     * 解析 Excel 为多行文本。第一个 sheet 的首行作为表头（列名），所有 sheet 的数据行格式化为「列名: 值」便于大模型理解。
+     * 返回：第 0 项为表头行（空格拼接，用于原文展示），第 1..n 项为数据行（列名: 值，换行分隔）。
+     */
     private List<String> parseExcelToRowTexts(MultipartFile file) throws Exception {
         List<String> rowTexts = new ArrayList<>();
+        List<String> headerNames = null;
+        int maxCol = 0;
         try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
             for (int s = 0; s < wb.getNumberOfSheets(); s++) {
                 Sheet sheet = wb.getSheetAt(s);
                 for (int r = 0; r <= sheet.getLastRowNum(); r++) {
                     Row row = sheet.getRow(r);
                     if (row == null) continue;
-                    StringBuilder sb = new StringBuilder();
-                    for (int c = 0; c < row.getLastCellNum(); c++) {
-                        Cell cell = row.getCell(c);
-                        if (cell != null) {
-                            String v = getCellString(cell);
-                            if (v != null && !v.isBlank()) sb.append(v).append(" ");
+                    int lastCellNum = row.getLastCellNum() <= 0 ? 0 : row.getLastCellNum();
+                    if (headerNames == null && s == 0 && r == 0) {
+                        headerNames = new ArrayList<>();
+                        for (int c = 0; c < lastCellNum; c++) {
+                            Cell cell = row.getCell(c);
+                            String name = cell != null ? getCellString(cell) : null;
+                            if (name == null || name.isBlank()) {
+                                name = "列" + (c + 1);
+                            } else {
+                                name = name.trim();
+                            }
+                            headerNames.add(name);
                         }
+                        maxCol = headerNames.size();
+                        String headerLine = String.join(" ", headerNames);
+                        rowTexts.add(headerLine.isBlank() ? "(表头)" : headerLine);
+                        continue;
                     }
-                    String rowText = sb.toString().trim();
-                    if (!rowText.isEmpty()) {
+                    if (headerNames == null || headerNames.isEmpty()) {
+                        headerNames = new ArrayList<>();
+                        for (int c = 0; c < lastCellNum; c++) headerNames.add("列" + (c + 1));
+                        maxCol = headerNames.size();
+                        rowTexts.add(String.join(" ", headerNames));
+                        continue;
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    for (int c = 0; c < maxCol; c++) {
+                        String colName = c < headerNames.size() ? headerNames.get(c) : ("列" + (c + 1));
+                        Cell cell = row.getCell(c);
+                        String v = cell != null ? getCellString(cell) : null;
+                        if (v != null) v = v.trim();
+                        if (v == null) v = "";
+                        if (sb.length() > 0) sb.append("\n");
+                        sb.append(colName).append(": ").append(v);
+                    }
+                    String rowText = sb.toString();
+                    if (!rowText.isBlank()) {
                         rowTexts.add(rowText);
                     }
                 }
             }
+        }
+        if (rowTexts.isEmpty() && headerNames != null && !headerNames.isEmpty()) {
+            rowTexts.add(String.join(" ", headerNames));
         }
         return rowTexts;
     }

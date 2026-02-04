@@ -14,36 +14,43 @@ SET NAMES 'utf8';
 CREATE TABLE IF NOT EXISTS person
 (
     `person_id` VARCHAR(200) NOT NULL COMMENT '人物编号：MD5(原始姓名+出生日期+性别+国籍)',
-    `person_type` VARCHAR(50) COMMENT '人物类型分类',
+    `person_type` VARCHAR(100) COMMENT '人物类型分类',
     `is_key_person` BOOLEAN DEFAULT 0 COMMENT '是否重点人群',
-    `chinese_name` VARCHAR(100) COMMENT '中文姓名',
-    `original_name` VARCHAR(200) COMMENT '原始姓名',
-    `alias_names` ARRAY<VARCHAR(100)> COMMENT '人物别名',
-    `organization` VARCHAR(100) COMMENT '机构名称',
-    `belonging_group` VARCHAR(50) COMMENT '所属群体（用于首页群体类别统计，如康复、确诊、疑似、正常）',
-    `avatar_files` ARRAY<VARCHAR(100)> COMMENT '头像文件SeaweedFS编号',
-    `gender` VARCHAR(10) COMMENT '性别',
-    `id_numbers` ARRAY<VARCHAR(50)> COMMENT '证件号码数组',
+    `chinese_name` VARCHAR(200) COMMENT '中文姓名',
+    `original_name` VARCHAR(300) COMMENT '原始姓名',
+    `alias_names` ARRAY<VARCHAR(200)> COMMENT '人物别名',
+    `organization` VARCHAR(200) COMMENT '机构名称',
+    `belonging_group` VARCHAR(100) COMMENT '所属群体（用于首页群体类别统计，如康复、确诊、疑似、正常）',
+    `avatar_files` ARRAY<VARCHAR(200)> COMMENT '头像文件SeaweedFS编号',
+    `gender` VARCHAR(20) COMMENT '性别',
+    `marital_status` VARCHAR(100) COMMENT '婚姻现状：未婚/已婚/离异/丧偶等',
+    `id_number` VARCHAR(200) COMMENT '证件号码',
     `birth_date` DATE COMMENT '出生日期',
-    `nationality` VARCHAR(100) COMMENT '国籍',
+    `nationality` VARCHAR(200) COMMENT '国籍',
     `nationality_code` VARCHAR(3) COMMENT '国籍三字码',
-    `household_address` VARCHAR(500) COMMENT '户籍地址',
-    `highest_education` VARCHAR(50) COMMENT '最高学历',
-    `phone_numbers` ARRAY<VARCHAR(20)> COMMENT '手机号数组',
-    `emails` ARRAY<VARCHAR(100)> COMMENT '邮箱数组',
-    `passport_numbers` ARRAY<VARCHAR(50)> COMMENT '护照号数组',
-    `id_card_number` VARCHAR(18) COMMENT '身份证号',
-    `visa_type` VARCHAR(50) COMMENT '签证类型：公务签证/外交签证/记者签证/旅游签证/其他（首页签证类型排名按此统计）',
-    `visa_number` VARCHAR(100) COMMENT '签证号码',
-    `twitter_accounts` ARRAY<VARCHAR(100)> COMMENT 'Twitter账号',
-    `linkedin_accounts` ARRAY<VARCHAR(100)> COMMENT '领英账号',
-    `facebook_accounts` ARRAY<VARCHAR(100)> COMMENT 'Facebook账号',
-    `person_tags` ARRAY<VARCHAR(50)> COMMENT '人物标签名称数组',
+    `household_address` VARCHAR(1000) COMMENT '户籍地址',
+    `highest_education` VARCHAR(100) COMMENT '最高学历',
+    `phone_numbers` ARRAY<VARCHAR(50)> COMMENT '手机号数组',
+    `emails` ARRAY<VARCHAR(200)> COMMENT '邮箱数组',
+    `passport_numbers` ARRAY<VARCHAR(100)> COMMENT '护照号数组',
+    `passport_number` VARCHAR(200) COMMENT '主护照号',
+    `passport_type` VARCHAR(100) COMMENT '护照类型：普通护照/外交护照/公务护照/旅行证等',
+    `id_card_number` VARCHAR(50) COMMENT '身份证号',
+    `visa_type` VARCHAR(100) COMMENT '签证类型：公务签证/外交签证/记者签证/旅游签证/其他（首页签证类型排名按此统计）',
+    `visa_number` VARCHAR(200) COMMENT '签证号码',
+    `twitter_accounts` ARRAY<VARCHAR(200)> COMMENT 'Twitter账号',
+    `linkedin_accounts` ARRAY<VARCHAR(200)> COMMENT '领英账号',
+    `facebook_accounts` ARRAY<VARCHAR(200)> COMMENT 'Facebook账号',
+    `person_tags` ARRAY<VARCHAR(100)> COMMENT '人物标签名称数组',
     `work_experience` STRING COMMENT '[{"start_time":"","end_time":"","organization":"","department":"","job":""}, ...]',
     `education_experience` STRING COMMENT '[{"start_time":"","end_time":"","school_name":"","department":"","major":""}, ...]',
+    `related_persons` STRING COMMENT '关系人JSON：[{"name":"关系人名称","relation":"关系名称","brief":"关系人简介"}, ...]',
     `remark` STRING COMMENT '备注信息',
     `is_public` BOOLEAN DEFAULT 1 COMMENT '是否公开档案：1-所有人可见，0-仅创建人可见',
-    `created_by` VARCHAR(100) COMMENT '创建人用户名（私有档案仅此人可见）',
+    `created_by` VARCHAR(200) COMMENT '创建人用户名（私有档案仅此人可见）',
+    `deleted` BOOLEAN DEFAULT 0 COMMENT '是否已删除（软删）',
+    `deleted_time` DATETIME COMMENT '删除时间',
+    `deleted_by` VARCHAR(200) COMMENT '删除人用户名',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )
@@ -69,6 +76,8 @@ ALTER TABLE person ADD INDEX idx_education (highest_education) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_key_person (is_key_person) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_created_time (created_time) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_id_card (id_card_number) USING INVERTED;
+ALTER TABLE person ADD INDEX idx_passport_number (passport_number) USING INVERTED;
+ALTER TABLE person ADD INDEX idx_passport_type (passport_type) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_visa_type (visa_type) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_phone (phone_numbers) USING INVERTED;
 ALTER TABLE person ADD INDEX idx_email (emails) USING INVERTED;
@@ -82,16 +91,16 @@ CREATE TABLE IF NOT EXISTS person_travel
     `travel_id` BIGINT NOT NULL COMMENT '行程ID',
     `person_id` VARCHAR(200) NOT NULL COMMENT '人物编号',
     `event_time` DATETIME NOT NULL COMMENT '发生时间',
-    `person_name` VARCHAR(200) NOT NULL COMMENT '人物姓名',
-    `departure` VARCHAR(500) COMMENT '出发地',
-    `destination` VARCHAR(500) COMMENT '目的地',
+    `person_name` VARCHAR(300) NOT NULL COMMENT '人物姓名',
+    `departure` VARCHAR(1000) COMMENT '出发地',
+    `destination` VARCHAR(1000) COMMENT '目的地',
     `travel_type` VARCHAR(20) NOT NULL COMMENT '行程类型: TRAIN-火车, FLIGHT-飞机, CAR-汽车',
-    `ticket_number` VARCHAR(100) COMMENT '行程票据编号',
-    `visa_type` VARCHAR(50) COMMENT '签证类型: 公务签证/外交签证/记者签证/旅游签证/其他，出入境时填写',
-    `destination_province` VARCHAR(50) COMMENT '目的地省份（用于各地排名统计）',
-    `departure_province` VARCHAR(50) COMMENT '出发地省份（用于各地排名统计）',
-    `destination_city` VARCHAR(50) COMMENT '到达城市',
-    `departure_city` VARCHAR(50) COMMENT '出发城市',
+    `ticket_number` VARCHAR(200) COMMENT '行程票据编号',
+    `visa_type` VARCHAR(100) COMMENT '签证类型: 公务签证/外交签证/记者签证/旅游签证/其他，出入境时填写',
+    `destination_province` VARCHAR(100) COMMENT '目的地省份（用于各地排名统计）',
+    `departure_province` VARCHAR(100) COMMENT '出发地省份（用于各地排名统计）',
+    `destination_city` VARCHAR(100) COMMENT '到达城市',
+    `departure_city` VARCHAR(100) COMMENT '出发城市',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )
@@ -124,11 +133,11 @@ CREATE TABLE IF NOT EXISTS person_social_dynamic
     `dynamic_id` VARCHAR(64) NOT NULL COMMENT '社交动态编号：MD5(社交内容)',
     `publish_time` DATETIME NOT NULL COMMENT '发表时间',
     `social_account_type` VARCHAR(50) NOT NULL COMMENT '社交账号类型: TWITTER, LINKEDIN, FACEBOOK, WEIBO',
-    `social_account` VARCHAR(200) NOT NULL COMMENT '社交账号',
-    `title` VARCHAR(500) COMMENT '标题',
+    `social_account` VARCHAR(300) NOT NULL COMMENT '社交账号',
+    `title` VARCHAR(1000) COMMENT '标题',
     `content` STRING COMMENT '社交内容',
-    `image_files` ARRAY<VARCHAR(100)> COMMENT '图片SeaweedFS编号',
-    `publish_location` VARCHAR(200) COMMENT '发表地点',
+    `image_files` ARRAY<VARCHAR(200)> COMMENT '图片SeaweedFS编号',
+    `publish_location` VARCHAR(500) COMMENT '发表地点',
     `like_count` BIGINT DEFAULT 0 COMMENT '点赞数',
     `share_count` BIGINT DEFAULT 0 COMMENT '转发数',
     `comment_count` BIGINT DEFAULT 0 COMMENT '评论数',
@@ -167,13 +176,13 @@ CREATE TABLE IF NOT EXISTS news
 (
     `news_id` VARCHAR(64) NOT NULL COMMENT '新闻编号：MD5(新闻标题+内容)',
     `publish_time` DATETIME NOT NULL COMMENT '新闻发布时间',
-    `media_name` VARCHAR(200) NOT NULL COMMENT '发表媒体名称',
-    `title` VARCHAR(500) NOT NULL COMMENT '新闻标题',
+    `media_name` VARCHAR(300) NOT NULL COMMENT '发表媒体名称',
+    `title` VARCHAR(1000) NOT NULL COMMENT '新闻标题',
     `content` STRING COMMENT '新闻内容',
-    `authors` ARRAY<VARCHAR(100)> COMMENT '新闻作者数组',
-    `tags` ARRAY<VARCHAR(50)> COMMENT '新闻标签列表',
-    `original_url` VARCHAR(1000) COMMENT '原始网页URL',
-    `category` VARCHAR(50) COMMENT '新闻类别: POLITICS-政治, ECONOMY-经济, CULTURE-文化, SPORTS-体育, TECHNOLOGY-科技',
+    `authors` ARRAY<VARCHAR(200)> COMMENT '新闻作者数组',
+    `tags` ARRAY<VARCHAR(100)> COMMENT '新闻标签列表',
+    `original_url` VARCHAR(2000) COMMENT '原始网页URL',
+    `category` VARCHAR(100) COMMENT '新闻类别: POLITICS-政治, ECONOMY-经济, CULTURE-文化, SPORTS-体育, TECHNOLOGY-科技',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )
@@ -206,13 +215,16 @@ ALTER TABLE news ADD INDEX idx_url (original_url) USING INVERTED;
 CREATE TABLE IF NOT EXISTS tag
 (
     `tag_id` BIGINT NOT NULL COMMENT '标签编号',
-    `first_level_name` VARCHAR(100) COMMENT '一级标签类名',
-    `second_level_name` VARCHAR(100) COMMENT '二级标签类名',
-    `tag_name` VARCHAR(255) NOT NULL COMMENT '标签名称',
+    `first_level_name` VARCHAR(200) COMMENT '一级标签类名',
+    `second_level_name` VARCHAR(200) COMMENT '二级标签类名',
+    `tag_name` VARCHAR(500) NOT NULL COMMENT '标签名称',
     `tag_description` STRING COMMENT '标签描述',
     `calculation_rules` STRING COMMENT '标签计算规则',
     `parent_tag_id` BIGINT COMMENT '父标签编号',
     `first_level_sort_order` INT DEFAULT 0 COMMENT '一级标签展示顺序：1基本属性 2身份属性 3关系属性 4组织架构 5行为规律 6异常行为',
+    `second_level_sort_order` INT DEFAULT 999 COMMENT '二级分类展示顺序：同一级下多个二级分类的排序，数字越小越靠前',
+    `tag_sort_order` INT DEFAULT 999 COMMENT '三级标签展示顺序：同二级下多个标签的排序，数字越小越靠前',
+    `key_tag` BOOLEAN DEFAULT 0 COMMENT '是否重点标签：重点人员页左侧仅展示重点标签，右侧仅展示命中重点标签的人员',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )
@@ -236,8 +248,8 @@ CREATE TABLE IF NOT EXISTS directory
 (
     `directory_id` INT NOT NULL COMMENT '目录编号',
     `parent_directory_id` INT COMMENT '父目录编号',
-    `directory_name` VARCHAR(200) NOT NULL COMMENT '目录名称',
-    `creator_username` VARCHAR(100) COMMENT '创建者用户名称',
+    `directory_name` VARCHAR(300) NOT NULL COMMENT '目录名称',
+    `creator_username` VARCHAR(200) COMMENT '创建者用户名称',
     `creator_user_id` INT COMMENT '创建者用户编号',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
@@ -277,7 +289,7 @@ CREATE TABLE IF NOT EXISTS person_edit_history
     `history_id` VARCHAR(64) NOT NULL COMMENT '历史记录编号：personId_timestamp',
     `person_id` VARCHAR(200) NOT NULL COMMENT '人物编号',
     `edit_time` DATETIME NOT NULL COMMENT '编辑时间',
-    `editor` VARCHAR(100) COMMENT '编辑人',
+    `editor` VARCHAR(200) COMMENT '编辑人',
     `change_summary` STRING COMMENT '变更摘要JSON: [{"field":"chineseName","label":"中文姓名","old":"x","new":"y"},...]'
 )
 UNIQUE KEY(`history_id`)
@@ -295,18 +307,18 @@ ALTER TABLE person_edit_history ADD INDEX idx_edit_time (edit_time) USING INVERT
 CREATE TABLE IF NOT EXISTS uploaded_document
 (
     `document_id` VARCHAR(64) NOT NULL COMMENT '文档编号：MD5(文档内容)',
-    `document_name` VARCHAR(500) COMMENT '文档名称',
-    `document_title` VARCHAR(500) COMMENT '文档标题',
-    `document_type` VARCHAR(50) COMMENT 'pdf, doc, txt, html, ppt, xlsx',
-    `file_path_id` VARCHAR(100) COMMENT 'SeaweedFS唯一编号',
+    `document_name` VARCHAR(1000) COMMENT '文档名称',
+    `document_title` VARCHAR(1000) COMMENT '文档标题',
+    `document_type` VARCHAR(100) COMMENT 'pdf, doc, txt, html, ppt, xlsx',
+    `file_path_id` VARCHAR(200) COMMENT 'SeaweedFS唯一编号',
     `file_size` BIGINT COMMENT '文档大小(字节)',
-    `source` VARCHAR(50) COMMENT '来源: USER_UPLOAD-用户上传, SYSTEM_COLLECT-系统采集',
-    `author` VARCHAR(200) COMMENT '文档作者',
+    `source` VARCHAR(100) COMMENT '来源: USER_UPLOAD-用户上传, SYSTEM_COLLECT-系统采集',
+    `author` VARCHAR(500) COMMENT '文档作者',
     `original_content` STRING COMMENT '文档原始文本内容',
     `metadata` STRING COMMENT '文档元数据: {"page_count":0, "word_count":0, "format_version":"", "created_time":""}',
     `language` VARCHAR(20) COMMENT '文档语种: zh-CN, en-US, ja-JP等',
     `translated_content` STRING COMMENT '文档翻译后内容',
-    `upload_username` VARCHAR(100) COMMENT '上传用户名称',
+    `upload_username` VARCHAR(200) COMMENT '上传用户名称',
     `upload_user_id` INT COMMENT '上传用户编号',
     `directory_id` INT COMMENT '所属目录编号',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -365,7 +377,7 @@ CREATE TABLE IF NOT EXISTS qa_history
     `session_id` VARCHAR(100) NOT NULL,
     `question_id` BIGINT NOT NULL,
     `user_id` VARCHAR(100),
-    `question_type` VARCHAR(50) COMMENT '问题类型: DOC_QA-文档问答, PERSON_QUERY-人物查询, NEWS_SEARCH-新闻检索, TRAVEL_ANALYSIS-行程分析',
+    `question_type` VARCHAR(100) COMMENT '问题类型: DOC_QA-文档问答, PERSON_QUERY-人物查询, NEWS_SEARCH-新闻检索, TRAVEL_ANALYSIS-行程分析',
     `question` STRING NOT NULL COMMENT '问题内容',
     `answer` STRING COMMENT '回答内容',
     `source_doc_ids` ARRAY<VARCHAR(64)> COMMENT '引用的文档ID',
@@ -374,7 +386,7 @@ CREATE TABLE IF NOT EXISTS qa_history
     `source_news_ids` ARRAY<VARCHAR(64)> COMMENT '引用的新闻ID',
     `confidence_score` FLOAT COMMENT '置信度',
     `query_time_ms` INT COMMENT '查询耗时(毫秒)',
-    `model_used` VARCHAR(50) COMMENT '使用的模型',
+    `model_used` VARCHAR(100) COMMENT '使用的模型',
     `created_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `feedback` TINYINT COMMENT '用户反馈: 1-赞, -1-踩, 0-无反馈'
 )
@@ -409,17 +421,20 @@ CREATE TABLE IF NOT EXISTS archive_import_task
 (
     `task_id` VARCHAR(64) NOT NULL COMMENT '任务编号：UUID',
     `document_id` VARCHAR(64) COMMENT '关联上传文档编号',
-    `file_name` VARCHAR(500) COMMENT '原始文件名',
-    `file_path_id` VARCHAR(100) COMMENT 'SeaweedFS 文件编号',
-    `file_type` VARCHAR(20) COMMENT '文件类型: DOC, DOCX, XLS, XLSX, CSV, PDF',
-    `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING, EXTRACTING, MATCHING, SUCCESS, FAILED',
+    `file_name` VARCHAR(1000) COMMENT '原始文件名',
+    `file_path_id` VARCHAR(200) COMMENT 'SeaweedFS 文件编号',
+    `file_type` VARCHAR(50) COMMENT '文件类型: DOC, DOCX, XLS, XLSX, CSV, PDF',
+    `status` VARCHAR(50) NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING, EXTRACTING, MATCHING, SUCCESS, FAILED',
     `original_text` STRING COMMENT '解析后的原始文档全文，用于与抽取结果对比阅读',
     `creator_user_id` INT COMMENT '创建者用户编号',
-    `creator_username` VARCHAR(100) COMMENT '创建者用户名',
-    `extract_count` INT DEFAULT 0 COMMENT '提取出的人物数量',
+    `creator_username` VARCHAR(200) COMMENT '创建者用户名',
+    `total_extract_count` INT DEFAULT 0 COMMENT '待提取人物总数（Excel/CSV 为行数，文档为 1）',
+    `extract_count` INT DEFAULT 0 COMMENT '已提取人物数量',
     `error_message` STRING COMMENT '失败时错误信息',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    `completed_time` DATETIME COMMENT '任务完成时间（状态变为 SUCCESS 或 FAILED 时写入）',
+    `similar_match_fields` VARCHAR(500) COMMENT '相似档案判定属性组合，逗号分隔：originalName,birthDate,gender,nationality'
 )
 UNIQUE KEY(`task_id`)
 COMMENT "人员档案导入任务表"
@@ -439,15 +454,15 @@ CREATE TABLE IF NOT EXISTS archive_extract_result
     `result_id` VARCHAR(64) NOT NULL COMMENT '结果编号：UUID',
     `task_id` VARCHAR(64) NOT NULL COMMENT '任务编号',
     `extract_index` INT NOT NULL COMMENT '同一任务中人物序号',
-    `original_name` VARCHAR(200) COMMENT '原始姓名',
+    `original_name` VARCHAR(300) COMMENT '原始姓名',
     `birth_date` DATE COMMENT '出生日期',
-    `gender` VARCHAR(10) COMMENT '性别',
-    `nationality` VARCHAR(100) COMMENT '国籍',
+    `gender` VARCHAR(20) COMMENT '性别',
+    `nationality` VARCHAR(200) COMMENT '国籍',
     `original_text` TEXT COMMENT '原始文本内容',
     `raw_json` TEXT COMMENT '大模型返回的完整结构化 JSON（与 person 表结构一致）',
     `confirmed` BOOLEAN DEFAULT 0 COMMENT '用户是否确认导入',
     `imported` BOOLEAN DEFAULT 0 COMMENT '是否已导入 person 表',
-    `imported_person_id` VARCHAR(200) COMMENT '导入后的人物编号',
+    `imported_person_id` VARCHAR(300) COMMENT '导入后的人物编号',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 )
 UNIQUE KEY(`result_id`)
@@ -488,8 +503,8 @@ ALTER TABLE archive_similar_match ADD INDEX idx_person_id (person_id) USING INVE
 -- 系统配置表（key-value，控制系统名称、Logo、前端 base URL、各导航与核心板块显示隐藏）
 CREATE TABLE IF NOT EXISTS system_config
 (
-    `config_key`   VARCHAR(100)  NOT NULL COMMENT '配置键',
-    `config_value` VARCHAR(1000) NULL COMMENT '配置值',
+    `config_key`   VARCHAR(200)  NOT NULL COMMENT '配置键',
+    `config_value` VARCHAR(8000) NULL COMMENT '配置值（含人物档案提取提示词等）',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 )
 UNIQUE KEY(`config_key`)
@@ -506,12 +521,12 @@ PROPERTIES (
 CREATE TABLE IF NOT EXISTS prediction_model
 (
     `model_id` VARCHAR(64) NOT NULL COMMENT '模型编号：UUID',
-    `name` VARCHAR(200) NOT NULL COMMENT '模型名称',
-    `description` VARCHAR(500) COMMENT '模型描述',
-    `status` VARCHAR(20) NOT NULL DEFAULT 'PAUSED' COMMENT '状态: RUNNING-运行中, PAUSED-已暂停',
+    `name` VARCHAR(300) NOT NULL COMMENT '模型名称',
+    `description` VARCHAR(1000) COMMENT '模型描述',
+    `status` VARCHAR(50) NOT NULL DEFAULT 'PAUSED' COMMENT '状态: RUNNING-运行中, PAUSED-已暂停',
     `rule_config` STRING COMMENT '语义规则（自然语言），如：满足年龄大于20岁且具有高消费标签的所有人群',
     `locked_count` INT DEFAULT 0 COMMENT '锁定人数（模型识别出的重点人数）',
-    `accuracy` VARCHAR(50) COMMENT '准确率，如 92.5%',
+    `accuracy` VARCHAR(100) COMMENT '准确率，如 92.5%',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )

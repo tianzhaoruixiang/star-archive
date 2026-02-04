@@ -24,10 +24,10 @@ public class Directory {
     @Column(name = "parent_directory_id")
     private Integer parentDirectoryId;
 
-    @Column(name = "directory_name", nullable = false, length = 200)
+    @Column(name = "directory_name", nullable = false, length = 300)
     private String directoryName;
 
-    @Column(name = "creator_username", length = 100)
+    @Column(name = "creator_username", length = 200)
     private String creatorUsername;
 
     @Column(name = "creator_user_id")

@@ -26,11 +26,11 @@ public class PersonSocialDynamic {
     
     @Column(name = "social_account_type", nullable = false, length = 50)
     private String socialAccountType;
-    
-    @Column(name = "social_account", nullable = false, length = 200)
+
+    @Column(name = "social_account", nullable = false, length = 300)
     private String socialAccount;
-    
-    @Column(name = "title", length = 500)
+
+    @Column(name = "title", length = 1000)
     private String title;
     
     @Column(name = "content", columnDefinition = "TEXT")
@@ -43,7 +43,7 @@ public class PersonSocialDynamic {
     @Column(name = "publish_time", nullable = false)
     private LocalDateTime publishTime;
     
-    @Column(name = "publish_location", length = 200)
+    @Column(name = "publish_location", length = 500)
     private String publishLocation;
     
     @Column(name = "like_count")

@@ -28,34 +28,34 @@ public class PersonTravel {
     @Column(name = "event_time", nullable = false)
     private LocalDateTime eventTime;
     
-    @Column(name = "person_name", nullable = false, length = 200)
+    @Column(name = "person_name", nullable = false, length = 300)
     private String personName;
-    
-    @Column(name = "departure", length = 500)
+
+    @Column(name = "departure", length = 1000)
     private String departure;
-    
-    @Column(name = "destination", length = 500)
+
+    @Column(name = "destination", length = 1000)
     private String destination;
-    
+
     @Column(name = "travel_type", nullable = false, length = 20)
     private String travelType;
-    
-    @Column(name = "ticket_number", length = 100)
+
+    @Column(name = "ticket_number", length = 200)
     private String ticketNumber;
-    
-    @Column(name = "visa_type", length = 50)
+
+    @Column(name = "visa_type", length = 100)
     private String visaType;
-    
-    @Column(name = "destination_province", length = 50)
+
+    @Column(name = "destination_province", length = 100)
     private String destinationProvince;
-    
-    @Column(name = "departure_province", length = 50)
+
+    @Column(name = "departure_province", length = 100)
     private String departureProvince;
-    
-    @Column(name = "destination_city", length = 50)
+
+    @Column(name = "destination_city", length = 100)
     private String destinationCity;
-    
-    @Column(name = "departure_city", length = 50)
+
+    @Column(name = "departure_city", length = 100)
     private String departureCity;
     
     @Column(name = "created_time")

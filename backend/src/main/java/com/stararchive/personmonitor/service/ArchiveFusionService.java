@@ -14,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.MessageDigest;
@@ -22,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,9 +37,11 @@ import java.util.stream.Collectors;
 public class ArchiveFusionService {
 
     private static final String STATUS_PENDING = "PENDING";
+    private static final String STATUS_FAILED = "FAILED";
 
     private final ArchiveImportTaskRepository taskRepository;
     private final ArchiveExtractResultRepository extractResultRepository;
+    private final ArchiveSimilarMatchRepository similarMatchRepository;
     private final PersonRepository personRepository;
     private final PersonService personService;
     private final SeaweedFSService seaweedFSService;
@@ -53,13 +58,15 @@ public class ArchiveFusionService {
      * 大模型提取由异步任务执行，执行成功后更新任务状态为 SUCCESS/FAILED 及提取人数。
      */
     @Transactional(rollbackFor = Exception.class)
-    public ArchiveImportTaskDTO createTaskAndExtract(MultipartFile file, Integer creatorUserId, String creatorUsername) {
+    public ArchiveImportTaskDTO createTaskAndExtract(MultipartFile file, Integer creatorUserId, String creatorUsername,
+                                                     String similarMatchFields) {
         String taskId = UUID.randomUUID().toString().replace("-", "");
         String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown";
         String fileType = resolveFileType(fileName);
+        String normalizedMatchFields = normalizeSimilarMatchFields(similarMatchFields);
 
-        log.info("【档案融合】创建任务开始: taskId={}, fileName={}, fileType={}, creatorUsername={}", 
-                taskId, fileName, fileType, creatorUsername);
+        log.info("【档案融合】创建任务开始: taskId={}, fileName={}, fileType={}, creatorUsername={}, similarMatchFields={}",
+                taskId, fileName, fileType, creatorUsername, normalizedMatchFields);
 
         String filePathId;
         try {
@@ -78,18 +85,30 @@ public class ArchiveFusionService {
                 .status(STATUS_PENDING)
                 .creatorUserId(creatorUserId)
                 .creatorUsername(creatorUsername)
+                .totalExtractCount(0)
                 .extractCount(0)
+                .similarMatchFields(normalizedMatchFields)
                 .createdTime(LocalDateTime.now())
                 .updatedTime(LocalDateTime.now())
                 .build();
         taskRepository.save(task);
         log.info("【档案融合】任务已保存: taskId={}, status={}", taskId, STATUS_PENDING);
 
-        // 通过单独的 Bean 调用异步方法，确保 @Async 代理生效
-        log.info("【档案融合】准备触发异步提取: taskId={}", taskId);
-        asyncExecutor.executeExtractionAsync(taskId);
-        log.info("【档案融合】异步提取已触发，接口即将返回: taskId={}", taskId);
-        
+        // 有事务时在提交后触发异步提取；无事务时（如批量上传内部调用）直接触发，避免 Transaction synchronization is not active
+        final String taskIdForAsync = taskId;
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info("【档案融合】事务已提交，触发异步提取: taskId={}", taskIdForAsync);
+                    asyncExecutor.executeExtractionAsync(taskIdForAsync);
+                }
+            });
+        } else {
+            log.info("【档案融合】无活动事务，直接触发异步提取: taskId={}", taskIdForAsync);
+            asyncExecutor.executeExtractionAsync(taskIdForAsync);
+        }
+
         return toTaskDTO(task);
     }
 
@@ -100,14 +119,15 @@ public class ArchiveFusionService {
     public ArchiveFusionBatchCreateResultDTO batchCreateTasksAndExtract(
             List<MultipartFile> files,
             Integer creatorUserId,
-            String creatorUsername) {
+            String creatorUsername,
+            String similarMatchFields) {
         List<ArchiveImportTaskDTO> tasks = new ArrayList<>();
         List<ArchiveFusionBatchCreateResultDTO.BatchCreateError> errors = new ArrayList<>();
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty()) continue;
             String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown";
             try {
-                ArchiveImportTaskDTO dto = createTaskAndExtract(file, creatorUserId, creatorUsername);
+                ArchiveImportTaskDTO dto = createTaskAndExtract(file, creatorUserId, creatorUsername, similarMatchFields);
                 if (dto != null) {
                     tasks.add(dto);
                 } else {
@@ -128,6 +148,66 @@ public class ArchiveFusionService {
                 .build();
     }
 
+    /**
+     * 失败任务重新导入：仅允许状态为 FAILED 的任务重试。
+     * 清空该任务的提取结果、重置状态为 PENDING 并重新触发异步提取。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ArchiveImportTaskDTO retryTask(String taskId) {
+        ArchiveImportTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("任务不存在"));
+        if (!STATUS_FAILED.equals(task.getStatus())) {
+            throw new IllegalArgumentException("仅失败状态的任务支持重新导入，当前状态: " + task.getStatus());
+        }
+        // 清空该任务已有的提取结果
+        List<ArchiveExtractResult> existing = extractResultRepository.findByTaskIdOrderByExtractIndexAsc(taskId);
+        if (!existing.isEmpty()) {
+            extractResultRepository.deleteAll(existing);
+        }
+        task.setStatus(STATUS_PENDING);
+        task.setErrorMessage(null);
+        task.setExtractCount(0);
+        task.setTotalExtractCount(0);
+        task.setUpdatedTime(LocalDateTime.now());
+        taskRepository.save(task);
+        log.info("【档案融合】失败任务重新导入: taskId={}", taskId);
+        final String taskIdForAsync = taskId;
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    asyncExecutor.executeExtractionAsync(taskIdForAsync);
+                }
+            });
+        } else {
+            asyncExecutor.executeExtractionAsync(taskIdForAsync);
+        }
+        return toTaskDTO(task);
+    }
+
+    /**
+     * 删除档案融合导入任务：仅删除任务及关联的提取结果、相似匹配记录；SeaweedFS 文件保留。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteTask(String taskId) {
+        if (taskId == null || taskId.isBlank()) {
+            throw new IllegalArgumentException("任务编号不能为空");
+        }
+        if (!taskRepository.existsById(taskId)) {
+            throw new IllegalArgumentException("任务不存在");
+        }
+        List<ArchiveExtractResult> results = extractResultRepository.findByTaskIdOrderByExtractIndexAsc(taskId);
+        if (!results.isEmpty()) {
+            extractResultRepository.deleteAll(results);
+        }
+        List<ArchiveSimilarMatch> matches = similarMatchRepository.findByTaskId(taskId);
+        if (!matches.isEmpty()) {
+            similarMatchRepository.deleteAll(matches);
+        }
+        taskRepository.deleteById(taskId);
+        log.info("【档案融合】删除任务: taskId={}", taskId);
+    }
+
     private String resolveFileType(String fileName) {
         if (fileName == null) return "UNKNOWN";
         String lower = fileName.toLowerCase();
@@ -139,20 +219,30 @@ public class ArchiveFusionService {
     }
 
     /**
-     * 相似档案条件：原始姓名+出生日期+性别+国籍 均非空时才查询。
+     * 相似档案查询：按选定的属性组合匹配，仅当选中的属性均有值时才查询。
      * 比对范围仅限当前用户可见的档案：公开档案 或 创建人为 currentUsername 的私有档案。
      *
+     * @param matchFields 参与比对的属性集合（originalName, birthDate, gender, nationality）
      * @param currentUsername 当前用户（任务创建人或查看详情的用户），为空时仅返回公开档案
      */
-    private List<Person> findSimilarPersons(String originalName, LocalDate birthDate, String gender, String nationality, String currentUsername) {
-        if (originalName == null || originalName.isBlank()
-                || birthDate == null
-                || gender == null || gender.isBlank()
-                || nationality == null || nationality.isBlank()) {
+    private List<Person> findSimilarPersons(Set<String> matchFields, String originalName, LocalDate birthDate,
+                                            String gender, String nationality, String currentUsername) {
+        if (matchFields == null || matchFields.isEmpty()) {
             return Collections.emptyList();
         }
-        List<Person> all = personRepository.findSimilarByOriginalNameAndBirthDateAndGenderAndNationality(
-                originalName, birthDate, gender, nationality);
+        if (matchFields.contains("originalName") && (originalName == null || originalName.isBlank())) {
+            return Collections.emptyList();
+        }
+        if (matchFields.contains("birthDate") && birthDate == null) {
+            return Collections.emptyList();
+        }
+        if (matchFields.contains("gender") && (gender == null || gender.isBlank())) {
+            return Collections.emptyList();
+        }
+        if (matchFields.contains("nationality") && (nationality == null || nationality.isBlank())) {
+            return Collections.emptyList();
+        }
+        List<Person> all = personRepository.findSimilarByFields(matchFields, originalName, birthDate, gender, nationality);
         String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
         return all.stream()
                 .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
@@ -202,17 +292,35 @@ public class ArchiveFusionService {
     }
 
     /**
-     * 获取任务详情（提取结果及每条结果的库内相似档案）。相似档案比对范围仅限 currentUsername 可见的档案。
+     * 获取任务详情（仅任务信息，不包含提取结果列表）。提取结果由分页接口 {@link #getTaskExtractResultsPage} 获取。
      *
-     * @param currentUsername 当前用户（X-Username），为空时相似档案仅包含公开档案
+     * @param currentUsername 当前用户（X-Username），用于权限校验
      */
     public ArchiveFusionTaskDetailDTO getTaskDetail(String taskId, String currentUsername) {
         ArchiveImportTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new NoSuchElementException("任务不存在: " + taskId));
-        List<ArchiveExtractResult> results = extractResultRepository.findByTaskIdOrderByExtractIndexAsc(taskId);
+        ArchiveImportTaskDTO taskDTO = toTaskDTO(task);
+        taskDTO.setUnimportedCount(extractResultRepository.countByTaskIdAndImportedFalse(taskId));
+        return ArchiveFusionTaskDetailDTO.builder()
+                .task(taskDTO)
+                .extractResults(Collections.emptyList())
+                .build();
+    }
+
+    /**
+     * 分页获取任务提取结果（含每条结果的库内相似档案）。相似档案比对范围仅限 currentUsername 可见的档案。
+     *
+     * @param currentUsername 当前用户（X-Username），为空时相似档案仅包含公开档案
+     */
+    public PageResponse<ArchiveExtractResultDTO> getTaskExtractResultsPage(String taskId, int page, int size, String currentUsername) {
+        ArchiveImportTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new NoSuchElementException("任务不存在: " + taskId));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "extractIndex"));
+        Page<ArchiveExtractResult> resultPage = extractResultRepository.findByTaskIdOrderByExtractIndexAsc(taskId, pageable);
         String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
-        List<ArchiveExtractResultDTO> resultDTOs = results.stream().map(r -> {
-            List<Person> similar = findSimilarPersons(r.getOriginalName(), r.getBirthDate(), r.getGender(), r.getNationality(), user);
+        Set<String> matchFields = parseSimilarMatchFields(task.getSimilarMatchFields());
+        List<ArchiveExtractResultDTO> resultDTOs = resultPage.getContent().stream().map(r -> {
+            List<Person> similar = findSimilarPersons(matchFields, r.getOriginalName(), r.getBirthDate(), r.getGender(), r.getNationality(), user);
             List<PersonCardDTO> cards = similar.stream().map(personService::toCardDTO).collect(Collectors.toList());
             return ArchiveExtractResultDTO.builder()
                     .resultId(r.getResultId())
@@ -230,25 +338,53 @@ public class ArchiveFusionService {
                     .similarPersons(cards)
                     .build();
         }).collect(Collectors.toList());
-        return ArchiveFusionTaskDetailDTO.builder()
-                .task(toTaskDTO(task))
-                .extractResults(resultDTOs)
-                .build();
+        return PageResponse.of(resultDTOs, page, size, resultPage.getTotalElements());
     }
 
     private ArchiveImportTaskDTO toTaskDTO(ArchiveImportTask task) {
+        Long durationSeconds = null;
+        if (task.getCreatedTime() != null && task.getCompletedTime() != null) {
+            durationSeconds = ChronoUnit.SECONDS.between(task.getCreatedTime(), task.getCompletedTime());
+        }
         return ArchiveImportTaskDTO.builder()
                 .taskId(task.getTaskId())
                 .fileName(task.getFileName())
                 .fileType(task.getFileType())
                 .status(task.getStatus())
                 .originalText(task.getOriginalText())
+                .totalExtractCount(task.getTotalExtractCount())
                 .extractCount(task.getExtractCount())
                 .errorMessage(task.getErrorMessage())
                 .creatorUsername(task.getCreatorUsername())
                 .createdTime(task.getCreatedTime())
                 .updatedTime(task.getUpdatedTime())
+                .completedTime(task.getCompletedTime())
+                .durationSeconds(durationSeconds)
+                .similarMatchFields(task.getSimilarMatchFields())
                 .build();
+    }
+
+    /** 相似判定允许的属性名 */
+    private static final Set<String> SIMILAR_MATCH_ALLOWED = Set.of("originalName", "birthDate", "gender", "nationality");
+    /** 默认相似判定属性：四者均参与 */
+    private static final String DEFAULT_SIMILAR_MATCH_FIELDS = "originalName,birthDate,gender,nationality";
+
+    private static Set<String> parseSimilarMatchFields(String similarMatchFields) {
+        if (similarMatchFields == null || similarMatchFields.isBlank()) {
+            return Set.copyOf(List.of("originalName", "birthDate", "gender", "nationality"));
+        }
+        return Arrays.stream(similarMatchFields.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty() && SIMILAR_MATCH_ALLOWED.contains(s))
+                .collect(Collectors.toSet());
+    }
+
+    private static String normalizeSimilarMatchFields(String similarMatchFields) {
+        Set<String> set = parseSimilarMatchFields(similarMatchFields);
+        if (set.isEmpty()) {
+            return DEFAULT_SIMILAR_MATCH_FIELDS;
+        }
+        return String.join(",", set);
     }
 
     /**
@@ -302,6 +438,26 @@ public class ArchiveFusionService {
         return importedPersonIds;
     }
 
+    /**
+     * 全部导入（异步）：将本任务下所有未导入的提取结果提交给后台异步任务逐批导入，接口立即返回。
+     *
+     * @return 本批提交的条数（将后台导入）
+     */
+    public int confirmImportAllAsync(String taskId, List<String> batchTags, boolean importAsPublic) {
+        ArchiveImportTask task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new NoSuchElementException("任务不存在: " + taskId));
+        List<String> resultIds = extractResultRepository.findResultIdsByTaskIdAndImportedFalse(taskId);
+        if (resultIds.isEmpty()) {
+            return 0;
+        }
+        List<String> tags = (batchTags != null && !batchTags.isEmpty())
+                ? batchTags.stream().map(String::trim).filter(s -> !s.isEmpty()).distinct().toList()
+                : List.<String>of();
+        asyncExecutor.runConfirmImportAllAsync(taskId, resultIds, tags, importAsPublic);
+        log.info("【档案融合】已提交全部导入异步任务: taskId={}, 共 {} 条", taskId, resultIds.size());
+        return resultIds.size();
+    }
+
     private Person mapFromRawJsonToPerson(Map<String, Object> map) {
         String originalName = stringOrNull(map.get("original_name"));
         String birthDateStr = stringOrNull(map.get("birth_date"));
@@ -316,6 +472,7 @@ public class ArchiveFusionService {
         person.setOriginalName(originalName);
         person.setChineseName(stringOrNull(map.get("chinese_name")));
         person.setGender(gender);
+        person.setMaritalStatus(stringOrNull(map.get("marital_status")));
         person.setNationality(nationality);
         person.setNationalityCode(stringOrNull(map.get("nationality_code")));
         person.setBirthDate(birthDate != null ? birthDate.atStartOfDay() : null);
@@ -327,10 +484,12 @@ public class ArchiveFusionService {
         person.setIsPublic(true);
         person.setCreatedBy(null);
         person.setAliasNames(listFromMap(map, "alias_names"));
-        person.setIdNumbers(listFromMap(map, "id_numbers"));
+        person.setIdNumber(stringOrNull(map.get("id_number")));
         person.setPhoneNumbers(listFromMap(map, "phone_numbers"));
         person.setEmails(listFromMap(map, "emails"));
         person.setPassportNumbers(listFromMap(map, "passport_numbers"));
+        person.setPassportNumber(stringOrNull(map.get("passport_number")));
+        person.setPassportType(stringOrNull(map.get("passport_type")));
         person.setPersonTags(listFromMap(map, "person_tags"));
         person.setAvatarFiles(listFromMap(map, "avatar_files"));
         person.setTwitterAccounts(listFromMap(map, "twitter_accounts"));

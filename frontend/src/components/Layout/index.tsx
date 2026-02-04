@@ -30,11 +30,10 @@ const TOP_MENU_ENTRIES: { key: string; icon: React.ReactNode; label: string; con
   { key: '/system-config', icon: <SettingOutlined />, label: '系统配置', configKey: 'navSystemConfig' },
 ];
 
-/** 工作区二级导航 */
+/** 工作区二级导航（每项可在系统配置中单独控制显示/隐藏） */
 const WORKSPACE_CHILDREN: { key: string; label: string; configKey: keyof SystemConfigDTO }[] = [
-  { key: '/workspace/fusion', label: '档案融合', configKey: 'navWorkspace' },
-  { key: '/workspace/tags', label: '标签管理', configKey: 'navWorkspace' },
-  { key: '/workspace/data', label: '数据管理', configKey: 'navWorkspace' },
+  { key: '/workspace/fusion', label: '档案融合', configKey: 'navWorkspaceFusion' },
+  { key: '/workspace/tags', label: '标签管理', configKey: 'navWorkspaceTags' },
   { key: '/workspace/models', label: '模型管理', configKey: 'navModelManagement' },
 ];
 
@@ -162,7 +161,7 @@ const Layout = () => {
           <span className="logo-text">{appName}</span>
         </div>
         <Menu
-          theme="dark"
+          theme="light"
           mode="horizontal"
           selectedKeys={selectedKeys}
           openKeys={menuOpenKeys}

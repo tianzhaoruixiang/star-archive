@@ -2,9 +2,8 @@
 <configuration>
   <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-  <!-- 日志目录与主文件路径（可通过 application.yml logging.file.name 覆盖） -->
-  <springProperty name="LOG_PATH" source="logging.file.path" defaultValue="/app/logs"/>
-  <springProperty name="LOG_FILE" source="logging.file.name" defaultValue="/app/logs/application.log"/>
+  <!-- 日志目录：由 application.yml 或环境变量 LOGGING_FILE_PATH 覆盖；容器内设为 /app/logs 并保证该目录可写。文件路径一律基于 LOG_PATH，避免 name 为相对路径时写到不可写目录 -->
+  <springProperty name="LOG_PATH" source="logging.file.path" defaultValue="./logs"/>
 
   <!-- 控制台输出 -->
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -14,9 +13,9 @@
     </encoder>
   </appender>
 
-  <!-- 按日期滚动的日志文件 -->
+  <!-- 按日期滚动的日志文件（始终使用 LOG_PATH，避免 application.yml 中 name: application.log 导致相对路径写 /app 权限错误） -->
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${LOG_FILE}</file>
+    <file>${LOG_PATH}/application.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${LOG_PATH}/application.%d{yyyy-MM-dd}.log</fileNamePattern>
       <maxHistory>30</maxHistory>

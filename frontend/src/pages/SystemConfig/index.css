@@ -1,7 +1,9 @@
 /* 系统配置页 - 深色科技感，与全站配色统一 */
 
+/* 与人员档案详情页一致的最小宽度 */
 .system-config-page {
   width: 100%;
+  min-width: 1200px;
   padding: var(--page-padding);
   display: flex;
   flex-direction: column;
@@ -76,15 +78,21 @@
   color: var(--text-muted) !important;
 }
 
-/* 输入框：深色底 + 青蓝描边 */
+/* 输入框：深色底 + 青蓝描边（仅最外层一层边框，避免 affix-wrapper 与内部 input 双重边框） */
 .system-config-page .ant-input,
-.system-config-page .ant-input-affix-wrapper,
-.system-config-page .ant-input-password {
+.system-config-page .ant-input-affix-wrapper {
   background: var(--input-bg) !important;
   border: 1px solid var(--input-border) !important;
   border-radius: var(--radius-md) !important;
   color: var(--text-primary) !important;
   transition: all var(--transition-fast);
+}
+
+/* 被 affix-wrapper 包裹的 input/textarea 不再单独加边框，避免双重线 */
+.system-config-page .ant-input-affix-wrapper .ant-input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .system-config-page .ant-input::placeholder,
@@ -93,16 +101,23 @@
 }
 
 .system-config-page .ant-input:hover,
-.system-config-page .ant-input-affix-wrapper:hover,
-.system-config-page .ant-input-password:hover {
+.system-config-page .ant-input-affix-wrapper:hover {
   border-color: var(--input-hover-border) !important;
 }
 
+.system-config-page .ant-input-affix-wrapper:hover .ant-input {
+  border-color: transparent !important;
+}
+
 .system-config-page .ant-input:focus,
-.system-config-page .ant-input-affix-wrapper-focused,
-.system-config-page .ant-input-password:focus-within {
+.system-config-page .ant-input-affix-wrapper-focused {
   border-color: var(--input-focus-border) !important;
   box-shadow: var(--input-focus-glow);
+}
+
+.system-config-page .ant-input-affix-wrapper-focused .ant-input {
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .system-config-page .ant-input-password .ant-input {
@@ -133,20 +148,20 @@
   color: #fff;
 }
 
-/* 主按钮：青蓝渐变 + 光晕 */
+/* 主按钮 */
 .system-config-page .ant-btn-primary {
   background: var(--accent-btn) !important;
   border: none !important;
   color: #fff !important;
   border-radius: var(--radius-md);
-  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35);
+  box-shadow: var(--card-shadow);
   transition: all var(--transition-fast);
 }
 
 .system-config-page .ant-btn-primary:hover {
   background: var(--accent-btn-hover) !important;
   color: #fff !important;
-  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.45);
+  box-shadow: var(--card-shadow-hover);
 }
 
 /* 次要按钮 / 上传按钮 */
@@ -231,12 +246,12 @@
 .system-config-users-toolbar .ant-btn-primary {
   background: var(--accent-btn) !important;
   border: none !important;
-  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35);
+  box-shadow: var(--card-shadow);
 }
 
 .system-config-users-toolbar .ant-btn-primary:hover {
   background: var(--accent-btn-hover) !important;
-  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.45);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .system-config-users-card .ant-table {
@@ -245,7 +260,7 @@
 
 /* 表格在卡片内使用 common 的 ant-table 覆盖，此处补充分页等 */
 .system-config-users-card .ant-table-thead > tr > th {
-  background: rgba(6, 182, 212, 0.08) !important;
+  background: #f8fafc !important;
   color: var(--text-muted) !important;
   border-bottom-color: var(--card-border-subtle) !important;
 }

@@ -1,57 +1,56 @@
 /**
- * 科技感深色主题 - 设计变量
- * 深蓝紫背景、青蓝/紫色强调、圆角与柔和光晕，体现科技感、质感与智能化
+ * 简洁白色主题 - 设计变量
+ * 白底、浅灰边框、蓝色主色，干净易读
  */
 :root {
   /* 字体 */
   --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
     'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
 
-  /* 主背景 - 深蓝紫 */
-  --page-bg: #0f0d1a;
-  --page-bg-alt: #16142a;
-  --page-bg-gradient: linear-gradient(165deg, #0f0d1a 0%, #16142a 40%, #1a1735 100%);
+  /* 主背景 - 白色 / 浅灰 */
+  --page-bg: #ffffff;
+  --page-bg-alt: #f8fafc;
+  --page-bg-gradient: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 
   /* 背景图 */
-  --bg-pattern: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(168, 85, 247, 0.06) 0%, transparent 50%);
+  --bg-pattern: none;
   --bg-login: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80');
 
-  /* 卡片/区块 - 半透明深色 + 光晕 */
-  --card-bg: rgba(22, 20, 42, 0.72);
-  --card-bg-solid: #1a1735;
-  --card-border: rgba(6, 182, 212, 0.15);
-  --card-border-subtle: rgba(148, 163, 184, 0.12);
+  /* 卡片/区块 */
+  --card-bg: #ffffff;
+  --card-bg-solid: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.06);
+  --card-border-subtle: rgba(0, 0, 0, 0.06);
   --card-radius: 12px;
   --card-radius-lg: 16px;
-  --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), 0 0 1px rgba(6, 182, 212, 0.1);
-  --card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 24px rgba(6, 182, 212, 0.08);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   /* 输入/表单 */
-  --input-bg: rgba(26, 23, 53, 0.8);
-  --input-border: rgba(6, 182, 212, 0.2);
-  --input-focus-border: #06b6d4;
-  --input-hover-border: rgba(6, 182, 212, 0.4);
-  --input-focus-glow: 0 0 0 3px rgba(6, 182, 212, 0.25);
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --input-focus-border: #0ea5e9;
+  --input-hover-border: #94a3b8;
+  --input-focus-glow: 0 0 0 2px rgba(14, 165, 233, 0.2);
 
   /* 文字层级 */
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-placeholder: #64748b;
-  --text-disabled: #475569;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-placeholder: #94a3b8;
+  --text-disabled: #cbd5e1;
 
-  /* 主色 - 青蓝/Teal（科技感） */
-  --primary: #06b6d4;
-  --primary-hover: rgba(6, 182, 212, 0.2);
-  --primary-light: rgba(6, 182, 212, 0.12);
-  --primary-glow: rgba(6, 182, 212, 0.35);
+  /* 主色 - 蓝色（简洁） */
+  --primary: #0ea5e9;
+  --primary-hover: rgba(14, 165, 233, 0.08);
+  --primary-light: rgba(14, 165, 233, 0.1);
+  --primary-glow: rgba(14, 165, 233, 0.2);
 
-  /* 强调色 - 紫色（选中/高亮） */
-  --accent-purple: #a855f7;
-  --accent-purple-light: rgba(168, 85, 247, 0.2);
-  --accent-btn: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-  --accent-btn-hover: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  /* 强调色 */
+  --accent-purple: #8b5cf6;
+  --accent-purple-light: rgba(139, 92, 246, 0.1);
+  --accent-btn: #0ea5e9;
+  --accent-btn-hover: #0284c7;
   --accent-green: #22c55e;
   --accent-red: #ef4444;
   --accent-amber: #f59e0b;
@@ -68,7 +67,15 @@
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
 
-  --content-max-width: 1400px;
+  /** 顶栏高度（与 Layout 一致，用于计算内容区可用高度） */
+  --layout-header-height: 52px;
+  /** 内容区可用高度（视口高度减去顶栏），用于满屏布局 */
+  --content-available-height: calc(100vh - var(--layout-header-height));
+
+  /** 非首页内容区最大宽度（宽屏时两侧留白） */
+  --content-max-width: 1320px;
+  /** 非首页内容区左右留白 */
+  --content-side-padding: 40px;
 
   /* 圆角 */
   --radius-sm: 8px;
@@ -93,4 +100,29 @@
   /* 过渡 */
   --transition-fast: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   --transition-normal: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* 1920 宽屏：内容区加宽，更好利用横向空间 */
+@media (min-width: 1920px) {
+  :root {
+    --content-max-width: 1600px;
+    --content-side-padding: 48px;
+  }
+}
+
+/* 2560 超宽屏（含 2560×1080）：进一步加宽内容区，适配 21:9 等超宽比例 */
+@media (min-width: 2400px) {
+  :root {
+    --content-max-width: 2000px;
+    --content-side-padding: 56px;
+  }
+}
+
+/* 矮屏（如 2560×1080 高度 1080）：适当收紧上下间距，保证一屏内内容更多 */
+@media (max-height: 1080px) {
+  :root {
+    --page-padding: 18px;
+    --page-gap: 20px;
+    --spacing-2xl: 28px;
+  }
 }

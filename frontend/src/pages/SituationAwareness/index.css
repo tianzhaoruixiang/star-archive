@@ -1,9 +1,20 @@
-/* 态势感知 - 新闻动态（主流新闻站风格） */
-
+/* 态势感知 - 新闻动态（主流新闻站风格），固定宽度与人员档案列表一致，避免抖动 */
 .situation-awareness {
-  min-width: 900px;
+  width: var(--content-max-width);
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box;
+}
+
+/* 与人员档案页面一致的卡片边框与背景 */
+.situation-awareness .situation-awareness-card {
+  border-radius: var(--card-radius-lg);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  padding: var(--card-padding);
+  overflow: hidden;
 }
 
 /* ========== 新闻列表页 ========== */

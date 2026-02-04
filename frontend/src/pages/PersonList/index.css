@@ -1,10 +1,21 @@
-/* 人员档案列表页 - 使用统一深色主题变量 */
+/* 人员档案列表页 - 使用统一深色主题变量，与工作区标签管理页一致的卡片边框与背景 */
 
 .page-wrapper.person-list-page {
   width: 100%;
   max-width: var(--content-max-width);
   margin-left: auto;
   margin-right: auto;
+  min-height: var(--content-available-height);
+}
+
+/* 与工作区 .workspace-card 一致的边框与背景 */
+.person-list-page .person-list-card {
+  border-radius: var(--card-radius-lg);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  padding: var(--card-padding);
+  overflow: hidden;
 }
 
 .person-list-page .person-list-title {
@@ -93,15 +104,14 @@
   font-size: 14px;
   font-weight: var(--font-weight-subtitle);
   color: var(--text-secondary);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 8px;
 }
 
 .person-list-filter-block {
   display: flex;
-  align-items: flex-start;
-  gap: 10px 14px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 8px;
 }
 
 .person-list-filter-block:last-child {
@@ -111,9 +121,9 @@
 .person-list-filter-category {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
-  min-height: 32px;
+  min-height: 24px;
 }
 
 .person-list-filter-bar {
@@ -130,67 +140,54 @@
   color: var(--text-secondary);
 }
 
-/* 二级分类：与一级分类同一行，横向排列 */
-.person-list-filter-seconds-row {
+/* 二级分类：排列在一级下面，一行一个二级分类，首行缩进为 0 */
+.person-list-filter-seconds-col {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+/* 每行：二级分类 + 三级标签（同一行），首行缩进为 0 */
+.person-list-filter-second-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  align-items: flex-start;
-  flex: 1;
-  min-width: 0;
+  min-height: 24px;
+  margin-left: 0;
+  padding-left: 0;
 }
 
-.person-list-filter-second-wrap {
-  flex: 0 0 auto;
-  width: fit-content;
-  max-width: 100%;
+.person-list-filter-second-row .person-list-filter-second {
+  flex-shrink: 0;
 }
 
+/* 二级分类：与一级一样，不支持点击，字体略小，首行缩进为 0 */
 .person-list-filter-second {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--input-border);
-  background: var(--input-bg);
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  padding: 0;
   white-space: nowrap;
-}
-
-.person-list-filter-second:hover {
-  border-color: var(--primary);
-  background: var(--primary-hover);
-  color: var(--text-secondary);
-}
-
-.person-list-filter-second-expanded {
-  border-color: var(--primary);
-  background: var(--primary-hover);
+  text-indent: 0;
 }
 
 .person-list-filter-second-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--font-weight-subtitle);
   color: var(--text-secondary);
 }
 
-.person-list-filter-second-count {
-  font-size: 11px;
-  color: var(--text-placeholder);
-}
-
-.person-list-filter-second-arrow {
-  font-size: 10px;
-  color: var(--text-placeholder);
-  transition: transform 0.2s;
-}
-
+/* 三级标签：紧接在二级分类后面，同一行排列，小字体；过多时换行 */
 .person-list-filter-tags-third {
-  margin-top: 8px;
-  padding-left: 8px;
-  border-left: 2px solid var(--card-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 5px;
+  flex: 1;
   min-width: 0;
 }
 
@@ -241,6 +238,35 @@
   color: #fff !important;
 }
 
+/* 三级标签：字体略小、样式紧凑，可展示更多标签 */
+.person-list-filter-tags-third .person-list-tag {
+  font-size: 11px !important;
+  padding: 1px 6px !important;
+  border-radius: 10px !important;
+  flex-shrink: 0;
+}
+
+.person-list-filter-tags-third .person-list-tag-count {
+  font-size: 10px;
+}
+
+/* 三级标签选中态：优化配色与对比度 */
+.person-list-filter-tags-third .person-list-tag-selected {
+  background: var(--accent-btn-hover, #0284c7) !important;
+  color: #fff !important;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.3);
+}
+
+.person-list-filter-tags-third .person-list-tag-selected .person-list-tag-count {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.person-list-filter-tags-third .person-list-tag-selected:hover {
+  background: var(--accent-btn-hover, #0284c7) !important;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.35);
+}
+
 .person-list-tag-count {
   margin-left: 1px;
   color: var(--text-placeholder);
@@ -248,7 +274,7 @@
 }
 
 .person-list-tag-selected .person-list-tag-count {
-  color: var(--primary);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* 当前已选标签 */

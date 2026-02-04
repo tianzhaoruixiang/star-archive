@@ -132,6 +132,23 @@
   margin: 0;
 }
 
+.workspace-fusion-similar-match-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+.workspace-fusion-similar-match-label {
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+}
+.workspace-fusion-similar-match-checkboxes.ant-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
 /* 合并上传框：拖拽区 + 已选列表 + 开始上传 */
 .workspace-fusion-upload-box {
   margin-bottom: var(--spacing-xl);
@@ -290,7 +307,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: var(--content-available-height);
 }
 
 .import-detail-back,
@@ -498,6 +515,14 @@
   max-height: 560px;
   overflow: auto;
   padding: 16px;
+}
+
+.import-detail-results-pagination {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  justify-content: center;
 }
 
 .import-detail-empty {

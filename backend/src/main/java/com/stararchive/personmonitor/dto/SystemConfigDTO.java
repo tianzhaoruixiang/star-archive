@@ -26,7 +26,11 @@ public class SystemConfigDTO {
     private Boolean navKeyPersonLibrary;
     /** 导航-工作区 是否显示 */
     private Boolean navWorkspace;
-    /** 导航-模型管理 是否显示 */
+    /** 二级导航-档案融合 是否显示 */
+    private Boolean navWorkspaceFusion;
+    /** 二级导航-标签管理 是否显示 */
+    private Boolean navWorkspaceTags;
+    /** 二级导航-模型管理 是否显示 */
     private Boolean navModelManagement;
     /** 导航-态势感知 是否显示 */
     private Boolean navSituation;
@@ -41,4 +45,11 @@ public class SystemConfigDTO {
     private String llmModel;
     /** 人物档案融合 · 大模型 API Key */
     private String llmApiKey;
+    /** 人物档案融合 · 大模型提取人物档案的系统提示词（为空则使用内置默认） */
+    private String llmExtractPrompt;
+
+    /** OnlyOffice · 前端加载脚本的地址（document-server-url） */
+    private String onlyofficeDocumentServerUrl;
+    /** OnlyOffice · 服务端拉取文档的基地址（document-download-base） */
+    private String onlyofficeDocumentDownloadBase;
 }

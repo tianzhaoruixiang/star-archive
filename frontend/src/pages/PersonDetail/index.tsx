@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Tag, Button, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message } from 'antd';
+import { Card, Tag, Button, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message, Popconfirm, Upload, Spin, Tabs } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined, ShareAltOutlined, HistoryOutlined, SendOutlined, CarOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined, ShareAltOutlined, HistoryOutlined, SendOutlined, CarOutlined, CameraOutlined, TeamOutlined, FileTextOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonDetail } from '@/store/slices/personSlice';
-import { personAPI, systemConfigAPI, type PersonUpdatePayload, type PersonEditHistoryItem, type SystemConfigDTO } from '@/services/api';
-import type { PersonTravelItem, SocialDynamicItem } from '@/types/person';
+import { personAPI, systemConfigAPI, BASE_PATH, type PersonUpdatePayload, type PersonEditHistoryItem, type SystemConfigDTO } from '@/services/api';
+import type { PersonTravelItem, SocialDynamicItem, RelatedPersonItem } from '@/types/person';
 import { formatDateOnly, formatDateTime } from '@/utils/date';
 import { PageDetailSkeleton, InlineSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
@@ -35,6 +35,18 @@ function parseExperienceJson(raw: string | undefined): ExperienceItem[] {
   try {
     const parsed = JSON.parse(raw) as unknown;
     const arr = Array.isArray(parsed) ? (parsed as ExperienceItem[]) : parsed && typeof parsed === 'object' ? [parsed as ExperienceItem] : [];
+    return arr;
+  } catch {
+    return [];
+  }
+}
+
+/** 关系人 JSON 解析（每项含 name、relation、brief） */
+function parseRelatedPersonsJson(raw: string | undefined): RelatedPersonItem[] {
+  if (!raw?.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const arr = Array.isArray(parsed) ? (parsed as RelatedPersonItem[]) : parsed && typeof parsed === 'object' ? [parsed as RelatedPersonItem] : [];
     return arr;
   } catch {
     return [];
@@ -76,6 +88,7 @@ interface EditFormValues {
   organization?: string;
   belongingGroup?: string;
   gender?: string;
+  maritalStatus?: string;
   birthDate?: Dayjs | null;
   nationality?: string;
   householdAddress?: string;
@@ -83,11 +96,19 @@ interface EditFormValues {
   phoneNumbersText?: string;
   emailsText?: string;
   idCardNumber?: string;
+  /** 证件号码 */
+  idNumber?: string;
+  /** 主护照号 */
+  passportNumber?: string;
+  /** 护照类型 */
+  passportType?: string;
   visaType?: string;
   visaNumber?: string;
   personTags?: string[];
   workExperienceItems?: WorkItemForm[];
   educationExperienceItems?: EducationItemForm[];
+  /** 关系人表单项（name、relation、brief） */
+  relatedPersonItems?: { name?: string; relation?: string; brief?: string }[];
   remark?: string;
   isKeyPerson?: boolean;
   isPublic?: boolean;
@@ -106,10 +127,34 @@ const PersonDetail = () => {
   const [form] = Form.useForm<EditFormValues>();
   const user = useAppSelector((state) => state.auth?.user);
   const showPersonDetailEdit = systemConfig?.showPersonDetailEdit !== false;
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  /** 智能画像抽屉 */
+  const [portraitDrawerOpen, setPortraitDrawerOpen] = useState(false);
+  const [portraitLoading, setPortraitLoading] = useState(false);
+  const [portraitText, setPortraitText] = useState('');
+  /** 民航铁路信息默认只展示条数，更多需点开展示 */
+  const TRAVEL_DEFAULT_SHOW = 10;
+  const [travelExpanded, setTravelExpanded] = useState(false);
+  const canDelete =
+    detail &&
+    user?.username &&
+    ((detail.isPublic !== false && user?.role === 'admin') ||
+      (detail.isPublic === false && user.username === detail.createdBy));
+  const showDelete = canDelete && detail && !detail.deleted;
 
   useEffect(() => {
     if (personId) dispatch(fetchPersonDetail(personId));
   }, [dispatch, personId]);
+
+  useEffect(() => {
+    setTravelExpanded(false);
+  }, [personId]);
+
+  /** 人物切换时清空智能画像结果 */
+  useEffect(() => {
+    setPortraitText('');
+  }, [personId]);
 
   useEffect(() => {
     const loadConfig = () => {
@@ -160,12 +205,18 @@ const PersonDetail = () => {
       major: (item.major as string) || undefined,
       degree: (item.degree as string) || undefined,
     }));
+    const relatedItems = parseRelatedPersonsJson(detail.relatedPersons).map((item) => ({
+      name: (item.name as string) || undefined,
+      relation: (item.relation as string) || undefined,
+      brief: (item.brief as string) || undefined,
+    }));
     form.setFieldsValue({
       chineseName: detail.chineseName ?? '',
       originalName: detail.originalName ?? '',
       organization: detail.organization ?? '',
       belongingGroup: detail.belongingGroup ?? '',
       gender: detail.gender ?? undefined,
+      maritalStatus: detail.maritalStatus ?? '',
       birthDate: birth ?? undefined,
       nationality: detail.nationality ?? '',
       householdAddress: detail.householdAddress ?? '',
@@ -173,11 +224,15 @@ const PersonDetail = () => {
       phoneNumbersText: (detail.phoneNumbers ?? []).join('\n'),
       emailsText: (detail.emails ?? []).join('\n'),
       idCardNumber: detail.idCardNumber ?? '',
+      idNumber: detail.idNumber ?? '',
+      passportNumber: detail.passportNumber ?? '',
+      passportType: detail.passportType ?? '',
       visaType: detail.visaType ?? '',
       visaNumber: detail.visaNumber ?? '',
       personTags: detail.personTags ?? [],
       workExperienceItems: workItems.length ? workItems : [{ start_time: '', end_time: '', organization: '', department: '', job: '', responsibilities: '' }],
       educationExperienceItems: eduItems.length ? eduItems : [{ start_time: '', end_time: '', school_name: '', department: '', major: '', degree: '' }],
+      relatedPersonItems: relatedItems.length ? relatedItems : [{ name: '', relation: '', brief: '' }],
       remark: detail.remark ?? '',
       isKeyPerson: detail.isKeyPerson ?? false,
       isPublic: detail.isPublic !== false,
@@ -189,6 +244,30 @@ const PersonDetail = () => {
     setEditOpen(false);
     form.resetFields();
   }, [form]);
+
+  /** 请求智能画像（抽屉内调用或打开抽屉时自动调用） */
+  const fetchPortraitAnalysis = useCallback(async () => {
+    if (!personId) return;
+    setPortraitLoading(true);
+    try {
+      const text = await personAPI.getPortraitAnalysis(personId);
+      setPortraitText(text ?? '');
+    } catch (e) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      message.error(msg ?? '智能画像请求失败');
+      setPortraitText('');
+    } finally {
+      setPortraitLoading(false);
+    }
+  }, [personId]);
+
+  /** 打开智能画像抽屉：若当前无结果则自动请求 */
+  const openPortraitDrawer = useCallback(() => {
+    setPortraitDrawerOpen(true);
+    if (!portraitText && personId) {
+      fetchPortraitAnalysis();
+    }
+  }, [personId, portraitText, fetchPortraitAnalysis]);
 
   const handleEditSubmit = useCallback(async () => {
     const values = await form.validateFields().catch(() => null);
@@ -207,6 +286,7 @@ const PersonDetail = () => {
       organization: values.organization || undefined,
       belongingGroup: values.belongingGroup || undefined,
       gender: values.gender || undefined,
+      maritalStatus: values.maritalStatus || undefined,
       birthDate: values.birthDate ? values.birthDate.format('YYYY-MM-DD') : null,
       nationality: values.nationality || undefined,
       householdAddress: values.householdAddress || undefined,
@@ -214,6 +294,9 @@ const PersonDetail = () => {
       phoneNumbers: phones.length ? phones : undefined,
       emails: emails.length ? emails : undefined,
       idCardNumber: values.idCardNumber || undefined,
+      idNumber: values.idNumber || undefined,
+      passportNumber: values.passportNumber || undefined,
+      passportType: values.passportType || undefined,
       visaType: values.visaType || undefined,
       visaNumber: values.visaNumber || undefined,
       personTags: values.personTags?.length ? values.personTags : undefined,
@@ -225,6 +308,11 @@ const PersonDetail = () => {
       educationExperience: (() => {
         const items = values.educationExperienceItems ?? [];
         const valid = items.filter((i) => (i.school_name ?? i.department ?? i.major ?? i.degree ?? '').toString().trim());
+        return valid.length ? JSON.stringify(valid) : undefined;
+      })(),
+      relatedPersons: (() => {
+        const items = values.relatedPersonItems ?? [];
+        const valid = items.filter((i) => (i.name ?? i.relation ?? i.brief ?? '').toString().trim());
         return valid.length ? JSON.stringify(valid) : undefined;
       })(),
       remark: values.remark || undefined,
@@ -255,6 +343,10 @@ const PersonDetail = () => {
   const workList = useMemo(
     () => parseExperienceJson(detail?.workExperience),
     [detail?.workExperience]
+  );
+  const relatedPersonList = useMemo(
+    () => parseRelatedPersonsJson(detail?.relatedPersons),
+    [detail?.relatedPersons]
   );
 
   const phoneStr = detail?.phoneNumbers?.length
@@ -317,7 +409,7 @@ const PersonDetail = () => {
         >
           返回
         </Button>
-        {showPersonDetailEdit && (
+        {showPersonDetailEdit && !detail.deleted && (
           <Button
             type="default"
             icon={<EditOutlined />}
@@ -327,20 +419,66 @@ const PersonDetail = () => {
             编辑
           </Button>
         )}
+        {showDelete && personId && (
+          <Popconfirm
+            title="确定删除该人员档案？"
+            description="删除后仅管理员（公开档案）或创建人（个人档案）可查看，列表中将不再展示。"
+            onConfirm={async () => {
+              setDeleting(true);
+              try {
+                await personAPI.deletePerson(personId);
+                message.success('已删除');
+                navigate('/persons');
+              } catch (e) {
+                message.error((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '删除失败');
+              } finally {
+                setDeleting(false);
+              }
+            }
+            }
+            okText="删除"
+            cancelText="取消"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              type="default"
+              danger
+              icon={<DeleteOutlined />}
+              loading={deleting}
+              className="person-detail-header-btn"
+            >
+              删除
+            </Button>
+          </Popconfirm>
+        )}
+        {!detail.deleted && (
+          <Button
+            type="default"
+            icon={<FileTextOutlined />}
+            onClick={openPortraitDrawer}
+            className="person-detail-header-btn"
+          >
+            智能画像
+          </Button>
+        )}
       </div>
 
       {/* 简历式主体：顶带 + 双栏 */}
       <div className="person-detail-resume">
         {/* 顶带：RESUME 角标 + 姓名 + 身份/意向 */}
         <div className="person-detail-resume-head">
-          <span className="person-detail-resume-label">ARCHIVE</span>
+          {detail.deleted && (
+            <Tag color="default" className="person-detail-deleted-tag">已删除</Tag>
+          )}
           <div className="person-detail-resume-head-right">
             <h1 className="person-detail-resume-name">{displayName}</h1>
             <p className="person-detail-resume-intent">{occupationOrOrg}</p>
           </div>
         </div>
 
-        <div className="person-detail-resume-body">
+        <Tabs defaultActiveKey="info" className="person-detail-tabs">
+          <Tabs.TabPane tab={<span><UserOutlined /> 人物信息</span>} key="info">
+            <div className="person-detail-resume-body">
           {/* 左栏：多头像（一大图 + 下方小图）、人物备注、技能标签等 */}
           <aside className="person-detail-resume-left">
             <div className="person-detail-resume-avatars">
@@ -365,8 +503,44 @@ const PersonDetail = () => {
                 </>
               ) : (
                 <div className="person-detail-resume-avatar-placeholder person-detail-resume-avatar-main">
-                  <UserOutlined />
+                  <img
+                    src={`${BASE_PATH}/default-avatar.svg`}
+                    alt="默认头像"
+                    className="person-detail-resume-avatar-img person-detail-default-avatar"
+                  />
                 </div>
+              )}
+              {showPersonDetailEdit && !detail.deleted && personId && (
+                <Upload
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                  showUploadList={false}
+                  beforeUpload={(file) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    setAvatarUploading(true);
+                    personAPI
+                      .uploadAvatar(personId, formData, user?.username)
+                      .then(() => {
+                        message.success('头像上传成功');
+                        dispatch(fetchPersonDetail(personId));
+                      })
+                      .catch((err: { response?: { data?: { message?: string } } }) => {
+                        message.error(err?.response?.data?.message ?? '头像上传失败');
+                      })
+                      .finally(() => setAvatarUploading(false));
+                    return false;
+                  }}
+                >
+                  <Button
+                    type="default"
+                    size="small"
+                    icon={<CameraOutlined />}
+                    loading={avatarUploading}
+                    className="person-detail-avatar-upload-btn"
+                  >
+                    上传头像
+                  </Button>
+                </Upload>
               )}
             </div>
 
@@ -459,6 +633,10 @@ const PersonDetail = () => {
                   <span className="info-value">{detail.gender || '—'}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
+                  <span className="info-label">婚姻现状</span>
+                  <span className="info-value">{detail.maritalStatus || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
                   <span className="info-label">出生日期</span>
                   <span className="info-value">{formatDateOnly(detail.birthDate)}</span>
                 </div>
@@ -499,8 +677,20 @@ const PersonDetail = () => {
                   <span className="info-value">{detail.idCardNumber || '—'}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
+                  <span className="info-label">证件号码</span>
+                  <span className="info-value">{detail.idNumber || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">主护照号</span>
+                  <span className="info-value">{detail.passportNumber || '—'}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
                   <span className="info-label">护照号</span>
                   <span className="info-value">{passportStr}</span>
+                </div>
+                <div className="person-detail-resume-info-item">
+                  <span className="info-label">护照类型</span>
+                  <span className="info-value">{detail.passportType || '—'}</span>
                 </div>
                 <div className="person-detail-resume-info-item">
                   <span className="info-label">签证类型</span>
@@ -645,6 +835,39 @@ const PersonDetail = () => {
               </div>
             )}
 
+            {relatedPersonList.length > 0 && (
+              <div className="person-detail-resume-block">
+                <div className="person-detail-resume-block-title">
+                  <TeamOutlined />
+                  <span>关系人</span>
+                </div>
+                <div className="person-detail-resume-exp-list">
+                  {relatedPersonList.map((item, idx) => (
+                    <div key={idx} className="person-detail-resume-exp-item person-detail-resume-exp-full">
+                      {item.name && (
+                        <div className="person-detail-resume-exp-row">
+                          <span className="person-detail-resume-exp-label">关系人名称</span>
+                          <span className="person-detail-resume-exp-value">{item.name}</span>
+                        </div>
+                      )}
+                      {item.relation && (
+                        <div className="person-detail-resume-exp-row">
+                          <span className="person-detail-resume-exp-label">关系名称</span>
+                          <span className="person-detail-resume-exp-value">{item.relation}</span>
+                        </div>
+                      )}
+                      {item.brief && (
+                        <div className="person-detail-resume-exp-row">
+                          <span className="person-detail-resume-exp-label">关系人简介</span>
+                          <span className="person-detail-resume-exp-value person-detail-resume-exp-multiline">{item.brief}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="person-detail-resume-block">
               <div className="person-detail-resume-block-title">
                 <HistoryOutlined />
@@ -686,47 +909,58 @@ const PersonDetail = () => {
               )}
             </div>
           </main>
-        </div>
+            </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane tab={<span><SendOutlined /> 行程轨迹</span>} key="travel">
+            <div className="person-detail-tab-panel">
+              {(detail.recentTravels?.length ?? 0) > 0 ? (
+                <Card className="person-detail-resume-extra-card" title="民航铁路信息" size="small">
+                  <ul className="person-detail-travel-list">
+                    {(travelExpanded ? detail.recentTravels! : detail.recentTravels!.slice(0, TRAVEL_DEFAULT_SHOW)).map((t: PersonTravelItem) => (
+                      <li key={t.travelId ?? t.eventTime}>
+                        <span className="time">{formatDateTime(t.eventTime, '')}</span>
+                        {t.travelType === 'FLIGHT' ? (
+                          <><SendOutlined className="person-detail-travel-icon person-detail-travel-icon-flight" /> 航班</>
+                        ) : (
+                          <><CarOutlined className="person-detail-travel-icon person-detail-travel-icon-train" /> 火车</>
+                        )}：{(t.departureCity && t.destinationCity) ? `${t.departureCity} → ${t.destinationCity}` : `${t.departure ?? ''} → ${t.destination ?? ''}`}
+                        {t.ticketNumber && ` · 票号 ${t.ticketNumber}`}
+                        {t.visaType && ` · 签证 ${t.visaType}`}
+                      </li>
+                    ))}
+                  </ul>
+                  {detail.recentTravels!.length > TRAVEL_DEFAULT_SHOW && (
+                    <Button type="link" size="small" className="person-detail-travel-expand-btn" onClick={() => setTravelExpanded((prev) => !prev)}>
+                      {travelExpanded ? '收起' : `展开更多（共 ${detail.recentTravels!.length} 条）`}
+                    </Button>
+                  )}
+                </Card>
+              ) : (
+                <Empty description="暂无行程轨迹" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              )}
+            </div>
+          </Tabs.TabPane>
+          <Tabs.TabPane tab={<span><ShareAltOutlined /> 社交动态</span>} key="social">
+            <div className="person-detail-tab-panel">
+              {(detail.recentSocialDynamics?.length ?? 0) > 0 ? (
+                <Card className="person-detail-resume-extra-card" title="社交媒体动态" size="small">
+                  <ul className="person-detail-social-list">
+                    {detail.recentSocialDynamics!.map((s: SocialDynamicItem) => (
+                      <li key={s.dynamicId}>
+                        <Tag color="blue">{s.socialAccountType}</Tag> {s.socialAccount}
+                        <div className="content">{s.content?.substring(0, 200)}</div>
+                        <div className="time">{formatDateTime(s.publishTime, '')}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              ) : (
+                <Empty description="暂无社交动态" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              )}
+            </div>
+          </Tabs.TabPane>
+        </Tabs>
       </div>
-
-      {/* 民航铁路、社交媒体（次要，全宽） */}
-      {((detail.recentTravels?.length ?? 0) > 0 || (detail.recentSocialDynamics?.length ?? 0) > 0) && (
-        <div className="person-detail-resume-extra">
-          {(detail.recentTravels?.length ?? 0) > 0 && (
-            <Card className="person-detail-resume-extra-card" title="民航铁路信息" size="small">
-              <ul className="person-detail-travel-list">
-                {detail.recentTravels!.map((t: PersonTravelItem) => (
-                  <li key={t.travelId ?? t.eventTime}>
-                    <span className="time">
-                      {formatDateTime(t.eventTime, '')}
-                    </span>
-                    {t.travelType === 'FLIGHT' ? (
-                      <><SendOutlined className="person-detail-travel-icon person-detail-travel-icon-flight" /> 航班</>
-                    ) : (
-                      <><CarOutlined className="person-detail-travel-icon person-detail-travel-icon-train" /> 火车</>
-                    )}：{(t.departureCity && t.destinationCity) ? `${t.departureCity} → ${t.destinationCity}` : `${t.departure ?? ''} → ${t.destination ?? ''}`}
-                    {t.ticketNumber && ` · 票号 ${t.ticketNumber}`}
-                    {t.visaType && ` · 签证 ${t.visaType}`}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-          {(detail.recentSocialDynamics?.length ?? 0) > 0 && (
-            <Card className="person-detail-resume-extra-card" title="社交媒体动态" size="small">
-              <ul className="person-detail-social-list">
-                {detail.recentSocialDynamics!.map((s: SocialDynamicItem) => (
-                  <li key={s.dynamicId}>
-                    <Tag color="blue">{s.socialAccountType}</Tag> {s.socialAccount}
-                    <div className="content">{s.content?.substring(0, 200)}</div>
-                    <div className="time">{formatDateTime(s.publishTime, '')}</div>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-        </div>
-      )}
 
       <Drawer
         title="编辑人员档案"
@@ -755,6 +989,19 @@ const PersonDetail = () => {
           <Form.Item label="性别" name="gender">
             <Select placeholder="请选择" allowClear options={[{ value: '男', label: '男' }, { value: '女', label: '女' }, { value: '其他', label: '其他' }]} />
           </Form.Item>
+          <Form.Item label="婚姻现状" name="maritalStatus">
+            <Select
+              placeholder="请选择"
+              allowClear
+              options={[
+                { value: '未婚', label: '未婚' },
+                { value: '已婚', label: '已婚' },
+                { value: '离异', label: '离异' },
+                { value: '丧偶', label: '丧偶' },
+                { value: '其他', label: '其他' },
+              ]}
+            />
+          </Form.Item>
           <Form.Item label="出生日期" name="birthDate">
             <DatePicker style={{ width: '100%' }} placeholder="请选择出生日期" />
           </Form.Item>
@@ -781,6 +1028,15 @@ const PersonDetail = () => {
           </Form.Item>
           <Form.Item label="身份证号" name="idCardNumber">
             <Input placeholder="请输入身份证号" />
+          </Form.Item>
+          <Form.Item label="证件号码" name="idNumber">
+            <Input placeholder="请输入证件号码" />
+          </Form.Item>
+          <Form.Item label="主护照号" name="passportNumber">
+            <Input placeholder="请输入主护照号" />
+          </Form.Item>
+          <Form.Item label="护照类型" name="passportType">
+            <Input placeholder="如：普通护照、外交护照、公务护照、旅行证" />
           </Form.Item>
           <Form.Item label="签证类型" name="visaType">
             <Input placeholder="如：公务签证、旅游签证" />
@@ -857,6 +1113,30 @@ const PersonDetail = () => {
               </div>
             )}
           </Form.List>
+          <Form.List name="relatedPersonItems">
+            {(fields, { add, remove }) => (
+              <div>
+                <div className="person-detail-form-list-header">
+                  <span>关系人</span>
+                  <Button type="dashed" icon={<PlusOutlined />} onClick={() => add({})} size="small">添加</Button>
+                </div>
+                {fields.map(({ key, name }) => (
+                  <div key={key} className="person-detail-form-list-item">
+                    <Form.Item name={[name, 'name']} label="关系人名称">
+                      <Input placeholder="关系人姓名或称呼" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'relation']} label="关系名称">
+                      <Input placeholder="如：配偶、同事、朋友" />
+                    </Form.Item>
+                    <Form.Item name={[name, 'brief']} label="关系人简介">
+                      <Input.TextArea rows={2} placeholder="关系人简介（可选）" />
+                    </Form.Item>
+                    <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} className="person-detail-form-list-remove">删除</Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Form.List>
           <Form.Item label="人物备注" name="remark">
             <Input.TextArea rows={3} placeholder="请输入人物备注" />
           </Form.Item>
@@ -867,6 +1147,37 @@ const PersonDetail = () => {
             <Switch checkedChildren="公开" unCheckedChildren="私有" />
           </Form.Item>
         </Form>
+      </Drawer>
+
+      {/* 智能画像抽屉：右侧展示大模型生成的智能画像（与档案融合使用同一大模型配置） */}
+      <Drawer
+        title="智能画像"
+        placement="right"
+        width={480}
+        open={portraitDrawerOpen}
+        onClose={() => setPortraitDrawerOpen(false)}
+        className="person-detail-portrait-drawer"
+        extra={
+          <Button
+            type="primary"
+            size="small"
+            icon={<ReloadOutlined />}
+            loading={portraitLoading}
+            onClick={fetchPortraitAnalysis}
+          >
+            重新生成
+          </Button>
+        }
+      >
+        {portraitLoading && !portraitText ? (
+          <div className="person-detail-portrait-loading">
+            <Spin size="large" tip="正在生成智能画像…" />
+          </div>
+        ) : (
+          <div className="person-detail-portrait-content">
+            <pre className="person-detail-portrait-text">{portraitText || '暂无分析内容，请点击「重新生成」获取智能画像。'}</pre>
+          </div>
+        )}
       </Drawer>
     </div>
   );

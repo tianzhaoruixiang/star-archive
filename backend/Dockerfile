@@ -15,8 +15,7 @@ RUN mvn package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 RUN apk add --no-cache dumb-init
 WORKDIR /app
-RUN mkdir -p /app/logs
-RUN chmod -R 755 /app/logs
+RUN mkdir -p /app/logs && chown -R 1000:1000 /app/logs
 
 # 从构建阶段复制 jar（Spring Boot 打出 fat jar）
 COPY --from=builder /build/target/person-monitor-*.jar ./app.jar
@@ -24,6 +23,9 @@ COPY --from=builder /build/target/person-monitor-*.jar ./app.jar
 # 默认端口与 context-path 与 application.yml 一致
 ENV SERVER_PORT=8000
 EXPOSE 8000
+
+# 日志写入 /app/logs，避免写入 /app 导致 Permission denied（容器以非 root 用户运行）
+ENV LOGGING_FILE_PATH=/app/logs
 
 USER 1000:1000
 ENTRYPOINT ["dumb-init", "--", "java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

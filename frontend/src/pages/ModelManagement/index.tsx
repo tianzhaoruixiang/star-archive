@@ -206,7 +206,7 @@ const ModelManagement: React.FC = () => {
   return (
     <div className="page-wrapper model-management-page">
       <p className="model-management-desc">
-        通过建模的方式锁定关键人群，创建和管理预测模型。规则为语义规则（自然语言），启动后将根据语义规则自动调用大模型匹配人物档案，锁定人数将更新。
+        工作区模型管理，通过建模的方式锁定关键人群，创建和管理预测模型。模型的规则为语义规则（自然语言），启动后将根据语义规则自动调用大模型匹配人物档案，锁定人数将更新。
       </p>
 
       {loading ? (

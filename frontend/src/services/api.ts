@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { OnlyOfficePreviewConfigDTO } from '@/types/archiveFusion';
+import type { ArchiveImportTaskDTO, OnlyOfficePreviewConfigDTO } from '@/types/archiveFusion';
 import { getStoredAuthUsername } from '@/utils/authStorage';
 
 /** 前端与 API 统一前缀 */
@@ -131,6 +131,8 @@ export interface PersonUpdatePayload {
   organization?: string;
   belongingGroup?: string;
   gender?: string;
+  /** 婚姻现状：未婚/已婚/离异/丧偶等 */
+  maritalStatus?: string;
   birthDate?: string | null;
   nationality?: string;
   nationalityCode?: string;
@@ -139,12 +141,20 @@ export interface PersonUpdatePayload {
   phoneNumbers?: string[];
   emails?: string[];
   passportNumbers?: string[];
+  /** 主护照号 */
+  passportNumber?: string;
+  /** 护照类型：普通护照/外交护照/公务护照/旅行证等 */
+  passportType?: string;
   idCardNumber?: string;
+  /** 证件号码 */
+  idNumber?: string;
   visaType?: string;
   visaNumber?: string;
   personTags?: string[];
   workExperience?: string;
   educationExperience?: string;
+  /** 关系人 JSON，每项含：name、relation、brief */
+  relatedPersons?: string;
   remark?: string;
   isKeyPerson?: boolean;
   /** 是否公开档案：true 所有人可见，false 仅创建人可见 */
@@ -208,15 +218,31 @@ export const personAPI = {
     apiClient.put(`/persons/${personId}`, data, {
       headers: editor ? { 'X-Editor': editor } : undefined,
     }),
+  deletePerson: (personId: string) =>
+    apiClient.delete(`/persons/${personId}`),
+  uploadAvatar: (personId: string, formData: FormData, editor?: string) =>
+    apiClient.post(`/persons/${personId}/avatar`, formData, {
+      headers: editor ? { 'X-Editor': editor } : undefined,
+      timeout: 15000,
+    }),
   getEditHistory: (personId: string) =>
     apiClient.get<PersonEditHistoryItem[]>(`/persons/${personId}/edit-history`),
-  getTags: () => apiClient.get('/persons/tags'),
+  /** 智能画像（大模型根据档案基本信息生成，与档案融合使用同一大模型配置） */
+  getPortraitAnalysis: (personId: string) =>
+    apiClient
+      .get<{ result?: string; message?: string; data?: string }>(`/persons/${personId}/portrait-analysis`)
+      .then((res) => res.data?.data ?? ''),
+  getTags: (params?: { keyTag?: boolean }) =>
+    apiClient.get('/persons/tags', { params: params?.keyTag !== undefined ? { keyTag: params.keyTag } : undefined }),
   createTag: (dto: TagCreateDTO) => apiClient.post<TagDTO>('/persons/tags', dto),
+  updateTag: (tagId: number, dto: TagCreateDTO) => apiClient.put<TagDTO>(`/persons/tags/${tagId}`, dto),
   deleteTag: (tagId: number) => apiClient.delete(`/persons/tags/${tagId}`),
   getPersonListByTag: (tag: string, page: number, size: number) =>
     apiClient.get('/persons/by-tag', { params: { tag, page, size } }),
-  getPersonListByTags: (tags: string[], page: number, size: number) =>
-    apiClient.get('/persons/by-tags', { params: { tags: tags.join(','), page, size } }),
+  getPersonListByTags: (tags: string[], page: number, size: number, matchAny?: boolean) =>
+    apiClient.get('/persons/by-tags', {
+      params: { tags: tags.join(','), page, size, ...(matchAny === true ? { matchAny: true } : {}) },
+    }),
 };
 
 /** 人物标签（与后端 TagDTO 一致，用于标签管理） */
@@ -228,17 +254,29 @@ export interface TagDTO {
   tagDescription?: string;
   parentTagId?: number;
   firstLevelSortOrder?: number;
+  /** 二级分类展示顺序 */
+  secondLevelSortOrder?: number;
+  /** 三级标签展示顺序 */
+  tagSortOrder?: number;
+  /** 是否重点标签：重点人员页左侧仅展示重点标签 */
+  keyTag?: boolean;
   personCount?: number;
   children?: TagDTO[];
 }
 
-/** 新增人物标签请求体 */
+/** 新增/编辑人物标签请求体 */
 export interface TagCreateDTO {
   firstLevelName?: string;
   secondLevelName?: string;
   tagName: string;
   tagDescription?: string;
   firstLevelSortOrder?: number;
+  /** 二级分类展示顺序，数字越小越靠前 */
+  secondLevelSortOrder?: number;
+  /** 三级标签展示顺序，数字越小越靠前 */
+  tagSortOrder?: number;
+  /** 是否重点标签：勾选后在重点人员页左侧展示 */
+  keyTag?: boolean;
 }
 
 /** 重点人员类别（单个目录项） */
@@ -303,6 +341,11 @@ export interface SystemConfigDTO {
   navPersons?: boolean;
   navKeyPersonLibrary?: boolean;
   navWorkspace?: boolean;
+  /** 二级导航-档案融合 */
+  navWorkspaceFusion?: boolean;
+  /** 二级导航-标签管理 */
+  navWorkspaceTags?: boolean;
+  /** 二级导航-模型管理 */
   navModelManagement?: boolean;
   navSituation?: boolean;
   navSystemConfig?: boolean;
@@ -313,6 +356,12 @@ export interface SystemConfigDTO {
   llmModel?: string;
   /** 人物档案融合 · 大模型 API Key */
   llmApiKey?: string;
+  /** 人物档案融合 · 大模型提取人物档案的系统提示词（为空则使用内置默认） */
+  llmExtractPrompt?: string;
+  /** OnlyOffice · 前端加载脚本的地址（document-server-url） */
+  onlyofficeDocumentServerUrl?: string;
+  /** OnlyOffice · 服务端拉取文档的基地址（document-download-base） */
+  onlyofficeDocumentDownloadBase?: string;
 }
 
 export const systemConfigAPI = {
@@ -434,11 +483,28 @@ export const archiveFusionAPI = {
   /** 任务列表按当前登录用户过滤（X-Username），仅返回该用户创建的导入任务 */
   listTasks: (params: { page?: number; size?: number }) =>
     apiClient.get('/workspace/archive-fusion/tasks', { params }),
+  /** 失败任务重新导入：仅 FAILED 状态可调用，后台重新触发异步提取 */
+  retryTask: (taskId: string) =>
+    apiClient.put<ArchiveImportTaskDTO>(`/workspace/archive-fusion/tasks/${taskId}/retry`),
+  /** 删除档案融合导入任务：仅任务创建人可操作 */
+  deleteTask: (taskId: string) =>
+    apiClient.delete(`/workspace/archive-fusion/tasks/${taskId}`),
   getTaskDetail: (taskId: string) =>
     apiClient.get(`/workspace/archive-fusion/tasks/${taskId}`),
-  /** 获取 OnlyOffice 预览配置（documentServerUrl、documentUrl、documentKey 等） */
+  /** 分页获取任务提取结果（对照预览右侧结构化结果） */
+  getExtractResultsPage: (taskId: string, page: number, size: number) =>
+    apiClient.get(`/workspace/archive-fusion/tasks/${taskId}/extract-results`, { params: { page, size } }),
+  /** 全部导入（异步）：提交本任务下所有未导入结果由服务端后台导入，接口立即返回 */
+  confirmImportAllAsync: (taskId: string, tags?: string[], importAsPublic?: boolean) =>
+    apiClient.post<{ data?: { totalQueued?: number }; message?: string }>(
+      `/workspace/archive-fusion/tasks/${taskId}/confirm-import-all-async`,
+      { tags: tags?.filter(Boolean) ?? [], importAsPublic: importAsPublic === true }
+    ),
+  /** 获取 OnlyOffice 预览配置（documentServerUrl、documentUrl、documentKey 等）。documentUrl 由后端返回，使用 document-download-base，不经前端 Nginx 转发。 */
   getPreviewConfig: (taskId: string) =>
-    apiClient.get<{ data: OnlyOfficePreviewConfigDTO }>(`/workspace/archive-fusion/tasks/${taskId}/preview-config`),
+    apiClient.get<{ data: OnlyOfficePreviewConfigDTO }>(
+      `/workspace/archive-fusion/tasks/${taskId}/preview-config`
+    ),
   /** 档案文件下载地址（GET 该 URL 会返回文件流，download=1 时触发下载） */
   getFileDownloadUrl: (taskId: string) =>
     `${BASE_PATH}/api/workspace/archive-fusion/tasks/${taskId}/file?download=1`,

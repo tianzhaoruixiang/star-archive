@@ -36,8 +36,6 @@ const PersonList = () => {
   const { list, pagination, loading, tags, tagsLoading } = useAppSelector((state) => state.person);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
-  /** 当前展开的二级分类 key：firstLevelName-secondLevelName，用于展示三级标签 */
-  const [expandedSecondKey, setExpandedSecondKey] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchTags());
@@ -76,10 +74,6 @@ const PersonList = () => {
     setSelectedTags([]);
   }, []);
 
-  const handleSecondLevelClick = useCallback((key: string) => {
-    setExpandedSecondKey((prev) => (prev === key ? null : key));
-  }, []);
-
   const tagTree = useMemo(() => buildTagTree((tags || []) as TagItem[]), [tags]);
 
   const filteredList = useMemo(() => {
@@ -105,6 +99,7 @@ const PersonList = () => {
 
   return (
     <div className="page-wrapper person-list-page">
+      <div className="person-list-card">
       {/* 顶部：标题 + 搜索 + 右侧图标 */}
       <div className="person-list-top">
         <div className="person-list-top-right">
@@ -134,27 +129,17 @@ const PersonList = () => {
               <span className="person-list-filter-bar" />
               <span className="person-list-filter-category-label">{firstLevelName}</span>
             </div>
-            <div className="person-list-filter-seconds-row">
-            {Object.entries(secondMap).map(([secondLevelName, items]) => {
-              const secondKey = `${firstLevelName}-${secondLevelName}`;
-              const isExpanded = expandedSecondKey === secondKey;
-              const displaySecondName = secondLevelName || '其他';
-              return (
-                <div key={secondKey} className="person-list-filter-second-wrap">
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className={`person-list-filter-second ${isExpanded ? 'person-list-filter-second-expanded' : ''}`}
-                    onClick={() => handleSecondLevelClick(secondKey)}
-                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleSecondLevelClick(secondKey)}
-                  >
-                    <span className="person-list-filter-second-label">{displaySecondName}</span>
-                    <span className="person-list-filter-second-count">共 {items.length} 项</span>
-                    <span className="person-list-filter-second-arrow">{isExpanded ? '▼' : '▶'}</span>
-                  </div>
-                  {isExpanded && (
+            <div className="person-list-filter-seconds-col">
+              {Object.entries(secondMap).map(([secondLevelName, items]) => {
+                const secondKey = `${firstLevelName}-${secondLevelName}`;
+                const displaySecondName = secondLevelName || '其他';
+                return (
+                  <div key={secondKey} className="person-list-filter-second-row">
+                    <div className="person-list-filter-second">
+                      <span className="person-list-filter-second-label">{displaySecondName}</span>
+                    </div>
                     <div className="person-list-filter-tags person-list-filter-tags-third">
-                      {                      items.map((t) => (
+                      {items.map((t) => (
                         <Tag
                           key={t.tagId}
                           className={`person-list-tag ${selectedTags.includes(t.tagName) ? 'person-list-tag-selected' : ''}`}
@@ -167,10 +152,9 @@ const PersonList = () => {
                         </Tag>
                       ))}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
@@ -246,6 +230,7 @@ const PersonList = () => {
           )}
         </>
       )}
+      </div>
     </div>
   );
 };

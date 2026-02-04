@@ -30,16 +30,16 @@ public class ArchiveExtractResult {
     @Column(name = "extract_index", nullable = false)
     private Integer extractIndex;
 
-    @Column(name = "original_name", length = 200)
+    @Column(name = "original_name", length = 300)
     private String originalName;
 
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @Column(name = "gender", length = 10)
+    @Column(name = "gender", length = 20)
     private String gender;
 
-    @Column(name = "nationality", length = 100)
+    @Column(name = "nationality", length = 200)
     private String nationality;
 
     @Column(name = "original_text", columnDefinition = "TEXT")
@@ -54,7 +54,7 @@ public class ArchiveExtractResult {
     @Column(name = "imported")
     private Boolean imported;
 
-    @Column(name = "imported_person_id", length = 200)
+    @Column(name = "imported_person_id", length = 300)
     private String importedPersonId;
 
     @Column(name = "created_time")

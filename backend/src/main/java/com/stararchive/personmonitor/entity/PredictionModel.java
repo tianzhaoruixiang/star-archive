@@ -23,13 +23,13 @@ public class PredictionModel {
     @Column(name = "model_id", length = 64, nullable = false)
     private String modelId;
 
-    @Column(name = "name", nullable = false, length = 200)
+    @Column(name = "name", nullable = false, length = 300)
     private String name;
 
-    @Column(name = "description", length = 500)
+    @Column(name = "description", length = 1000)
     private String description;
 
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 50)
     private String status;
 
     @Column(name = "rule_config", columnDefinition = "TEXT")
@@ -38,7 +38,7 @@ public class PredictionModel {
     @Column(name = "locked_count")
     private Integer lockedCount;
 
-    @Column(name = "accuracy", length = 50)
+    @Column(name = "accuracy", length = 100)
     private String accuracy;
 
     @Column(name = "created_time")

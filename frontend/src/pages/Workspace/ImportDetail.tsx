@@ -1,5 +1,5 @@
-import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, Table, Modal, Select, Radio, Tooltip } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined, LockOutlined } from '@ant-design/icons';
+import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, Table, Modal, Select, Radio, Tooltip, Pagination } from 'antd';
+import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined, LockOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
@@ -11,6 +11,7 @@ import type {
   OnlyOfficePreviewConfigDTO,
 } from '@/types/archiveFusion';
 import ArchiveResumeView from '@/components/ArchiveResumeView';
+import PersonCard from '@/components/PersonCard';
 import OnlyOfficeViewer from '@/components/OnlyOfficeViewer';
 import './index.css';
 
@@ -68,10 +69,16 @@ const ImportDetail: React.FC = () => {
   const [selectedResultIds, setSelectedResultIds] = useState<string[]>([]);
   const [batchTags, setBatchTags] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
+  /** 右侧提取结果分页：当前页数据、总数、当前页号、每页条数 */
+  const [extractResultsPage, setExtractResultsPage] = useState<ArchiveExtractResultDTO[]>([]);
+  const [extractResultsTotal, setExtractResultsTotal] = useState(0);
+  const [extractPage, setExtractPage] = useState(0);
+  const EXTRACT_PAGE_SIZE = 20;
   /** 导入档案可见性：公开=所有人可见，私有=仅创建人可见；仅系统管理员可选公开 */
   const [importAsPublic, setImportAsPublic] = useState<boolean>(false);
   /** 原始文档区 OnlyOffice 配置（页面加载时拉取，用于左侧对比阅读） */
   const [documentPreviewConfig, setDocumentPreviewConfig] = useState<OnlyOfficePreviewConfigDTO | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const user = useAppSelector((state) => state.auth?.user);
   const isAdmin = user?.role === 'admin';
 
@@ -106,9 +113,42 @@ const ImportDetail: React.FC = () => {
     }
   }, []);
 
+  /** 加载指定页的提取结果（对照预览右侧） */
+  const loadExtractResultsPage = useCallback(async (id: string, page: number, size: number) => {
+    try {
+      const res = await archiveFusionAPI.getExtractResultsPage(id, page, size) as { data?: { content?: ArchiveExtractResultDTO[]; totalElements?: number } };
+      const payload = res?.data ?? res;
+      const content = Array.isArray((payload as { content?: ArchiveExtractResultDTO[] }).content)
+        ? (payload as { content: ArchiveExtractResultDTO[] }).content
+        : [];
+      const total = typeof (payload as { totalElements?: number }).totalElements === 'number'
+        ? (payload as { totalElements: number }).totalElements
+        : 0;
+      setExtractResultsPage(content);
+      setExtractResultsTotal(total);
+    } catch {
+      setExtractResultsPage([]);
+      setExtractResultsTotal(0);
+    }
+  }, []);
+
   useEffect(() => {
     if (taskId) loadDetail(taskId);
   }, [taskId, loadDetail]);
+
+  useEffect(() => {
+    setExtractPage(0);
+  }, [taskId]);
+
+  /** 任务详情加载完成且状态为 SUCCESS 时加载第一页提取结果；切换页码时加载对应页 */
+  useEffect(() => {
+    if (!taskId || !detail?.task || detail.task.status !== 'SUCCESS') {
+      setExtractResultsPage([]);
+      setExtractResultsTotal(0);
+      return;
+    }
+    loadExtractResultsPage(taskId, extractPage, EXTRACT_PAGE_SIZE);
+  }, [taskId, detail?.task?.status, extractPage, EXTRACT_PAGE_SIZE, loadExtractResultsPage]);
 
   const isExtracting = detail?.task?.status === 'EXTRACTING' || detail?.task?.status === 'MATCHING';
 
@@ -162,42 +202,62 @@ const ImportDetail: React.FC = () => {
     if (taskId) navigate(`/workspace/fusion/${taskId}/preview`);
   }, [taskId, navigate]);
 
-  const unimportedResultIds = detail?.extractResults?.filter((r) => !r.imported).map((r) => r.resultId) ?? [];
-  const selectAllUnimported = useCallback(() => {
-    setSelectedResultIds(
-      detail?.extractResults?.filter((r) => !r.imported).map((r) => r.resultId) ?? []
-    );
-  }, [detail?.extractResults]);
+  const handleRetry = useCallback(async () => {
+    if (!taskId) return;
+    setRetrying(true);
+    try {
+      const res = (await archiveFusionAPI.retryTask(taskId)) as { data?: unknown; message?: string };
+      if (res?.data) {
+        message.success(res.message ?? '已提交重新导入，页面将刷新');
+        loadDetail(taskId);
+      } else {
+        message.error((res as { message?: string })?.message ?? '重新导入失败');
+      }
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      message.error(err?.response?.data?.message ?? err?.message ?? '重新导入失败');
+    } finally {
+      setRetrying(false);
+    }
+  }, [taskId, loadDetail]);
 
+  /** 未导入条数：由任务详情接口返回的 unimportedCount 提供（支持 2000+ 条） */
+  const unimportedCount = detail?.task?.unimportedCount ?? 0;
+  /** 当前页中未导入的 resultId，用于「全选未导入」仅选当前页 */
+  const unimportedOnCurrentPage = extractResultsPage.filter((r) => !r.imported).map((r) => r.resultId);
+  const selectAllUnimported = useCallback(() => {
+    setSelectedResultIds((prev) => {
+      const add = unimportedOnCurrentPage.filter((id) => !prev.includes(id));
+      return add.length === 0 ? prev.filter((id) => !unimportedOnCurrentPage.includes(id)) : [...prev, ...add];
+    });
+  }, [unimportedOnCurrentPage]);
+
+  /** 全部导入：提交服务端异步任务，接口立即返回 */
   const handleImportAll = useCallback(async () => {
-    const idsToImport = detail?.extractResults?.filter((r) => !r.imported).map((r) => r.resultId) ?? [];
-    if (!detail?.task?.taskId || idsToImport.length === 0) {
+    if (!detail?.task?.taskId) return;
+    if (unimportedCount <= 0) {
       message.warning('当前无未导入的提取结果');
       return;
     }
     setImporting(true);
     try {
-      const res = await archiveFusionAPI.confirmImport(
+      const res = await archiveFusionAPI.confirmImportAllAsync(
         detail.task.taskId,
-        idsToImport,
         batchTags,
         isAdmin ? importAsPublic : false
-      ) as unknown as { data?: string[] };
-      const ids = res?.data ?? res;
-      if (Array.isArray(ids) && ids.length > 0) {
-        message.success(`已批量导入 ${ids.length} 条人物档案`);
-        setSelectedResultIds([]);
-        loadDetail(detail.task.taskId);
-      } else {
-        message.info('没有可导入的结果');
-      }
+      ) as { data?: { totalQueued?: number }; message?: string };
+      const totalQueued = res?.data?.totalQueued ?? res?.message?.match(/\d+/)?.[0];
+      message.success(res?.message ?? `已提交，共 ${totalQueued ?? unimportedCount} 条将后台导入`);
+      setSelectedResultIds([]);
+      loadDetail(detail.task.taskId);
+      loadExtractResultsPage(detail.task.taskId, extractPage, EXTRACT_PAGE_SIZE);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } }; message?: string };
-      message.error(err?.response?.data?.message ?? err?.message ?? '导入失败');
+      message.error(err?.response?.data?.message ?? err?.message ?? '提交全部导入失败');
     } finally {
       setImporting(false);
     }
-  }, [detail?.task?.taskId, detail?.extractResults, batchTags, importAsPublic, isAdmin, loadDetail]);
+  }, [detail?.task?.taskId, unimportedCount, batchTags, importAsPublic, isAdmin, loadDetail, loadExtractResultsPage, extractPage]);
 
   /** 从 rawJson 中取全部头像路径，生成头像代理 URL 列表（支持多头像展示） */
   const getExtractAvatarUrls = useCallback((rawJson: string | undefined): string[] => {
@@ -289,19 +349,7 @@ const ImportDetail: React.FC = () => {
                 <div className="import-detail-similar-title">库内相似档案</div>
                 <div className="import-detail-similar-list">
                   {r.similarPersons.map((p: PersonCardDTO) => (
-                    <Card key={p.personId} size="small" hoverable className="import-detail-similar-card" onClick={() => navigate(`/persons/${p.personId}`)}>
-                      <div className="import-detail-similar-card-inner">
-                        {p.avatarUrl ? (
-                          <img src={p.avatarUrl} alt="" className="import-detail-similar-avatar" />
-                        ) : (
-                          <div className="import-detail-similar-avatar-placeholder"><UserOutlined /></div>
-                        )}
-                        <div className="import-detail-similar-info">
-                          <div className="import-detail-similar-name">{p.chineseName || p.originalName || p.personId}</div>
-                          {p.idCardNumber && <div className="import-detail-similar-id">{p.idCardNumber}</div>}
-                        </div>
-                      </div>
-                    </Card>
+                    <PersonCard key={p.personId} person={p} clickable showActionLink={false} minWidth={280} maxWidth={320} />
                   ))}
                 </div>
               </div>
@@ -335,7 +383,7 @@ const ImportDetail: React.FC = () => {
     );
   }
 
-  const hasUnimported = detail.extractResults?.some((r) => !r.imported) ?? false;
+  const hasUnimported = unimportedCount > 0;
   const showImportBtn = detail.task?.taskId && hasUnimported;
   const canCompareAndImport = detail.task?.status === 'SUCCESS';
 
@@ -368,10 +416,25 @@ const ImportDetail: React.FC = () => {
           <div className="import-detail-task-info">
             <span className="import-detail-task-name">{detail.task.fileName}</span>
             <Tag color={STATUS_MAP[detail.task.status]?.color}>{STATUS_MAP[detail.task.status]?.text ?? detail.task.status}</Tag>
-            <span className="import-detail-task-meta">提取 {detail.task.extractCount} 人</span>
+            <span className="import-detail-task-meta">
+              {detail.task.totalExtractCount != null && detail.task.totalExtractCount > 0
+                ? `已提取 ${detail.task.extractCount ?? 0} / ${detail.task.totalExtractCount} 人`
+                : `提取 ${detail.task.extractCount ?? 0} 人`}
+              {detail.task.completedTime != null && (
+                <> · 完成时间 {new Date(detail.task.completedTime).toLocaleString('zh-CN')}</>
+              )}
+              {detail.task.durationSeconds != null && detail.task.durationSeconds >= 0 && (
+                <> · 总耗时 {detail.task.durationSeconds < 60 ? `${detail.task.durationSeconds}秒` : `${Math.floor(detail.task.durationSeconds / 60)}分${detail.task.durationSeconds % 60}秒`}</>
+              )}
+            </span>
             {detail.task.errorMessage && <Tag color="error">{detail.task.errorMessage}</Tag>}
           </div>
           <span className="import-detail-toolbar-divider" />
+          {detail.task.status === 'FAILED' && (
+            <Button type="primary" size="small" icon={<ReloadOutlined />} loading={retrying} onClick={handleRetry}>
+              重新导入
+            </Button>
+          )}
           <Button type="link" size="small" icon={<FileTextOutlined />} onClick={goToPreview}>预览</Button>
           <Button type="link" size="small" icon={<DownloadOutlined />} onClick={handleDownload}>下载</Button>
         </div>
@@ -405,7 +468,7 @@ const ImportDetail: React.FC = () => {
               className="import-detail-batch-tags"
             />
             <Button type="primary" loading={importing} onClick={handleImportAll}>
-              全部导入（{unimportedResultIds.length}）
+              全部导入（{unimportedCount}）
             </Button>
             <Button type="default" loading={importing} disabled={selectedResultIds.length === 0} onClick={handleConfirmImport}>
               确认并导入已勾选（{selectedResultIds.length}）
@@ -470,8 +533,22 @@ const ImportDetail: React.FC = () => {
           <Col xs={24} lg={12}>
             <Card size="small" title="抽取人物信息（勾选后点击确认并导入）" className="import-detail-card import-detail-card-results">
               <div className="import-detail-results-body">
-                {detail.extractResults && detail.extractResults.length > 0 ? (
-                  detail.extractResults.map(renderExtractResult)
+                {extractResultsPage.length > 0 ? (
+                  <>
+                    {extractResultsPage.map(renderExtractResult)}
+                    {extractResultsTotal > EXTRACT_PAGE_SIZE && (
+                      <div className="import-detail-results-pagination">
+                        <Pagination
+                          current={extractPage + 1}
+                          pageSize={EXTRACT_PAGE_SIZE}
+                          total={extractResultsTotal}
+                          showSizeChanger={false}
+                          showTotal={(total) => `共 ${total} 条`}
+                          onChange={(page) => setExtractPage(page - 1)}
+                        />
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <Empty description="无提取结果" className="import-detail-empty" />
                 )}

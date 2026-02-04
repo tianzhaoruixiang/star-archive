@@ -125,7 +125,7 @@ INSERT INTO tag (tag_id, first_level_name, second_level_name, tag_name, tag_desc
 -- 插入测试人员数据（全字段，含机构、所属群体）
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -141,7 +141,7 @@ INSERT INTO person (
     '康复',
     NULL,
     '男',
-    ARRAY('110101199001011234'),
+    '110101199001011234',
     '1990-01-01 00:00:00',
     '中国',
     'CHN',

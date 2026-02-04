@@ -11,10 +11,9 @@ import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchStatistics } from '@/store/slices/dashboardSlice';
-import { dashboardAPI, personAPI, type OrganizationRankItem, type VisaTypeRankItem, type ProvinceRanksDTO, type ProvinceFlowItemDTO, type TravelTrendDTO, type PersonListFilter } from '@/services/api';
+import { dashboardAPI, personAPI, type OrganizationRankItem, type VisaTypeRankItem, type ProvinceRanksDTO, type PersonListFilter } from '@/services/api';
 import PersonCard from '@/components/PersonCard';
 import type { PersonCardData } from '@/components/PersonCard';
-import { getProvinceCenter } from '@/utils/provinceGeo';
 import { DashboardSkeleton, PageCardGridSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
@@ -29,22 +28,16 @@ interface RankItem {
   value: number;
 }
 
-/* 深色主题：疑似=橙、康复=绿、青蓝/紫强调 */
-const TREND_COLORS = ['#f59e0b', '#22c55e', '#06b6d4', '#a855f7'];
-
 function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
   const { statistics, loading } = useAppSelector((state) => state.dashboard);
-  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
   const [locationTab, setLocationTab] = useState<string>('全部');
   const [organizationTop15, setOrganizationTop15] = useState<OrganizationRankItem[]>([]);
   const [visaTypeTop15, setVisaTypeTop15] = useState<VisaTypeRankItem[]>([]);
   const [provinceRanks, setProvinceRanks] = useState<ProvinceRanksDTO | null>(null);
-  const [travelTrend, setTravelTrend] = useState<TravelTrendDTO | null>(null);
   const [groupCategoryStats, setGroupCategoryStats] = useState<OrganizationRankItem[]>([]);
-  const [provinceFlow, setProvinceFlow] = useState<ProvinceFlowItemDTO[]>([]);
   const [chinaGeoLoaded, setChinaGeoLoaded] = useState(false);
 
   /** 人物列表弹框 */
@@ -67,12 +60,10 @@ function Dashboard() {
     if (!personListModalOpen) return;
     const controller = new AbortController();
     setPersonListLoading(true);
-    console.log('[Dashboard] 查询人员列表:', { page: personListPage, filter: personListFilter });
     personAPI
       .getPersonList(personListPage, PERSON_LIST_PAGE_SIZE, personListFilter, { signal: controller.signal })
       .then((res: unknown) => {
         const data = res && typeof res === 'object' && 'data' in res ? (res as { data?: { content?: PersonCardData[]; totalElements?: number } }).data : res as { content?: PersonCardData[]; totalElements?: number };
-        console.log('[Dashboard] 人员列表查询结果:', data);
         setPersonListData({
           content: Array.isArray(data?.content) ? data.content : [],
           totalElements: typeof data?.totalElements === 'number' ? data.totalElements : 0,
@@ -115,14 +106,6 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    dashboardAPI.getTravelTrend(14).then((res: { data?: TravelTrendDTO }) => {
-      const payload = res?.data ?? res;
-      // @ts-ignore
-      setTravelTrend(payload && typeof payload === 'object' ? payload : null);
-    }).catch(() => setTravelTrend(null));
-  }, []);
-
-  useEffect(() => {
     dashboardAPI.getGroupCategoryStats().then((res: { data?: OrganizationRankItem[] }) => {
       const list = res?.data ?? res;
       setGroupCategoryStats(Array.isArray(list) ? list : []);
@@ -141,63 +124,12 @@ function Dashboard() {
       .catch(() => setChinaGeoLoaded(false));
   }, []);
 
-  useEffect(() => {
-    dashboardAPI.getProvinceFlow().then((res: unknown) => {
-      const raw = res && typeof res === 'object' && 'data' in res ? (res as { data?: unknown }).data : res;
-      const list = Array.isArray(raw) ? raw : [];
-      setProvinceFlow(list as ProvinceFlowItemDTO[]);
-    }).catch(() => setProvinceFlow([]));
-  }, []);
-
   const totalPerson = statistics?.totalPersonCount ?? 0;
   const keyPerson = statistics?.keyPersonCount ?? 0;
   const activeRegions = 0;
   const todayMovement = statistics?.todaySocialDynamicCount ?? 0;
 
-  const trendOption = useCallback(() => {
-    const isBar = chartType === 'bar';
-    const dates = travelTrend?.dates ?? [];
-    const series = travelTrend?.series ?? [];
-    const xData = dates.map((d) => {
-      const parts = d.split('-');
-      return parts.length === 3 ? `${parts[1]}/${parts[2]}` : d;
-    });
-    return {
-      backgroundColor: 'transparent',
-      grid: { left: 48, right: 24, top: 40, bottom: 32 },
-      tooltip: { trigger: 'axis' },
-      legend: {
-        data: series.map((s) => s.name),
-        bottom: 0,
-        textStyle: { color: '#94a3b8', fontSize: 12 },
-        itemWidth: 14,
-        itemHeight: 14,
-      },
-      xAxis: {
-        type: 'category',
-        data: xData,
-        axisLine: { lineStyle: { color: 'rgba(6, 182, 212, 0.2)' } },
-        axisLabel: { color: '#94a3b8' },
-      },
-      yAxis: {
-        type: 'value',
-        axisLine: { show: false },
-        splitLine: { lineStyle: { color: 'rgba(6, 182, 212, 0.1)', type: 'dashed' } },
-        axisLabel: { color: '#94a3b8' },
-      },
-      series: series.map((s, i) => ({
-        name: s.name,
-        type: isBar ? 'bar' : 'line',
-        data: s.data ?? [],
-        smooth: true,
-        itemStyle: { color: TREND_COLORS[i % TREND_COLORS.length] },
-        lineStyle: { color: TREND_COLORS[i % TREND_COLORS.length], width: 2 },
-        areaStyle: isBar ? undefined : { color: 'rgba(6, 182, 212, 0.12)' },
-      })),
-    };
-  }, [chartType, travelTrend]);
-
-  /** 全国监测分布图：已注册中国 GeoJSON 时用地图+按省人数着色，否则散点占位 */
+  /** 全国监测分布图 */
   const mapOption = useCallback(() => {
     const provinceList = provinceRanks?.all ?? [];
     const countMap = new Map(provinceList.map((p) => [p.name, p.value]));
@@ -207,25 +139,11 @@ function Dashboard() {
     if (maxVal <= minVal) maxVal = minVal + 1;
 
     if (chinaGeoLoaded) {
-      /* 深色主题：蓝绿黄橙红渐变（少→多），科技感热力 */
+      /* 16 级冷暖渐变：浅蓝（少）→ 深红（多），专业数据可视化 */
       const visualMapColors = [
-        '#1e293b', '#334155', '#475569', '#0f766e', '#0d9488', '#14b8a6', '#22d3ee', '#06b6d4',
-        '#84cc16', '#eab308', '#f59e0b', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#7f1d1d',
+        '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1', '#075985',
+        '#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#ef4444', '#dc2626', '#b91c1c',
       ];
-      /* 流动线数据：仅保留两端都有坐标的线路 */
-      const lineData = provinceFlow
-        .map((f) => {
-          const fromCoord = getProvinceCenter(f.fromProvince);
-          const toCoord = getProvinceCenter(f.toProvince);
-          if (!fromCoord || !toCoord) return null;
-          return {
-            coords: [fromCoord, toCoord] as [number, number][],
-            value: f.personCount,
-            fromProvince: f.fromProvince,
-            toProvince: f.toProvince,
-          };
-        })
-        .filter((d): d is NonNullable<typeof d> => d != null);
 
       const series: Record<string, unknown>[] = [
         {
@@ -234,70 +152,36 @@ function Dashboard() {
           map: 'china',
           geoIndex: 0,
           itemStyle: {
-            borderColor: 'rgba(6, 182, 212, 0.35)',
-            borderWidth: 1.2,
-            shadowBlur: 6,
-            shadowColor: 'rgba(6, 182, 212, 0.15)',
+            borderColor: '#d1d5db',
+            borderWidth: 1.5,
+            areaColor: '#e0f2fe',
           },
           label: {
             show: true,
-            fontSize: 13,
-            fontWeight: 600,
-            color: '#e2e8f0',
+            fontSize: 12,
+            fontWeight: 500,
+            color: '#334155',
             fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
-            textBorderColor: 'rgba(15, 13, 26, 0.9)',
-            textBorderWidth: 1.5,
-            textShadowColor: 'rgba(6, 182, 212, 0.2)',
-            textShadowBlur: 3,
             padding: [1, 3],
           },
           emphasis: {
             label: {
               show: true,
               fontWeight: 700,
-              color: '#f1f5f9',
+              color: '#1e293b',
               fontSize: 14,
-              textBorderColor: 'rgba(6, 182, 212, 0.5)',
-              textBorderWidth: 2,
-              textShadowColor: 'rgba(6, 182, 212, 0.4)',
-              textShadowBlur: 4,
             },
             itemStyle: {
-              areaColor: 'rgba(6, 182, 212, 0.25)',
-              borderColor: 'rgba(6, 182, 212, 0.8)',
+              areaColor: '#a5b4fc',
+              borderColor: '#818cf8',
               borderWidth: 2.5,
-              shadowBlur: 12,
-              shadowColor: 'rgba(6, 182, 212, 0.4)',
+              shadowBlur: 10,
+              shadowColor: 'rgba(0, 0, 0, 0.3)',
             },
           },
           data: provinceList.map((p) => ({ name: p.name, value: p.value })),
         },
       ];
-      if (lineData.length > 0) {
-        series.push({
-          name: '人员流动',
-          type: 'lines',
-          coordinateSystem: 'geo',
-          geoIndex: 0,
-          data: lineData,
-          lineStyle: {
-            color: 'rgba(6, 182, 212, 0.55)',
-            width: 1.2,
-            curveness: 0.15,
-          },
-          effect: {
-            show: true,
-            period: 2.5,
-            trailLength: 0.35,
-            color: 'rgba(6, 182, 212, 0.75)',
-            symbolSize: 2.5,
-          },
-          emphasis: {
-            lineStyle: { width: 2.2, color: 'rgba(6, 182, 212, 0.9)' },
-            label: { show: false },
-          },
-        });
-      }
 
       return {
         backgroundColor: 'transparent',
@@ -308,26 +192,32 @@ function Dashboard() {
           layoutSize: '110%',
           silent: false,
           itemStyle: {
-            borderColor: 'rgba(6, 182, 212, 0.35)',
-            borderWidth: 1.2,
+            borderColor: '#d1d5db',
+            borderWidth: 1.5,
+            areaColor: '#e0f2fe',
           },
           label: { show: false },
+          emphasis: {
+            itemStyle: {
+              areaColor: '#a5b4fc',
+              borderColor: '#818cf8',
+              borderWidth: 2.5,
+              shadowBlur: 10,
+              shadowColor: 'rgba(0, 0, 0, 0.3)',
+            },
+          },
         },
         tooltip: {
           trigger: 'item',
-          formatter: (params: { seriesType?: string; name?: string; data?: { fromProvince?: string; toProvince?: string; value?: number } }) => {
-            if (params.seriesType === 'lines' && params.data) {
-              const d = params.data as { fromProvince?: string; toProvince?: string; value?: number };
-              return `从 ${d.fromProvince ?? ''} → ${d.toProvince ?? ''}: ${d.value ?? 0} 人<br/>点击查看人员`;
-            }
+          formatter: (params: { name?: string }) => {
             const v = countMap.get(params.name ?? '') ?? 0;
             return `${params.name}: ${v}`;
           },
-          backgroundColor: 'rgba(22, 20, 42, 0.95)',
-          borderColor: 'rgba(6, 182, 212, 0.3)',
+          backgroundColor: 'rgba(15, 23, 42, 0.92)',
+          borderColor: 'rgba(102, 126, 234, 0.5)',
           borderWidth: 1,
           borderRadius: 8,
-          textStyle: { color: '#f1f5f9', fontSize: 13, fontWeight: 500 },
+          textStyle: { color: '#e2e8f0', fontSize: 13, fontWeight: 500 },
           padding: [10, 14],
         },
         visualMap: {
@@ -339,39 +229,15 @@ function Dashboard() {
           inRange: { color: visualMapColors },
           right: 14,
           bottom: 8,
-          textStyle: { color: '#94a3b8', fontSize: 11, fontWeight: 500 },
+          textStyle: { color: 'rgba(148, 163, 184, 0.9)', fontSize: 11, fontWeight: 500 },
         },
         series,
       };
     }
 
-    return {
-      backgroundColor: 'transparent',
-      tooltip: { trigger: 'item', formatter: '{b}: {c}' },
-      grid: { left: 24, right: 24, top: 24, bottom: 24 },
-      xAxis: { type: 'value', min: 80, max: 130, show: false },
-      yAxis: { type: 'value', min: 15, max: 55, show: false },
-      series: [
-        {
-          type: 'scatter',
-          symbolSize: (val: number[]) => Math.max(val[2] / 4, 12),
-          data: [
-            [116.4, 39.9, 120],
-            [121.47, 31.23, 98],
-            [113.26, 23.13, 85],
-            [114.06, 22.55, 76],
-            [104.06, 30.67, 65],
-            [118.8, 32.06, 54],
-            [108.93, 34.27, 48],
-            [117.2, 31.82, 42],
-            [106.58, 29.56, 38],
-          ].map(([lng, lat, v]) => ({ value: [lng, lat, v], name: `区域${v}` })),
-          itemStyle: { color: 'rgba(6, 182, 212, 0.5)', borderColor: 'rgba(6, 182, 212, 0.4)', borderWidth: 1 },
-          emphasis: { scale: 1.2 },
-        },
-      ],
-    };
-  }, [chinaGeoLoaded, provinceRanks?.all, provinceFlow]);
+    /* 地图未加载时返回空配置，避免显示 fallback 导致抖动 */
+    return { backgroundColor: 'transparent', series: [] };
+  }, [chinaGeoLoaded, provinceRanks?.all]);
 
   if (loading && !statistics) {
     return <DashboardSkeleton />;
@@ -453,10 +319,10 @@ function Dashboard() {
         </Col>
       </Row>
 
-      {/* 三栏：左 中 右（左右卡片略窄，中间地图更宽） */}
+      {/* 三栏：左 中 右（超宽屏下中间地图占比更大，适配 2560×1080） */}
       <Row gutter={16} className="dashboard-main">
         {/* 左侧：机构分布 TOP15、签证类型排名 */}
-        <Col xs={24} lg={5}>
+        <Col xs={24} lg={5} xxl={4}>
           <Card className="dashboard-panel dashboard-panel-rank-card" title="机构分布TOP15" size="small">
             <div className="rank-list rank-list-scroll">
               {organizationTop15.length === 0 ? (
@@ -523,11 +389,10 @@ function Dashboard() {
           </Card>
         </Col>
 
-        {/* 中间：全国监测分布图 + 人物行程趋势分析 */}
-        <Col xs={24} lg={14}>
+        {/* 中间：全国监测分布图 */}
+        <Col xs={24} lg={14} xxl={16}>
           <Card className="dashboard-panel dashboard-panel-map" title="全国监测分布图" size="small">
             <div className="map-section map-container">
-              <div className="map-outline" />
               <ReactECharts
                 key={`china-map-${location.key}-${chinaGeoLoaded}`}
                 option={mapOption()}
@@ -535,23 +400,8 @@ function Dashboard() {
                 opts={{ renderer: 'canvas' }}
                 notMerge
                 onEvents={{
-                  click: (params: { componentSubType?: string; name?: string; data?: { fromProvince?: string; toProvince?: string } }) => {
+                  click: (params: { componentSubType?: string; name?: string }) => {
                     if (!chinaGeoLoaded) return;
-                    if (params.componentSubType === 'lines' && params.data) {
-                      const d = params.data as { fromProvince?: string; toProvince?: string };
-                      console.log('[Dashboard] 点击流动线:', d);
-                      if (d.fromProvince && d.toProvince) {
-                        console.log('[Dashboard] 打开人员列表弹窗:', {
-                          departureProvince: d.fromProvince,
-                          destinationProvince: d.toProvince,
-                        });
-                        openPersonListModal(`${d.fromProvince} → ${d.toProvince} 流动人员`, {
-                          departureProvince: d.fromProvince,
-                          destinationProvince: d.toProvince,
-                        });
-                      }
-                      return;
-                    }
                     if (params.componentSubType === 'map' && params.name) {
                       navigate(`/dashboard/province/${encodeURIComponent(params.name)}`);
                     }
@@ -560,28 +410,10 @@ function Dashboard() {
               />
             </div>
           </Card>
-          {/* <Card className="dashboard-panel" title="人物行程趋势分析" size="small">
-            <Tabs
-              activeKey={chartType}
-              onChange={(k) => setChartType(k as 'line' | 'bar')}
-              size="small"
-              className="dashboard-trend-tabs"
-              items={[
-                { key: 'line', label: '折线图' },
-                { key: 'bar', label: '柱状图' },
-              ]}
-            />
-            <ReactECharts
-              option={trendOption()}
-              style={{ height: 240, width: '100%' }}
-              opts={{ renderer: 'canvas' }}
-              notMerge
-            />
-          </Card> */}
         </Col>
 
         {/* 右侧：各地排名、群体类别 */}
-        <Col xs={24} lg={5}>
+        <Col xs={24} lg={5} xxl={4}>
           <Card className="dashboard-panel dashboard-panel-rank-card" title="各地排名" size="small">
             <Tabs
               activeKey={locationTab}
@@ -620,13 +452,13 @@ function Dashboard() {
                     title={`${item.name}: ${item.value}`}
                     placement="left"
                     overlayInnerStyle={{
-                      backgroundColor: 'rgba(22, 20, 42, 0.95)',
-                      border: '1px solid rgba(6, 182, 212, 0.25)',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e2e8f0',
                       borderRadius: 8,
                       padding: '10px 14px',
                       fontSize: 13,
                       fontWeight: 500,
-                      color: '#f1f5f9',
+                      color: '#1e293b',
                     }}
                   >
                     <div className="rank-item">
@@ -705,13 +537,17 @@ function Dashboard() {
           <Empty description="暂无人员" />
         ) : (
           <>
-            <Row gutter={[12, 12]} className="dashboard-person-list-grid">
+            <div className="dashboard-person-list-grid">
               {personListData.content.map((person) => (
-                <Col xs={24} sm={12} md={8} key={person.personId}>
-                  <PersonCard person={person} showActionLink />
-                </Col>
+                <PersonCard
+                  key={person.personId}
+                  person={person}
+                  showActionLink
+                  minWidth={180}
+                  maxWidth={280}
+                />
               ))}
-            </Row>
+            </div>
             {personListData.totalElements > PERSON_LIST_PAGE_SIZE && (
               <div className="dashboard-person-list-pagination">
                 <Pagination

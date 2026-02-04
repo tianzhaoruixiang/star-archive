@@ -18,10 +18,10 @@ import java.time.LocalDateTime;
 public class SystemConfig {
 
     @Id
-    @Column(name = "config_key", nullable = false, length = 100)
+    @Column(name = "config_key", nullable = false, length = 200)
     private String configKey;
 
-    @Column(name = "config_value", length = 1000)
+    @Column(name = "config_value", length = 8000)
     private String configValue;
 
     @Column(name = "updated_time")

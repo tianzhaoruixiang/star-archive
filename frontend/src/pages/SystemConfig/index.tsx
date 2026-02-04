@@ -6,14 +6,21 @@ import { formatDateTime } from '@/utils/date';
 import { FormCardSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
+/** 一级导航（顶部菜单项） */
 const NAV_ITEMS: { key: keyof SystemConfigDTO; label: string }[] = [
   { key: 'navDashboard', label: '首页' },
   { key: 'navPersons', label: '人员档案' },
   { key: 'navKeyPersonLibrary', label: '重点人员库' },
   { key: 'navWorkspace', label: '工作区' },
-  { key: 'navModelManagement', label: '模型管理' },
   { key: 'navSituation', label: '态势感知' },
   { key: 'navSystemConfig', label: '系统配置' },
+];
+
+/** 二级导航（工作区下的子菜单，可在系统配置中单独控制显示/隐藏） */
+const WORKSPACE_SECONDARY_NAV_ITEMS: { key: keyof SystemConfigDTO; label: string }[] = [
+  { key: 'navWorkspaceFusion', label: '档案融合' },
+  { key: 'navWorkspaceTags', label: '标签管理' },
+  { key: 'navModelManagement', label: '模型管理' },
 ];
 
 const PAGE_FEATURE_ITEMS: { key: keyof SystemConfigDTO; label: string }[] = [
@@ -93,6 +100,10 @@ const SystemConfigPage = () => {
             // @ts-ignore
             navWorkspace: data.navWorkspace !== false,
             // @ts-ignore
+            navWorkspaceFusion: data.navWorkspaceFusion !== false,
+            // @ts-ignore
+            navWorkspaceTags: data.navWorkspaceTags !== false,
+            // @ts-ignore
             navModelManagement: data.navModelManagement !== false,
             // @ts-ignore
             navSituation: data.navSituation !== false,
@@ -103,6 +114,9 @@ const SystemConfigPage = () => {
             llmBaseUrl: (data as SystemConfigDTO).llmBaseUrl ?? '',
             llmModel: (data as SystemConfigDTO).llmModel ?? '',
             llmApiKey: (data as SystemConfigDTO).llmApiKey ?? '',
+            llmExtractPrompt: (data as SystemConfigDTO).llmExtractPrompt ?? '',
+            onlyofficeDocumentServerUrl: (data as SystemConfigDTO).onlyofficeDocumentServerUrl ?? '',
+            onlyofficeDocumentDownloadBase: (data as SystemConfigDTO).onlyofficeDocumentDownloadBase ?? '',
           });
         }
       })
@@ -183,6 +197,8 @@ const SystemConfigPage = () => {
             navPersons: true,
             navKeyPersonLibrary: true,
             navWorkspace: true,
+            navWorkspaceFusion: true,
+            navWorkspaceTags: true,
             navModelManagement: true,
             navSituation: true,
             navSystemConfig: true,
@@ -190,6 +206,9 @@ const SystemConfigPage = () => {
             llmBaseUrl: '',
             llmModel: '',
             llmApiKey: '',
+            llmExtractPrompt: '',
+            onlyofficeDocumentServerUrl: '',
+            onlyofficeDocumentDownloadBase: '',
           }}
         >
           <Form.Item
@@ -229,9 +248,21 @@ const SystemConfigPage = () => {
           >
             <Input placeholder="/ 或 /app/" maxLength={200} />
           </Form.Item>
-          <Form.Item label="导航与核心板块显示">
+          <Form.Item label="一级导航显示">
             <div className="system-config-nav-switches">
               {NAV_ITEMS.map(({ key, label }) => (
+                <div key={key} className="system-config-nav-row">
+                  <span className="system-config-nav-label">{label}</span>
+                  <Form.Item name={key} valuePropName="checked" noStyle>
+                    <Switch checkedChildren="显示" unCheckedChildren="隐藏" />
+                  </Form.Item>
+                </div>
+              ))}
+            </div>
+          </Form.Item>
+          <Form.Item label="二级导航（工作区下）" extra="控制工作区菜单下各子项的显示与隐藏">
+            <div className="system-config-nav-switches">
+              {WORKSPACE_SECONDARY_NAV_ITEMS.map(({ key, label }) => (
                 <div key={key} className="system-config-nav-row">
                   <span className="system-config-nav-label">{label}</span>
                   <Form.Item name={key} valuePropName="checked" noStyle>
@@ -275,6 +306,39 @@ const SystemConfigPage = () => {
                 extra="大模型服务 API Key，请妥善保管"
               >
                 <Input.Password placeholder="留空则不修改或使用配置文件中的 Key" maxLength={500} autoComplete="new-password" />
+              </Form.Item>
+              <Form.Item
+                name="llmExtractPrompt"
+                label="人物档案提取提示词"
+                extra="大模型抽取单人档案时的系统提示词，留空则使用内置默认；用于控制抽取字段与格式"
+              >
+                <Input.TextArea
+                  placeholder="留空则使用内置默认提示词"
+                  rows={6}
+                  maxLength={4000}
+                  showCount
+                />
+              </Form.Item>
+            </div>
+          </Form.Item>
+          <Form.Item
+            label="OnlyOffice 文档预览配置"
+            extra="用于工作区档案融合任务中的文档在线预览；留空时使用 application.yml 中的 onlyoffice 配置"
+          >
+            <div className="system-config-llm-row">
+              <Form.Item
+                name="onlyofficeDocumentServerUrl"
+                label="Document Server URL"
+                extra="前端加载 OnlyOffice 脚本的地址，如 http://localhost:8081"
+              >
+                <Input placeholder="如 http://localhost:8081" maxLength={500} />
+              </Form.Item>
+              <Form.Item
+                name="onlyofficeDocumentDownloadBase"
+                label="Document Download Base"
+                extra="OnlyOffice 服务端拉取文档时的后端基地址，需能被 OnlyOffice 访问，如 http://host.docker.internal:8000/littlesmall/api"
+              >
+                <Input placeholder="如 http://localhost:8000/littlesmall/api" maxLength={500} />
               </Form.Item>
             </div>
           </Form.Item>

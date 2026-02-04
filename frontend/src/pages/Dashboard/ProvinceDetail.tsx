@@ -150,9 +150,10 @@ const ProvinceDetail: FC = () => {
     let maxVal = values.length ? Math.max(...values) : 1;
     if (maxVal <= minVal) maxVal = minVal + 1;
 
+    /* 16 级冷暖渐变：与首页地图一致 */
     const visualMapColors = [
-      '#d4d4d8', '#a1a1aa', '#71717a', '#52525b', '#3f3f46', '#22c55e', '#10b981', '#14b8a6',
-      '#34d399', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#991b1b',
+      '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8', '#0ea5e9', '#0284c7', '#0369a1', '#075985',
+      '#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#ef4444', '#dc2626', '#b91c1c',
     ];
 
     const mapSeries: Record<string, unknown> = {
@@ -163,31 +164,28 @@ const ProvinceDetail: FC = () => {
       layoutCenter: ['50%', '50%'],
       layoutSize: '120%',
       itemStyle: {
-        borderColor: 'rgba(148, 163, 184, 0.6)',
-        borderWidth: 1.2,
+        borderColor: '#d1d5db',
+        borderWidth: 1.5,
+        areaColor: '#e0f2fe',
         shadowBlur: 4,
-        shadowColor: 'rgba(0, 0, 0, 0.12)',
+        shadowColor: 'rgba(0, 0, 0, 0.15)',
       },
       label: {
         show: true,
-        fontSize: 13,
-        fontWeight: 600,
-        color: '#0f172a',
+        fontSize: 12,
+        fontWeight: 500,
+        color: '#334155',
         fontFamily: '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif',
-        textBorderColor: 'rgba(255, 255, 255, 0.95)',
-        textBorderWidth: 1.5,
-        textShadowColor: 'rgba(0, 0, 0, 0.2)',
-        textShadowBlur: 3,
         padding: [1, 3],
       },
       emphasis: {
-        label: { show: true, fontWeight: 700, color: '#020617', fontSize: 14 },
+        label: { show: true, fontWeight: 700, color: '#1e293b', fontSize: 14 },
         itemStyle: {
-          areaColor: '#007aff',
-          borderColor: 'rgba(102, 126, 234, 0.9)',
+          areaColor: '#a5b4fc',
+          borderColor: '#818cf8',
           borderWidth: 2.5,
-          shadowBlur: 12,
-          shadowColor: 'rgba(59, 130, 246, 0.35)',
+          shadowBlur: 10,
+          shadowColor: 'rgba(0, 0, 0, 0.3)',
         },
       },
       data: mapData,
@@ -206,11 +204,11 @@ const ProvinceDetail: FC = () => {
       tooltip: {
         trigger: 'item',
         formatter: tooltipFormatter,
-        backgroundColor: 'rgba(255, 255, 255, 0.96)',
-        borderColor: 'rgba(0, 0, 0, 0.08)',
+        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+        borderColor: 'rgba(102, 126, 234, 0.5)',
         borderWidth: 1,
         borderRadius: 8,
-        textStyle: { color: '#1d1d1f', fontSize: 13, fontWeight: 500 },
+        textStyle: { color: '#e2e8f0', fontSize: 13, fontWeight: 500 },
         padding: [10, 14],
       },
       series: [mapSeries],
@@ -228,14 +226,14 @@ const ProvinceDetail: FC = () => {
           inRange: { color: visualMapColors },
           right: 14,
           bottom: 8,
-          textStyle: { color: '#94a3b8', fontSize: 11, fontWeight: 500 },
+          textStyle: { color: 'rgba(148, 163, 184, 0.9)', fontSize: 11, fontWeight: 500 },
           seriesIndex: 0,
         },
       };
     }
 
     mapSeries.data = [];
-    (mapSeries.itemStyle as Record<string, unknown>).areaColor = 'rgba(30, 64, 175, 0.4)';
+    (mapSeries.itemStyle as Record<string, unknown>).areaColor = '#e0f2fe';
     return { ...baseOption, series: [mapSeries] };
   }, [provinceGeoLoaded, provinceMapKey, stats?.cityRank, geoJson]);
 
@@ -442,13 +440,17 @@ const ProvinceDetail: FC = () => {
           <Empty description="暂无人员" />
         ) : (
           <>
-            <Row gutter={[12, 12]} className="dashboard-person-list-grid">
+            <div className="dashboard-person-list-grid">
               {personListData.content.map((person) => (
-                <Col xs={24} sm={12} md={8} key={person.personId}>
-                  <PersonCard person={person} showActionLink />
-                </Col>
+                <PersonCard
+                  key={person.personId}
+                  person={person}
+                  showActionLink
+                  minWidth={180}
+                  maxWidth={280}
+                />
               ))}
-            </Row>
+            </div>
             {personListData.totalElements > PERSON_LIST_PAGE_SIZE && (
               <div className="dashboard-person-list-pagination">
                 <Pagination

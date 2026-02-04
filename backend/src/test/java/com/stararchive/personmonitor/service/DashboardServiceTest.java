@@ -39,7 +39,7 @@ class DashboardServiceTest {
     @Test
     void testGetStatistics() {
         when(personRepository.count()).thenReturn(100L);
-        when(personRepository.countByIsKeyPerson(true)).thenReturn(20L);
+        when(personRepository.countDistinctByKeyTagMatch()).thenReturn(20L);
         when(newsRepository.countByPublishTimeBetween(any(), any())).thenReturn(50L);
         when(socialDynamicRepository.countByPublishTimeBetween(any(), any())).thenReturn(30L);
         

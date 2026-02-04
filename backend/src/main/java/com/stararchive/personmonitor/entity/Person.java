@@ -27,46 +27,50 @@ public class Person {
     @Column(name = "is_key_person")
     private Boolean isKeyPerson;
     
-    @Column(name = "chinese_name", length = 100)
+    @Column(name = "chinese_name", length = 200)
     private String chineseName;
-    
-    @Column(name = "original_name", length = 200)
+
+    @Column(name = "original_name", length = 300)
     private String originalName;
-    
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "alias_names", columnDefinition = "json")
     private List<String> aliasNames;
-    
-    @Column(name = "organization", length = 100)
+
+    @Column(name = "organization", length = 200)
     private String organization;
-    
-    @Column(name = "belonging_group", length = 50)
+
+    @Column(name = "belonging_group", length = 100)
     private String belongingGroup;
-    
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "avatar_files", columnDefinition = "json")
     private List<String> avatarFiles;
-    
-    @Column(name = "gender", length = 10)
+
+    @Column(name = "gender", length = 20)
     private String gender;
-    
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "id_numbers", columnDefinition = "json")
-    private List<String> idNumbers;
-    
+
+    /** 婚姻现状：未婚/已婚/离异/丧偶等 */
+    @Column(name = "marital_status", length = 100)
+    private String maritalStatus;
+
+    /** 证件号码 */
+    @Column(name = "id_number", length = 200)
+    private String idNumber;
+
     @Column(name = "birth_date")
     private LocalDateTime birthDate;
-    
-    @Column(name = "nationality", length = 100)
+
+    @Column(name = "nationality", length = 200)
     private String nationality;
-    
+
     @Column(name = "nationality_code", length = 3)
     private String nationalityCode;
-    
-    @Column(name = "household_address", length = 500)
+
+    @Column(name = "household_address", length = 1000)
     private String householdAddress;
-    
-    @Column(name = "highest_education", length = 50)
+
+    @Column(name = "highest_education", length = 100)
     private String highestEducation;
     
     @JdbcTypeCode(SqlTypes.JSON)
@@ -80,16 +84,24 @@ public class Person {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "passport_numbers", columnDefinition = "json")
     private List<String> passportNumbers;
-    
-    @Column(name = "id_card_number", length = 18)
+
+    /** 主护照号 */
+    @Column(name = "passport_number", length = 200)
+    private String passportNumber;
+
+    /** 护照类型：普通护照/外交护照/公务护照/旅行证等 */
+    @Column(name = "passport_type", length = 100)
+    private String passportType;
+
+    @Column(name = "id_card_number", length = 50)
     private String idCardNumber;
 
     /** 签证类型：公务签证/外交签证/记者签证/旅游签证/其他（人员档案维度，首页签证类型排名按此统计） */
-    @Column(name = "visa_type", length = 50)
+    @Column(name = "visa_type", length = 100)
     private String visaType;
 
     /** 签证号码 */
-    @Column(name = "visa_number", length = 100)
+    @Column(name = "visa_number", length = 200)
     private String visaNumber;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -108,13 +120,15 @@ public class Person {
     @Column(name = "person_tags", columnDefinition = "json")
     private List<String> personTags;
     
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "work_experience", columnDefinition = "json")
+    @Column(name = "work_experience")
     private String workExperience;
     
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "education_experience", columnDefinition = "json")
+    @Column(name = "education_experience")
     private String educationExperience;
+
+    /** 关系人列表 JSON，每项含：关系人名称(name)、关系名称(relation)、关系人简介(brief) */
+    @Column(name = "related_persons")
+    private String relatedPersons;
     
     @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
@@ -124,8 +138,18 @@ public class Person {
     private Boolean isPublic = true;
 
     /** 创建人用户名（私有档案仅此人可见） */
-    @Column(name = "created_by", length = 100)
+    @Column(name = "created_by", length = 200)
     private String createdBy;
+
+    /** 是否已删除（软删）；公开档案仅系统管理员可删，个人档案创建人可删 */
+    @Column(name = "deleted")
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_time")
+    private LocalDateTime deletedTime;
+
+    @Column(name = "deleted_by", length = 200)
+    private String deletedBy;
     
     @Column(name = "created_time")
     private LocalDateTime createdTime;
@@ -142,6 +166,9 @@ public class Person {
         }
         if (educationExperience != null && educationExperience.isBlank()) {
             educationExperience = null;
+        }
+        if (relatedPersons != null && relatedPersons.isBlank()) {
+            relatedPersons = null;
         }
     }
 }

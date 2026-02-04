@@ -26,23 +26,26 @@ public class ArchiveImportTask {
     @Column(name = "document_id", length = 64)
     private String documentId;
 
-    @Column(name = "file_name", length = 500)
+    @Column(name = "file_name", length = 1000)
     private String fileName;
 
-    @Column(name = "file_path_id", length = 100)
+    @Column(name = "file_path_id", length = 200)
     private String filePathId;
 
-    @Column(name = "file_type", length = 20)
+    @Column(name = "file_type", length = 50)
     private String fileType;
 
-    @Column(name = "status", length = 20, nullable = false)
+    @Column(name = "status", length = 50, nullable = false)
     private String status;
 
     @Column(name = "creator_user_id")
     private Integer creatorUserId;
 
-    @Column(name = "creator_username", length = 100)
+    @Column(name = "creator_username", length = 200)
     private String creatorUsername;
+
+    @Column(name = "total_extract_count")
+    private Integer totalExtractCount;
 
     @Column(name = "extract_count")
     private Integer extractCount;
@@ -58,4 +61,12 @@ public class ArchiveImportTask {
 
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
+
+    /** 任务完成时间（状态变为 SUCCESS 或 FAILED 时写入） */
+    @Column(name = "completed_time")
+    private LocalDateTime completedTime;
+
+    /** 相似档案判定使用的属性组合，逗号分隔，如 originalName,birthDate,gender,nationality；为空时默认四者均参与 */
+    @Column(name = "similar_match_fields", length = 500)
+    private String similarMatchFields;
 }

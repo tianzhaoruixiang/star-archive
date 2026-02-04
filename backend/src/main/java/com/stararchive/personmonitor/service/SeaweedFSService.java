@@ -110,6 +110,45 @@ public class SeaweedFSService {
     }
 
     /**
+     * 上传人物头像到 Filer，路径为 {pathPrefix}/persons/{personId}/avatars/{safeFileName}，返回 Filer 内相对路径。
+     * 用于人物详情页上传头像。
+     */
+    public String uploadPersonAvatar(org.springframework.web.multipart.MultipartFile file, String personId) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("请选择要上传的图片");
+        }
+        String originalName = file.getOriginalFilename();
+        String safeName = originalName != null && !originalName.isBlank()
+                ? sanitizeFileName(originalName)
+                : "avatar-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8) + ".jpg";
+        if (!safeName.contains(".")) {
+            safeName = safeName + ".jpg";
+        }
+        final String filenameForUpload = safeName;
+        String path = properties.getPathPrefix() + "/persons/" + personId + "/avatars/" + safeName;
+        String base = properties.getFilerUrl().replaceAll("/$", "");
+        URI uri = URI.create(base + "/" + path);
+
+        byte[] bytes = file.getBytes();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new org.springframework.core.io.ByteArrayResource(bytes) {
+            @Override
+            public String getFilename() {
+                return filenameForUpload;
+            }
+        });
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, entity, String.class);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new IOException("SeaweedFS upload failed: " + response.getStatusCode() + " " + response.getBody());
+        }
+        log.info("SeaweedFS uploaded person avatar: personId={}, path={}", personId, path);
+        return path;
+    }
+
+    /**
      * 上传系统 Logo 到 Filer 固定路径 {pathPrefix}/system/logo.{ext}，返回 Filer 相对路径。
      * 每次上传会覆盖已有 Logo。
      */

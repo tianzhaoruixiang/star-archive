@@ -1,3 +1,4 @@
+/* 人物卡片 - 身份证式统一布局 */
 .person-card {
   border-radius: var(--card-radius-lg);
   border: 1px solid var(--card-border-subtle);
@@ -6,6 +7,8 @@
   box-shadow: var(--card-shadow);
   cursor: pointer;
   transition: all var(--transition-normal);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .person-card:hover {
@@ -14,96 +17,134 @@
 }
 
 .person-card .ant-card-body {
-  padding: 20px;
+  padding: 16px;
 }
 
-.person-card-avatar-wrap {
+/* ========== 身份证式布局 ========== */
+.person-card-id-style .person-card-id-layout {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 10px;
 }
 
-.person-card-avatar,
-.person-card-avatar-img {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+/* 左侧：长方形头像 + 人员类别 */
+.person-card-id-left {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
-.person-card-avatar {
-  line-height: 48px;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, var(--primary) 0%, #0891b2 100%);
-  box-shadow: 0 2px 12px rgba(6, 182, 212, 0.35);
+/* 身份证照片比例约 26mm×32mm → 约 1 : 1.23，取 84×104 或 90×112 */
+.person-card-id-photo-wrap {
+  width: 90px;
+  height: 112px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  background: var(--page-bg-alt);
 }
 
-.person-card-avatar-img {
+.person-card-id-photo,
+.person-card-id-photo-placeholder {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.person-card-status {
-  margin: 0 !important;
-  padding: 4px 10px !important;
-  font-size: var(--font-caption) !important;
-  border-radius: 20px !important;
-  background: var(--primary-light) !important;
-  border: none !important;
-  color: var(--primary) !important;
+.person-card-id-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--primary);
 }
 
-.person-card-name {
-  font-size: 17px;
+.person-card-id-category {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 右侧：姓名、所属、性别、国籍、出生日期、证件号 */
+.person-card-id-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.person-card-id-name {
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
-}
-
-.person-card-row {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.person-card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 12px 0 10px;
+.person-card-id-row {
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
 }
 
-.person-card-tag {
+.person-card-id-idno {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 底部：标签，超出省略（单行 + ellipsis） */
+.person-card-id-tags-wrap {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--card-border-subtle);
+  overflow: hidden;
+}
+
+.person-card-id-tags {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow: hidden;
+  align-items: center;
+}
+
+.person-card-id-tag {
   margin: 0 !important;
-  padding: 4px 10px !important;
-  font-size: var(--font-caption) !important;
-  border-radius: 20px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
   background: var(--primary-light) !important;
   border: none !important;
   color: var(--primary) !important;
+  flex-shrink: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.person-card-key {
-  margin: 0 0 10px 0 !important;
-  font-size: var(--font-caption) !important;
-}
-
-.person-card-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
+/* 查看详情链接（可选） */
+.person-card-id-action {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--card-border-subtle);
 }
 
 .person-card-link {
-  font-size: var(--font-caption);
+  font-size: 13px;
   color: var(--primary);
   cursor: pointer;
   display: inline-flex;
@@ -115,12 +156,14 @@
   text-decoration: underline;
 }
 
+/* 移除按钮 */
 .person-card-remove {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
   width: 100%;
+  margin-top: 10px;
   padding: 8px 14px;
   font-size: 14px;
   color: #fff;

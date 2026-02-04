@@ -16,7 +16,7 @@ import java.util.Optional;
  * 人物数据访问接口
  */
 @Repository
-public interface PersonRepository extends JpaRepository<Person, String> {
+public interface PersonRepository extends JpaRepository<Person, String>, PersonRepositoryCustom {
     
     /**
      * 根据姓名查询人物
@@ -34,10 +34,16 @@ public interface PersonRepository extends JpaRepository<Person, String> {
     long count();
     
     /**
-     * 统计重点人员数量
+     * 统计重点人员数量（按 is_key_person 字段，保留用于兼容）
      */
     long countByIsKeyPerson(Boolean isKeyPerson);
-    
+
+    /**
+     * 统计命中重点标签的人物总数（经过去重）：person_tags 与任意 key_tag=1 的 tag 名称匹配即计入
+     */
+    @Query(value = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN tag t ON t.key_tag = 1 AND JSON_CONTAINS(p.person_tags, JSON_ARRAY(t.tag_name)) = 1", nativeQuery = true)
+    long countDistinctByKeyTagMatch();
+
     /**
      * 根据标签查询人员
      */
@@ -95,19 +101,21 @@ public interface PersonRepository extends JpaRepository<Person, String> {
 
     /** 可见性条件：公开档案 或 当前用户为创建人（username 为空时仅公开） */
     String VISIBILITY_JPQL = "(p.isPublic = true OR (:currentUser IS NOT NULL AND p.createdBy = :currentUser))";
+    /** 未删除条件（软删后仍可被有权限者查看详情，列表不展示） */
+    String NOT_DELETED_JPQL = "AND (p.deleted = false OR p.deleted IS NULL)";
 
-    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL)
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " " + NOT_DELETED_JPQL)
     Page<Person> findAllVisible(Pageable pageable, @Param("currentUser") String currentUser);
 
-    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.isKeyPerson = :isKeyPerson")
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.isKeyPerson = :isKeyPerson " + NOT_DELETED_JPQL)
     Page<Person> findByIsKeyPersonAndVisible(@Param("isKeyPerson") Boolean isKeyPerson, Pageable pageable, @Param("currentUser") String currentUser);
 
-    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.organization = :organization")
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.organization = :organization " + NOT_DELETED_JPQL)
     Page<Person> findByOrganizationAndVisible(@Param("organization") String organization, Pageable pageable, @Param("currentUser") String currentUser);
 
-    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.visaType = :visaType")
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.visaType = :visaType " + NOT_DELETED_JPQL)
     Page<Person> findByVisaTypeAndVisible(@Param("visaType") String visaType, Pageable pageable, @Param("currentUser") String currentUser);
 
-    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.belongingGroup = :belongingGroup")
+    @Query("SELECT p FROM Person p WHERE " + VISIBILITY_JPQL + " AND p.belongingGroup = :belongingGroup " + NOT_DELETED_JPQL)
     Page<Person> findByBelongingGroupAndVisible(@Param("belongingGroup") String belongingGroup, Pageable pageable, @Param("currentUser") String currentUser);
 }

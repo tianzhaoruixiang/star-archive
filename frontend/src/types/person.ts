@@ -8,6 +8,8 @@ export interface PersonDetailData {
   /** 全部头像 URL 列表（第一张大头像，其余小头像） */
   avatarUrls?: string[];
   gender?: string;
+  /** 婚姻现状：未婚/已婚/离异/丧偶等 */
+  maritalStatus?: string;
   birthDate?: string | null;
   nationality?: string;
   nationalityCode?: string;
@@ -18,6 +20,12 @@ export interface PersonDetailData {
   phoneNumbers?: string[];
   emails?: string[];
   passportNumbers?: string[];
+  /** 主护照号 */
+  passportNumber?: string;
+  /** 护照类型：普通护照/外交护照/公务护照/旅行证等 */
+  passportType?: string;
+  /** 证件号码 */
+  idNumber?: string;
   idCardNumber?: string;
   /** 签证类型：公务签证/外交签证/记者签证/旅游签证/其他 */
   visaType?: string;
@@ -29,6 +37,8 @@ export interface PersonDetailData {
   personTags?: string[];
   workExperience?: string;
   educationExperience?: string;
+  /** 关系人 JSON，每项含：name(关系人名称)、relation(关系名称)、brief(关系人简介) */
+  relatedPersons?: string;
   remark?: string;
   recentTravels?: PersonTravelItem[];
   recentSocialDynamics?: SocialDynamicItem[];
@@ -37,6 +47,10 @@ export interface PersonDetailData {
   isPublic?: boolean;
   /** 创建人用户名（私有档案仅此人可见） */
   createdBy?: string;
+  /** 是否已删除（软删） */
+  deleted?: boolean;
+  deletedTime?: string;
+  deletedBy?: string;
   createdTime?: string;
   updatedTime?: string;
 }
@@ -61,4 +75,12 @@ export interface SocialDynamicItem {
   socialAccountType?: string;
   content?: string;
   publishTime?: string;
+}
+
+/** 关系人单项（与后端 related_persons JSON 项一致） */
+export interface RelatedPersonItem {
+  name?: string;
+  relation?: string;
+  brief?: string;
+  [key: string]: unknown;
 }

@@ -27,7 +27,7 @@ public class PersonEditHistory {
     @Column(name = "edit_time", nullable = false)
     private LocalDateTime editTime;
 
-    @Column(name = "editor", length = 100)
+    @Column(name = "editor", length = 200)
     private String editor;
 
     @Column(name = "change_summary", columnDefinition = "TEXT")

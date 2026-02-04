@@ -36,9 +36,9 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
     List<Tag> findBySecondLevelName(String secondLevelName);
     
     /**
-     * 查询所有标签(按层级排序)
+     * 查询所有标签（按一级、二级、三级展示顺序排序）
      */
-    @Query("SELECT t FROM Tag t ORDER BY COALESCE(t.firstLevelSortOrder, 999), t.firstLevelName, t.secondLevelName, t.tagName")
+    @Query("SELECT t FROM Tag t ORDER BY COALESCE(t.firstLevelSortOrder, 999), t.firstLevelName, COALESCE(t.secondLevelSortOrder, 999), t.secondLevelName, COALESCE(t.tagSortOrder, 999), t.tagName")
     List<Tag> findAllOrderByHierarchy();
 
     /**
@@ -56,4 +56,10 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
      * 按标签名称查询（用于按二级分类分组筛选）
      */
     Optional<Tag> findByTagName(String tagName);
+
+    /**
+     * 查询所有重点标签（按一级、二级、三级展示顺序排序，用于重点人员页左侧）
+     */
+    @Query("SELECT t FROM Tag t WHERE t.keyTag = true ORDER BY COALESCE(t.firstLevelSortOrder, 999), t.firstLevelName, COALESCE(t.secondLevelSortOrder, 999), t.secondLevelName, COALESCE(t.tagSortOrder, 999), t.tagName")
+    List<Tag> findByKeyTagTrueOrderByHierarchy();
 }

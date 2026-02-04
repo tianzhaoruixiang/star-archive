@@ -2,7 +2,8 @@
 
 .page-wrapper.person-detail-page {
   width: 100%;
-  max-width: var(--content-max-width);
+  min-width: 1200px;
+  max-width: 1560px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -57,9 +58,41 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   padding: 28px 32px;
   background: rgba(0, 0, 0, 0.02);
   border-bottom: 1px solid var(--card-border);
+}
+
+/* Tab 切换：人物信息 / 行程轨迹 / 社交动态 */
+.person-detail-tabs {
+  padding: 0 24px 24px;
+}
+
+.person-detail-tabs .ant-tabs-nav {
+  margin-bottom: 16px;
+}
+
+.person-detail-tabs .ant-tabs-tab {
+  padding: 12px 0;
+}
+
+.person-detail-tab-panel {
+  min-height: 200px;
+  padding: 16px 0 0;
+}
+
+.person-detail-tab-panel .person-detail-resume-extra-card {
+  max-width: 100%;
+}
+
+.person-detail-deleted-tag {
+  margin-left: 8px;
+}
+
+.person-detail-avatar-upload-btn {
+  margin-top: 12px;
 }
 
 .person-detail-resume-label {
@@ -144,10 +177,20 @@
   object-fit: contain;
 }
 
+/* 默认头像占位符：使用人物剪影图，居中展示 */
 .person-detail-resume-avatar-placeholder.person-detail-resume-avatar-main {
-  min-height: 160px;
-  font-size: 48px;
-  color: var(--text-muted);
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
+  border: 1px solid rgba(14, 165, 233, 0.12);
+}
+
+.person-detail-resume-avatar-placeholder .person-detail-default-avatar {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
 }
 
 .person-detail-resume-avatar-thumbs {
@@ -513,6 +556,11 @@
   color: var(--accent-green);
 }
 
+.person-detail-travel-expand-btn {
+  margin-top: 8px;
+  padding-left: 0;
+}
+
 .person-detail-social-list .content {
   margin-top: 4px;
   color: var(--text-muted);
@@ -548,4 +596,31 @@
 .person-detail-float-btns .float-btn:hover {
   background: var(--primary-hover);
   color: var(--primary);
+}
+
+/* 智能画像抽屉 */
+.person-detail-portrait-drawer .ant-drawer-body {
+  padding: 16px 24px;
+}
+
+.person-detail-portrait-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.person-detail-portrait-content {
+  width: 100%;
+}
+
+.person-detail-portrait-text {
+  margin: 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: var(--font-body);
+  line-height: 1.6;
+  color: var(--text-primary);
 }

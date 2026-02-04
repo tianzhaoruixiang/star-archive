@@ -3,16 +3,14 @@
 .page-wrapper.dashboard {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 76px);
+  height: var(--content-available-height);
   min-height: 0;
-  max-height: calc(100vh - 76px);
+  max-height: var(--content-available-height);
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
   padding-bottom: 0;
-  background: var(--bg-pattern), var(--page-bg-gradient);
-  background-attachment: fixed, scroll;
-  background-size: 100% 100%, auto;
+  background: var(--page-bg-alt);
 }
 
 .dashboard-loading {
@@ -81,7 +79,6 @@
   font-weight: 600;
   font-size: 18px;
   color: var(--text-primary);
-  text-shadow: 0 0 24px var(--primary-glow);
 }
 
 .dashboard-card-icon {
@@ -92,12 +89,12 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--card-shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .dashboard-card:hover .dashboard-card-icon {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.25);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .dashboard-card-purple {
@@ -184,7 +181,7 @@
 }
 .dashboard-main .ant-col:first-child::-webkit-scrollbar-thumb,
 .dashboard-main .ant-col:last-child::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.25);
+  background: #cbd5e1;
   border-radius: 2px;
 }
 
@@ -242,9 +239,8 @@
   bottom: -1px;
   width: 48px;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+  background: var(--primary);
   border-radius: 0 1px 0 0;
-  box-shadow: 0 0 12px var(--primary-glow);
 }
 
 .dashboard-panel .ant-card-body {
@@ -299,11 +295,11 @@
 }
 
 .rank-list::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.25);
+  background: #cbd5e1;
   border-radius: 2px;
 }
 .rank-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.4);
+  background: #94a3b8;
 }
 
 .rank-item {
@@ -332,7 +328,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%);
+  background: var(--primary-light);
   border: 1px solid var(--card-border-subtle);
   border-radius: 6px;
   font-variant-numeric: tabular-nums;
@@ -375,17 +371,16 @@
   flex-shrink: 0;
   width: 56px;
   height: 6px;
-  background: rgba(6, 182, 212, 0.12);
+  background: var(--primary-light);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .rank-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+  background: var(--primary);
   border-radius: 3px;
   transition: width 0.35s ease;
-  box-shadow: 0 0 8px var(--primary-glow);
 }
 
 .rank-item-simple .rank-value {
@@ -408,12 +403,10 @@
 
 .dashboard-trend-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
   color: var(--primary);
-  text-shadow: 0 0 12px var(--primary-glow);
 }
 
 .dashboard-trend-tabs .ant-tabs-ink-bar {
-  background: linear-gradient(90deg, var(--primary), var(--accent-purple));
-  box-shadow: 0 0 8px var(--primary-glow);
+  background: var(--primary);
 }
 
 .dashboard-trend-tabs .ant-tabs-nav::before {
@@ -435,33 +428,33 @@
   flex: 1;
   min-height: 160px;
   width: 100%;
-  background: rgba(6, 182, 212, 0.04);
-  border: 1px solid var(--card-border-subtle);
+  /* 玻璃态效果：半透明深色背景 + 毛玻璃模糊 */
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(102, 126, 234, 0.25);
   border-radius: 0 0 var(--card-radius-lg) var(--card-radius-lg);
   overflow: hidden;
-  box-shadow: inset 0 0 40px rgba(6, 182, 212, 0.06);
+  /* 外阴影增加层次 + 内高光模拟顶部光泽 */
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.map-section::after {
-  display: none;
-}
-
-.map-container {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-}
-
-.map-outline {
+/* 整体柔光：中心微微发亮 */
+.map-section.map-container::after {
+  content: '';
   position: absolute;
-  left: 0;
   top: 0;
+  left: 0;
   right: 0;
   bottom: 0;
-  background: transparent;
-  border-radius: 0 0 12px 12px;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(102, 126, 234, 0.05) 0%,
+    transparent 70%
+  );
   pointer-events: none;
+  z-index: 1;
 }
 
 /* 右侧悬浮按钮 */
@@ -496,15 +489,15 @@
   background: var(--primary-light);
   color: var(--primary);
   border-color: var(--card-border);
-  box-shadow: 0 4px 16px var(--primary-glow);
+  box-shadow: var(--card-shadow-hover);
 }
 
 /* 省份下钻详情页：统计分布与地图均占满视窗剩余高度 */
 .page-wrapper.dashboard-province-detail {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 76px);
-  min-height: calc(100vh - 76px);
+  height: var(--content-available-height);
+  min-height: var(--content-available-height);
   width: 100%;
   box-sizing: border-box;
 }
@@ -650,6 +643,13 @@
   flex: 1;
   min-height: 0;
   width: 100%;
+  /* 玻璃态效果：与首页地图一致 */
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 0 0 var(--card-radius-lg) var(--card-radius-lg);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .dashboard-province-detail-map-loading,
@@ -684,11 +684,11 @@
   background: transparent;
 }
 .dashboard-person-list-modal .ant-modal-body::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.25);
+  background: #cbd5e1;
   border-radius: 3px;
 }
 .dashboard-person-list-modal .ant-modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.4);
+  background: #94a3b8;
 }.dashboard-person-list-loading {
   display: flex;
   justify-content: center;
@@ -696,7 +696,16 @@
   min-height: 200px;
 }
 .dashboard-person-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
   margin-bottom: 16px;
+}
+
+@media (min-width: 960px) {
+  .dashboard-person-list-grid {
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+  }
 }
 .dashboard-person-list-pagination {
   display: flex;

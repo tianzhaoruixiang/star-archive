@@ -1,12 +1,24 @@
-/* 重点人员 - Apple Design 风格 */
+/* 重点人员 - 与工作区标签管理页一致的卡片边框与背景 */
 
+/* 固定宽度，避免刷新/加载后因滚动条或内容变化导致宽度抖动 */
 .key-person-page {
-  max-width: var(--content-max-width);
+  width: 1200px;
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box;
 }
 
-/* 顶部：图标 + 标题 + 副标题 */
+/* 与工作区 .workspace-card 一致的边框与背景 */
+.key-person-page .key-person-card {
+  border-radius: var(--card-radius-lg);
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  padding: var(--card-padding);
+  overflow: hidden;
+}
+
+/* 顶部：副标题 */
 .key-person-header {
   display: flex;
   align-items: flex-start;
@@ -43,22 +55,25 @@
   line-height: var(--line-height-body);
 }
 
-/* 主体：侧边栏 + 主内容 */
+/* 主体：侧边栏 + 主内容，占满可用视口高度 */
 .key-person-body {
   display: flex;
   gap: var(--page-gap);
-  min-height: 480px;
+  min-height: calc(var(--content-available-height) - 120px);
 }
 
-/* 左侧：Apple 风格分组列表 */
+/* 左侧：重点标签列表，过多时滚动保持一屏内 */
 .key-person-sidebar {
   width: 240px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   padding: var(--spacing-md);
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--card-radius-lg);
   box-shadow: var(--card-shadow);
+  max-height: calc(var(--content-available-height) - 80px);
 }
 
 .key-person-sidebar-title {
@@ -85,13 +100,54 @@
   padding: 32px;
 }
 
-.key-person-category-list {
+.key-person-sidebar-empty {
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.key-person-sidebar-clear {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.key-person-sidebar-clear:hover {
+  background: var(--primary-hover);
+}
+
+/* 重点标签列表：过多时滚动，保持在一屏内 */
+.key-person-sidebar-tags-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.key-person-sidebar-tags-wrap::-webkit-scrollbar {
+  width: 6px;
+}
+
+.key-person-sidebar-tags-wrap::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 3px;
+}
+
+.key-person-tag-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.key-person-category-item {
+.key-person-tag-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -104,37 +160,27 @@
   font-size: 15px;
 }
 
-.key-person-category-item:hover {
+.key-person-tag-item:hover {
   background: var(--primary-light);
 }
 
-.key-person-category-item-active {
+.key-person-tag-item-active {
   background: var(--primary-light);
   color: var(--primary);
 }
 
-.key-person-category-item-active .key-person-category-icon {
+.key-person-tag-item-active .key-person-tag-count {
   color: var(--primary);
 }
 
-.key-person-category-item-active .key-person-category-count {
-  color: var(--primary);
-}
-
-.key-person-category-icon {
-  font-size: 16px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.key-person-category-name {
+.key-person-tag-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.key-person-category-count {
+.key-person-tag-count {
   font-size: 13px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;

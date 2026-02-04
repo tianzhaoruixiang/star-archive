@@ -50,7 +50,7 @@ public class DashboardService {
         LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
 
         long totalPersonCount = personRepository.count();
-        long keyPersonCount = personRepository.countByIsKeyPerson(true);
+        long keyPersonCount = personRepository.countDistinctByKeyTagMatch();
         long todayNewsCount = newsRepository.countByPublishTimeBetween(todayStart, todayEnd);
         long todaySocialCount = socialDynamicRepository.countByPublishTimeBetween(todayStart, todayEnd);
 

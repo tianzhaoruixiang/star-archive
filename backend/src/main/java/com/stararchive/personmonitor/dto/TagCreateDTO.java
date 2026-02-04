@@ -33,4 +33,13 @@ public class TagCreateDTO {
 
     /** 一级展示顺序：1基本属性 2身份属性 3关系属性 4组织架构 5行为规律 6异常行为 */
     private Integer firstLevelSortOrder;
+
+    /** 二级分类展示顺序：同一级下多个二级分类的排序，数字越小越靠前 */
+    private Integer secondLevelSortOrder;
+
+    /** 三级标签展示顺序：同二级下多个标签的排序，数字越小越靠前 */
+    private Integer tagSortOrder;
+
+    /** 是否重点标签：勾选后该标签在重点人员页左侧展示，仅展示命中重点标签的人员 */
+    private Boolean keyTag;
 }

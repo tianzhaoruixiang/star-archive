@@ -1,4 +1,4 @@
-/* 登录页 - 深色科技感玻璃卡片 */
+/* 登录页 - 简洁白色风格 */
 
 .login-container {
   display: flex;
@@ -6,20 +6,16 @@
   align-items: center;
   min-height: 100vh;
   padding: 24px;
-  background:
-    linear-gradient(165deg, rgba(15, 13, 26, 0.97) 0%, rgba(22, 20, 42, 0.95) 50%, rgba(26, 23, 53, 0.92) 100%),
-    var(--bg-login) center/cover no-repeat fixed;
-  background-blend-mode: overlay, normal;
+  background: var(--page-bg-alt);
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
   border-radius: var(--card-radius-lg);
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
-  backdrop-filter: blur(20px);
-  box-shadow: var(--card-shadow), 0 0 40px rgba(6, 182, 212, 0.08);
+  border: 1px solid var(--card-border-subtle);
+  background: #ffffff;
+  box-shadow: var(--card-shadow-hover);
 }
 
 .login-card .ant-card-head {
@@ -32,7 +28,6 @@
   font-weight: 600;
   color: var(--text-primary);
   padding: 24px 0;
-  text-shadow: 0 0 20px var(--primary-glow);
 }
 
 .login-card .ant-card-body {
@@ -79,12 +74,10 @@
   background: var(--accent-btn) !important;
   border: none !important;
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
 }
 
 .login-card .ant-btn-primary:hover {
   background: var(--accent-btn-hover) !important;
-  box-shadow: 0 6px 24px rgba(6, 182, 212, 0.45);
 }
 
 .login-card .ant-form-item {

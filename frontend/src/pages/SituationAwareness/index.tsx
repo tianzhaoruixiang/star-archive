@@ -126,12 +126,13 @@ const SituationAwareness: React.FC = () => {
 
   return (
     <div className="page-wrapper situation-awareness">
-      <div className="news-page-header">
-        <h1 className="news-page-title">新闻动态</h1>
-        <p className="news-page-desc">态势感知 · 新闻资讯</p>
-      </div>
+      <div className="situation-awareness-card">
+        <div className="news-page-header">
+          <h1 className="news-page-title">新闻动态</h1>
+          <p className="news-page-desc">态势感知 · 新闻资讯</p>
+        </div>
 
-      <Tabs
+        <Tabs
         activeKey={category}
         onChange={handleCategoryChange}
         size="small"
@@ -188,6 +189,7 @@ const SituationAwareness: React.FC = () => {
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );

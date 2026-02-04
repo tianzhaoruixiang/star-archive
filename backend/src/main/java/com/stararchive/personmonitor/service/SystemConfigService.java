@@ -28,6 +28,8 @@ public class SystemConfigService {
     private static final String KEY_NAV_PERSONS = "nav_persons";
     private static final String KEY_NAV_KEY_PERSON_LIBRARY = "nav_key_person_library";
     private static final String KEY_NAV_WORKSPACE = "nav_workspace";
+    private static final String KEY_NAV_WORKSPACE_FUSION = "nav_workspace_fusion";
+    private static final String KEY_NAV_WORKSPACE_TAGS = "nav_workspace_tags";
     private static final String KEY_NAV_MODEL_MANAGEMENT = "nav_model_management";
     private static final String KEY_NAV_SITUATION = "nav_situation";
     private static final String KEY_NAV_SYSTEM_CONFIG = "nav_system_config";
@@ -35,6 +37,9 @@ public class SystemConfigService {
     private static final String KEY_LLM_BASE_URL = "llm_base_url";
     private static final String KEY_LLM_MODEL = "llm_model";
     private static final String KEY_LLM_API_KEY = "llm_api_key";
+    private static final String KEY_LLM_EXTRACT_PROMPT = "llm_extract_prompt";
+    private static final String KEY_ONLYOFFICE_DOCUMENT_SERVER_URL = "onlyoffice_document_server_url";
+    private static final String KEY_ONLYOFFICE_DOCUMENT_DOWNLOAD_BASE = "onlyoffice_document_download_base";
 
     private final SystemConfigRepository systemConfigRepository;
 
@@ -66,6 +71,8 @@ public class SystemConfigService {
         map.put(KEY_NAV_PERSONS, Boolean.TRUE.equals(dto.getNavPersons()) ? "true" : "false");
         map.put(KEY_NAV_KEY_PERSON_LIBRARY, Boolean.TRUE.equals(dto.getNavKeyPersonLibrary()) ? "true" : "false");
         map.put(KEY_NAV_WORKSPACE, Boolean.TRUE.equals(dto.getNavWorkspace()) ? "true" : "false");
+        map.put(KEY_NAV_WORKSPACE_FUSION, Boolean.TRUE.equals(dto.getNavWorkspaceFusion()) ? "true" : "false");
+        map.put(KEY_NAV_WORKSPACE_TAGS, Boolean.TRUE.equals(dto.getNavWorkspaceTags()) ? "true" : "false");
         map.put(KEY_NAV_MODEL_MANAGEMENT, Boolean.TRUE.equals(dto.getNavModelManagement()) ? "true" : "false");
         map.put(KEY_NAV_SITUATION, Boolean.TRUE.equals(dto.getNavSituation()) ? "true" : "false");
         map.put(KEY_NAV_SYSTEM_CONFIG, Boolean.TRUE.equals(dto.getNavSystemConfig()) ? "true" : "false");
@@ -73,6 +80,9 @@ public class SystemConfigService {
         map.put(KEY_LLM_BASE_URL, dto.getLlmBaseUrl() != null ? dto.getLlmBaseUrl().trim() : "");
         map.put(KEY_LLM_MODEL, dto.getLlmModel() != null ? dto.getLlmModel().trim() : "");
         map.put(KEY_LLM_API_KEY, dto.getLlmApiKey() != null ? dto.getLlmApiKey() : "");
+        map.put(KEY_LLM_EXTRACT_PROMPT, dto.getLlmExtractPrompt() != null ? dto.getLlmExtractPrompt().trim() : "");
+        map.put(KEY_ONLYOFFICE_DOCUMENT_SERVER_URL, dto.getOnlyofficeDocumentServerUrl() != null ? dto.getOnlyofficeDocumentServerUrl().trim() : "");
+        map.put(KEY_ONLYOFFICE_DOCUMENT_DOWNLOAD_BASE, dto.getOnlyofficeDocumentDownloadBase() != null ? dto.getOnlyofficeDocumentDownloadBase().trim() : "");
 
         LocalDateTime now = LocalDateTime.now();
         for (Map.Entry<String, String> e : map.entrySet()) {
@@ -106,6 +116,8 @@ public class SystemConfigService {
         dto.setNavPersons("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_PERSONS, "true")));
         dto.setNavKeyPersonLibrary("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_KEY_PERSON_LIBRARY, "true")));
         dto.setNavWorkspace("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE, "true")));
+        dto.setNavWorkspaceFusion("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE_FUSION, "true")));
+        dto.setNavWorkspaceTags("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE_TAGS, "true")));
         dto.setNavModelManagement("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_MODEL_MANAGEMENT, "true")));
         dto.setNavSituation("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SITUATION, "true")));
         dto.setNavSystemConfig("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SYSTEM_CONFIG, "true")));
@@ -113,6 +125,9 @@ public class SystemConfigService {
         dto.setLlmBaseUrl(map.getOrDefault(KEY_LLM_BASE_URL, ""));
         dto.setLlmModel(map.getOrDefault(KEY_LLM_MODEL, ""));
         dto.setLlmApiKey(map.getOrDefault(KEY_LLM_API_KEY, ""));
+        dto.setLlmExtractPrompt(map.getOrDefault(KEY_LLM_EXTRACT_PROMPT, ""));
+        dto.setOnlyofficeDocumentServerUrl(map.getOrDefault(KEY_ONLYOFFICE_DOCUMENT_SERVER_URL, ""));
+        dto.setOnlyofficeDocumentDownloadBase(map.getOrDefault(KEY_ONLYOFFICE_DOCUMENT_DOWNLOAD_BASE, ""));
         return dto;
     }
 }

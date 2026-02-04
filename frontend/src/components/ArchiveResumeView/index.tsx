@@ -106,7 +106,7 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
   const remark = str(pick(data, 'remark'));
 
   const aliasNames = arr(pick(data, 'alias_names', 'aliasNames'));
-  const idNumbers = arr(pick(data, 'id_numbers', 'idNumbers'));
+  const idNumber = str(pick(data, 'id_number', 'idNumber'));
   const phoneNumbers = arr(pick(data, 'phone_numbers', 'phoneNumbers'));
   const emails = arr(pick(data, 'emails'));
   const passportNumbers = arr(pick(data, 'passport_numbers', 'passportNumbers'));
@@ -132,7 +132,7 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
     personType;
   const hasContact =
     idCardNumber ||
-    idNumbers.length > 0 ||
+    idNumber ||
     phoneNumbers.length > 0 ||
     emails.length > 0 ||
     passportNumbers.length > 0;
@@ -223,10 +223,10 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
               <span>{idCardNumber}</span>
             </div>
           )}
-          {idNumbers.length > 0 && (
+          {idNumber && (
             <div style={resumeRowStyle}>
               <span style={resumeLabelStyle}>证件号码</span>
-              <span>{idNumbers.join('、')}</span>
+              <span>{idNumber}</span>
             </div>
           )}
           {phoneNumbers.length > 0 && (

@@ -89,8 +89,8 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      * 指定「出发省→目的省」涉及人员 ID 分页（仅返回当前用户可见的档案）
      */
     @Query(
-            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE (pt.departure_province = :fromProvince OR pt.departure_province LIKE CONCAT(:fromProvince, '%') OR REPLACE(REPLACE(pt.departure_province, '省', ''), '市', '') = REPLACE(REPLACE(:fromProvince, '省', ''), '市', '')) AND (pt.destination_province = :toProvince OR pt.destination_province LIKE CONCAT(:toProvince, '%') OR REPLACE(REPLACE(pt.destination_province, '省', ''), '市', '') = REPLACE(REPLACE(:toProvince, '省', ''), '市', '')) AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
-            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE (pt.departure_province = :fromProvince OR pt.departure_province LIKE CONCAT(:fromProvince, '%') OR REPLACE(REPLACE(pt.departure_province, '省', ''), '市', '') = REPLACE(REPLACE(:fromProvince, '省', ''), '市', '')) AND (pt.destination_province = :toProvince OR pt.destination_province LIKE CONCAT(:toProvince, '%') OR REPLACE(REPLACE(pt.destination_province, '省', ''), '市', '') = REPLACE(REPLACE(:toProvince, '省', ''), '市', '')) AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user))",
+            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE (pt.departure_province = :fromProvince OR pt.departure_province LIKE CONCAT(:fromProvince, '%') OR REPLACE(REPLACE(pt.departure_province, '省', ''), '市', '') = REPLACE(REPLACE(:fromProvince, '省', ''), '市', '')) AND (pt.destination_province = :toProvince OR pt.destination_province LIKE CONCAT(:toProvince, '%') OR REPLACE(REPLACE(pt.destination_province, '省', ''), '市', '') = REPLACE(REPLACE(:toProvince, '省', ''), '市', '')) AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE (pt.departure_province = :fromProvince OR pt.departure_province LIKE CONCAT(:fromProvince, '%') OR REPLACE(REPLACE(pt.departure_province, '省', ''), '市', '') = REPLACE(REPLACE(:fromProvince, '省', ''), '市', '')) AND (pt.destination_province = :toProvince OR pt.destination_province LIKE CONCAT(:toProvince, '%') OR REPLACE(REPLACE(pt.destination_province, '省', ''), '市', '') = REPLACE(REPLACE(:toProvince, '省', ''), '市', '')) AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL)",
             nativeQuery = true
     )
     Page<Object[]> findPersonIdsByDepartureAndDestinationProvinceVisible(@Param("fromProvince") String fromProvince, @Param("toProvince") String toProvince, @Param("user") String user, Pageable pageable);
@@ -125,8 +125,8 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      * 使用两列返回避免单列时驱动返回 String 导致 ClassCastException。
      */
     @Query(
-            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
-            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user))",
+            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL)",
             nativeQuery = true
     )
     Page<Object[]> findPersonIdsByDestinationProvinceVisible(@Param("province") String province, @Param("user") String user, Pageable pageable);
@@ -175,8 +175,8 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      * 指定省份+城市涉及人员 ID 分页（仅返回当前用户可见的档案）
      */
     @Query(
-            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.destination_city = :city AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
-            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.destination_city = :city AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user))",
+            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.destination_city = :city AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.destination_city = :city AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL)",
             nativeQuery = true
     )
     Page<Object[]> findPersonIdsByDestinationProvinceAndCityVisible(@Param("province") String province, @Param("city") String city, @Param("user") String user, Pageable pageable);
@@ -195,8 +195,8 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      * 指定省份+签证类型涉及人员 ID 分页（仅返回当前用户可见的档案）
      */
     @Query(
-            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.visa_type = :visaType AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
-            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.visa_type = :visaType AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user))",
+            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.visa_type = :visaType AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND pt.visa_type = :visaType AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL)",
             nativeQuery = true
     )
     Page<Object[]> findPersonIdsByDestinationProvinceAndVisaTypeVisible(@Param("province") String province, @Param("visaType") String visaType, @Param("user") String user, Pageable pageable);
@@ -215,8 +215,8 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      * 指定省份+机构涉及人员 ID 分页（仅返回当前用户可见的档案）
      */
     @Query(
-            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.organization = :organization AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
-            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.organization = :organization AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user))",
+            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.organization = :organization AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.organization = :organization AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL)",
             nativeQuery = true
     )
     Page<Object[]> findPersonIdsByDestinationProvinceAndOrganizationVisible(@Param("province") String province, @Param("organization") String organization, @Param("user") String user, Pageable pageable);
@@ -235,8 +235,8 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
      * 指定省份+所属群体涉及人员 ID 分页（仅返回当前用户可见的档案）
      */
     @Query(
-            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.belonging_group = :belongingGroup AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
-            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.belonging_group = :belongingGroup AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user))",
+            value = "SELECT p.person_id, 1 FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.belonging_group = :belongingGroup AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL) GROUP BY p.person_id ORDER BY MAX(p.updated_time) DESC",
+            countQuery = "SELECT COUNT(DISTINCT p.person_id) FROM person p INNER JOIN person_travel pt ON p.person_id = pt.person_id WHERE pt.destination_province = :province AND p.belonging_group = :belongingGroup AND (p.is_public = 1 OR (LENGTH(COALESCE(:user, '')) > 0 AND p.created_by = :user)) AND (p.deleted = 0 OR p.deleted IS NULL)",
             nativeQuery = true
     )
     Page<Object[]> findPersonIdsByDestinationProvinceAndBelongingGroupVisible(@Param("province") String province, @Param("belongingGroup") String belongingGroup, @Param("user") String user, Pageable pageable);

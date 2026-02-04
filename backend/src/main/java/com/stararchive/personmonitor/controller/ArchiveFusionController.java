@@ -2,6 +2,7 @@ package com.stararchive.personmonitor.controller;
 
 import com.stararchive.personmonitor.common.ApiResponse;
 import com.stararchive.personmonitor.common.PageResponse;
+import com.stararchive.personmonitor.dto.ArchiveExtractResultDTO;
 import com.stararchive.personmonitor.config.OnlyOfficeProperties;
 import com.stararchive.personmonitor.dto.ArchiveFusionBatchCreateResultDTO;
 import com.stararchive.personmonitor.dto.ArchiveFusionTaskDetailDTO;
@@ -12,6 +13,7 @@ import com.stararchive.personmonitor.entity.SysUser;
 import com.stararchive.personmonitor.service.ArchiveFusionService;
 import com.stararchive.personmonitor.service.OnlyOfficePreviewTokenService;
 import com.stararchive.personmonitor.service.SeaweedFSService;
+import com.stararchive.personmonitor.service.SystemConfigService;
 import com.stararchive.personmonitor.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,7 @@ public class ArchiveFusionController {
     private final SysUserService sysUserService;
     private final OnlyOfficeProperties onlyOfficeProperties;
     private final OnlyOfficePreviewTokenService onlyOfficePreviewTokenService;
+    private final SystemConfigService systemConfigService;
 
     /**
      * 上传文件并创建档案融合任务（解析 -> 大模型抽取 -> 相似匹配）
@@ -48,7 +51,8 @@ public class ArchiveFusionController {
     public ResponseEntity<ApiResponse<ArchiveImportTaskDTO>> createTask(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "creatorUserId", required = false) Integer creatorUserId,
-            @RequestParam(value = "creatorUsername", required = false) String creatorUsername) {
+            @RequestParam(value = "creatorUsername", required = false) String creatorUsername,
+            @RequestParam(value = "similarMatchFields", required = false) String similarMatchFields) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("请选择文件"));
         }
@@ -56,7 +60,7 @@ public class ArchiveFusionController {
         if (name != null && !name.toLowerCase().matches(".*\\.(docx?|xlsx?|csv|pdf)$")) {
             return ResponseEntity.badRequest().body(ApiResponse.error("仅支持 Word(.doc/.docx)、Excel(.xls/.xlsx)、CSV、PDF 格式"));
         }
-        ArchiveImportTaskDTO dto = archiveFusionService.createTaskAndExtract(file, creatorUserId, creatorUsername);
+        ArchiveImportTaskDTO dto = archiveFusionService.createTaskAndExtract(file, creatorUserId, creatorUsername, similarMatchFields);
         return ResponseEntity.ok(ApiResponse.success(dto));
     }
 
@@ -67,7 +71,8 @@ public class ArchiveFusionController {
     public ResponseEntity<ApiResponse<ArchiveFusionBatchCreateResultDTO>> batchCreateTasks(
             @RequestParam("files") List<MultipartFile> files,
             @RequestParam(value = "creatorUserId", required = false) Integer creatorUserId,
-            @RequestParam(value = "creatorUsername", required = false) String creatorUsername) {
+            @RequestParam(value = "creatorUsername", required = false) String creatorUsername,
+            @RequestParam(value = "similarMatchFields", required = false) String similarMatchFields) {
         if (files == null || files.isEmpty()) {
             return ResponseEntity.badRequest().body(ApiResponse.error("请选择至少一个文件"));
         }
@@ -80,7 +85,7 @@ public class ArchiveFusionController {
             }
         }
         ArchiveFusionBatchCreateResultDTO result =
-                archiveFusionService.batchCreateTasksAndExtract(files, creatorUserId, creatorUsername);
+                archiveFusionService.batchCreateTasksAndExtract(files, creatorUserId, creatorUsername, similarMatchFields);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
@@ -94,6 +99,50 @@ public class ArchiveFusionController {
             @RequestHeader(value = "X-Username", required = false) String currentUsername) {
         PageResponse<ArchiveImportTaskDTO> result = archiveFusionService.listTasks(currentUsername, page, size);
         return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    /**
+     * 失败任务重新导入：仅允许状态为 FAILED 的任务，仅任务创建人可操作。
+     */
+    @PutMapping("/tasks/{taskId}/retry")
+    public ResponseEntity<ApiResponse<ArchiveImportTaskDTO>> retryTask(
+            @PathVariable String taskId,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        if (!isTaskCreator(taskOpt.get(), currentUsername)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("仅任务创建人可重新导入"));
+        }
+        try {
+            ArchiveImportTaskDTO dto = archiveFusionService.retryTask(taskId);
+            return ResponseEntity.ok(ApiResponse.success("已提交重新导入，后台将重新提取", dto));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * 删除档案融合导入任务：仅任务创建人可操作；删除任务及关联的提取结果、相似匹配记录。
+     */
+    @DeleteMapping("/tasks/{taskId}")
+    public ResponseEntity<ApiResponse<Void>> deleteTask(
+            @PathVariable String taskId,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        if (!isTaskCreator(taskOpt.get(), currentUsername)) {
+            return ResponseEntity.status(403).body(ApiResponse.error("仅任务创建人可删除"));
+        }
+        try {
+            archiveFusionService.deleteTask(taskId);
+            return ResponseEntity.ok(ApiResponse.success("删除成功", null));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     /** 仅任务创建人可访问详情/文件/预览；无创建人的旧任务视为可访问 */
@@ -153,7 +202,7 @@ public class ArchiveFusionController {
 
     /**
      * 获取 OnlyOffice 预览配置：前端用此配置加载 OnlyOffice 并打开文档。仅任务创建人可访问。
-     * documentUrl 为 OnlyOffice 服务端可访问的文档地址（需与 onlyoffice.document-download-base 同网可达）。
+     * documentUrl 使用后端配置的 document-download-base，不经前端 Nginx 转发，OnlyOffice 服务端直接访问后端拉取文档。
      */
     @GetMapping("/tasks/{taskId}/preview-config")
     public ResponseEntity<ApiResponse<OnlyOfficePreviewConfigDTO>> getPreviewConfig(
@@ -174,8 +223,23 @@ public class ArchiveFusionController {
             log.warn("预览配置: 任务未关联文件 taskId={}, filePathId=null", taskId);
             return ResponseEntity.status(404).body(ApiResponse.error("任务未关联文件，无法预览"));
         }
-        String docServerUrl = onlyOfficeProperties != null ? onlyOfficeProperties.getDocumentServerUrl() : null;
-        String docDownloadBase = onlyOfficeProperties != null ? onlyOfficeProperties.getDocumentDownloadBase() : null;
+        String docServerUrl = null;
+        String docDownloadBase = null;
+        if (systemConfigService != null) {
+            var config = systemConfigService.getConfig();
+            if (config.getOnlyofficeDocumentServerUrl() != null && !config.getOnlyofficeDocumentServerUrl().isBlank()) {
+                docServerUrl = config.getOnlyofficeDocumentServerUrl().trim();
+            }
+            if (config.getOnlyofficeDocumentDownloadBase() != null && !config.getOnlyofficeDocumentDownloadBase().isBlank()) {
+                docDownloadBase = config.getOnlyofficeDocumentDownloadBase().trim();
+            }
+        }
+        if (docServerUrl == null || docServerUrl.isBlank()) {
+            docServerUrl = onlyOfficeProperties != null ? onlyOfficeProperties.getDocumentServerUrl() : null;
+        }
+        if (docDownloadBase == null || docDownloadBase.isBlank()) {
+            docDownloadBase = onlyOfficeProperties != null ? onlyOfficeProperties.getDocumentDownloadBase() : null;
+        }
         boolean enabled = onlyOfficeProperties == null || onlyOfficeProperties.isEnabled();
         if (docDownloadBase == null || docDownloadBase.isBlank()) {
             docDownloadBase = "http://localhost:8000/littlesmall/api";
@@ -220,7 +284,7 @@ public class ArchiveFusionController {
     }
 
     /**
-     * 查询任务详情：原始文档全文、提取结果列表及每条结果对应的库内相似档案。仅任务创建人可访问。
+     * 查询任务详情：仅返回任务信息（不含提取结果列表）。提取结果由分页接口 GET /tasks/{taskId}/extract-results 获取。
      */
     @GetMapping("/tasks/{taskId}")
     public ResponseEntity<ApiResponse<ArchiveFusionTaskDetailDTO>> getTaskDetail(
@@ -236,6 +300,30 @@ public class ArchiveFusionController {
         try {
             ArchiveFusionTaskDetailDTO detail = archiveFusionService.getTaskDetail(taskId, currentUsername);
             return ResponseEntity.ok(ApiResponse.success(detail));
+        } catch (java.util.NoSuchElementException e) {
+            return ResponseEntity.status(404).body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * 分页查询任务提取结果（含每条结果的库内相似档案）。仅任务创建人可访问。
+     */
+    @GetMapping("/tasks/{taskId}/extract-results")
+    public ResponseEntity<ApiResponse<PageResponse<ArchiveExtractResultDTO>>> getTaskExtractResults(
+            @PathVariable String taskId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        if (!isTaskCreator(taskOpt.get(), currentUsername)) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        try {
+            PageResponse<ArchiveExtractResultDTO> result = archiveFusionService.getTaskExtractResultsPage(taskId, page, size, currentUsername);
+            return ResponseEntity.ok(ApiResponse.success(result));
         } catch (java.util.NoSuchElementException e) {
             return ResponseEntity.status(404).body(ApiResponse.error(e.getMessage()));
         }
@@ -274,6 +362,42 @@ public class ArchiveFusionController {
         java.util.List<String> importedPersonIds = archiveFusionService.confirmImport(
                 taskId, request.getResultIds(), batchTags, importAsPublic);
         return ResponseEntity.ok(ApiResponse.success(importedPersonIds));
+    }
+
+    /**
+     * 全部导入（异步）：将本任务下所有未导入的提取结果提交给后台异步任务逐批导入，接口立即返回。
+     * 请求体同 confirm-import，但 resultIds 无需传递（服务端按任务查询未导入列表）。
+     */
+    @PostMapping("/tasks/{taskId}/confirm-import-all-async")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> confirmImportAllAsync(
+            @PathVariable String taskId,
+            @RequestBody ConfirmImportRequest request,
+            @RequestHeader(value = "X-Username", required = false) String currentUsername) {
+        Optional<ArchiveImportTask> taskOpt = archiveFusionService.getTask(taskId);
+        if (taskOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(ApiResponse.error("任务不存在"));
+        }
+        if (!isTaskCreator(taskOpt.get(), currentUsername)) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("仅任务创建人可操作"));
+        }
+        boolean importAsPublic = Boolean.TRUE.equals(request != null && request.getImportAsPublic());
+        if (importAsPublic) {
+            SysUser user = currentUsername != null && !currentUsername.isBlank()
+                    ? sysUserService.findByUsername(currentUsername.trim()) : null;
+            if (user == null || !"admin".equals(user.getRole())) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("仅系统管理员可导入为公开档案"));
+            }
+        }
+        java.util.List<String> batchTags = request != null && request.getTags() != null ? request.getTags() : java.util.Collections.emptyList();
+        int totalQueued = archiveFusionService.confirmImportAllAsync(taskId, batchTags, importAsPublic);
+        if (totalQueued == 0) {
+            return ResponseEntity.ok(ApiResponse.success("当前无未导入的提取结果", java.util.Map.of("totalQueued", 0)));
+        }
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("totalQueued", totalQueued);
+        return ResponseEntity.ok(ApiResponse.success("已提交，共 " + totalQueued + " 条将后台导入", data));
     }
 
     @lombok.Data

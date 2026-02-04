@@ -24,10 +24,10 @@ public class News {
     @Column(name = "news_id", length = 64, nullable = false)
     private String newsId;
     
-    @Column(name = "media_name", nullable = false, length = 200)
+    @Column(name = "media_name", nullable = false, length = 300)
     private String mediaName;
-    
-    @Column(name = "title", nullable = false, length = 500)
+
+    @Column(name = "title", nullable = false, length = 1000)
     private String title;
     
     @Column(name = "content", columnDefinition = "TEXT")
@@ -44,10 +44,10 @@ public class News {
     @Column(name = "tags", columnDefinition = "json")
     private List<String> tags;
     
-    @Column(name = "original_url", length = 1000)
+    @Column(name = "original_url", length = 2000)
     private String originalUrl;
-    
-    @Column(name = "category", length = 50)
+
+    @Column(name = "category", length = 100)
     private String category;
     
     @Column(name = "created_time")

@@ -4,7 +4,7 @@ SET NAMES 'utf8';
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -62,7 +62,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -120,7 +120,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -178,7 +178,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -236,7 +236,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -294,7 +294,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -352,7 +352,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -410,7 +410,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -468,7 +468,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
@@ -526,7 +526,7 @@ INSERT INTO person (
 
 INSERT INTO person (
     person_id, person_type, is_key_person, chinese_name, original_name, alias_names, organization, belonging_group, avatar_files,
-    gender, id_numbers, birth_date, nationality, nationality_code, household_address, highest_education,
+    gender, id_number, birth_date, nationality, nationality_code, household_address, highest_education,
     phone_numbers, emails, passport_numbers, id_card_number, visa_type, visa_number,
     twitter_accounts, linkedin_accounts, facebook_accounts,
     person_tags, work_experience, education_experience, remark, created_time, updated_time
