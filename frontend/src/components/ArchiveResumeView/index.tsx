@@ -25,14 +25,25 @@ const arr = (v: unknown): string[] => {
   }
 };
 
-/** 工作/教育经历单项 */
+/** 工作/教育经历单项（兼容旧字段与基于 JSON Schema 的新字段） */
 interface ExperienceItem {
+  // 通用时间字段（旧：start_time/end_time；新：start_date/end_date）
   start_time?: string;
   end_time?: string;
+  start_date?: string;
+  end_date?: string;
+  // 工作：organization/company、department、job/position、location、description
   organization?: string;
-  school_name?: string;
+  company?: string;
   department?: string;
   job?: string;
+  position?: string;
+  location?: string;
+  description?: string;
+  // 教育：school_name/school、degree、major
+  school_name?: string;
+  school?: string;
+  degree?: string;
   major?: string;
 }
 
@@ -42,8 +53,50 @@ const parseExperience = (v: unknown): ExperienceItem[] => {
   if (!s) return [];
   try {
     const parsed = JSON.parse(s) as unknown;
-    if (Array.isArray(parsed)) return parsed as ExperienceItem[];
-    if (parsed && typeof parsed === 'object') return [parsed as ExperienceItem];
+    const toItem = (raw: unknown): ExperienceItem | null => {
+      if (!raw || typeof raw !== 'object') return null;
+      const obj = raw as ExperienceItem;
+      const item: ExperienceItem = { ...obj };
+      // 时间字段归一化
+      if (!item.start_time && item.start_date) item.start_time = item.start_date;
+      if (!item.end_time && item.end_date) item.end_time = item.end_date;
+      // 工作：company -> organization，position -> job
+      if (!item.organization && item.company) item.organization = item.company;
+      if (!item.job && item.position) item.job = item.position;
+      // 教育：school -> school_name
+      if (!item.school_name && item.school) item.school_name = item.school;
+      return item;
+    };
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map(toItem)
+        .filter((x): x is ExperienceItem => x !== null);
+    }
+    const one = toItem(parsed);
+    return one ? [one] : [];
+  } catch {
+    // ignore
+  }
+  return [];
+};
+
+/** 关系人单项 */
+interface RelatedPersonItem {
+  name?: string;
+  relation?: string;
+  brief?: string;
+}
+
+const parseRelatedPersons = (v: unknown): RelatedPersonItem[] => {
+  if (v === undefined || v === null) return [];
+  const s = typeof v === 'string' ? v : JSON.stringify(v);
+  if (!s) return [];
+  try {
+    const parsed = JSON.parse(s) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed.filter((x) => x && typeof x === 'object') as RelatedPersonItem[];
+    }
+    if (parsed && typeof parsed === 'object') return [parsed as RelatedPersonItem];
   } catch {
     // ignore
   }
@@ -101,6 +154,8 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
   const nationalityCode = str(pick(data, 'nationality_code', 'nationalityCode'));
   const householdAddress = str(pick(data, 'household_address', 'householdAddress'));
   const highestEducation = str(pick(data, 'highest_education', 'highestEducation'));
+  const organization = str(pick(data, 'organization'));
+  const belongingGroup = str(pick(data, 'belonging_group', 'belongingGroup'));
   const personType = str(pick(data, 'person_type', 'personType'));
   const idCardNumber = str(pick(data, 'id_card_number', 'idCardNumber'));
   const remark = str(pick(data, 'remark'));
@@ -110,6 +165,8 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
   const phoneNumbers = arr(pick(data, 'phone_numbers', 'phoneNumbers'));
   const emails = arr(pick(data, 'emails'));
   const passportNumbers = arr(pick(data, 'passport_numbers', 'passportNumbers'));
+  const visaType = str(pick(data, 'visa_type', 'visaType'));
+  const visaNumber = str(pick(data, 'visa_number', 'visaNumber'));
   const twitterAccounts = arr(pick(data, 'twitter_accounts', 'twitterAccounts'));
   const linkedinAccounts = arr(pick(data, 'linkedin_accounts', 'linkedinAccounts'));
   const facebookAccounts = arr(pick(data, 'facebook_accounts', 'facebookAccounts'));
@@ -119,6 +176,7 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
   const educationItems = parseExperience(
     pick(data, 'education_experience', 'educationExperience')
   );
+  const relatedPersons = parseRelatedPersons(pick(data, 'related_persons', 'relatedPersons'));
 
   const displayName = chineseName || originalName || '—';
   const hasBasic =
@@ -129,20 +187,25 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
     nationalityCode ||
     householdAddress ||
     highestEducation ||
+    organization ||
+    belongingGroup ||
     personType;
   const hasContact =
     idCardNumber ||
     idNumber ||
     phoneNumbers.length > 0 ||
     emails.length > 0 ||
-    passportNumbers.length > 0;
+    passportNumbers.length > 0 ||
+    visaType ||
+    visaNumber;
   const hasSocial =
     twitterAccounts.length > 0 ||
     linkedinAccounts.length > 0 ||
     facebookAccounts.length > 0;
   const hasEducation = educationItems.length > 0;
   const hasWork = workItems.length > 0;
-  const hasOther = aliasNames.length > 0 || personTags.length > 0 || remark;
+  const hasRelations = relatedPersons.length > 0;
+  const hasOther = aliasNames.length > 0 || personTags.length > 0 || remark || hasRelations;
 
   if (
     !hasBasic &&
@@ -199,6 +262,18 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
               <span>{householdAddress}</span>
             </div>
           )}
+          {organization && (
+            <div style={resumeRowStyle}>
+              <span style={resumeLabelStyle}>所在机构</span>
+              <span>{organization}</span>
+            </div>
+          )}
+          {belongingGroup && (
+            <div style={resumeRowStyle}>
+              <span style={resumeLabelStyle}>所属群体</span>
+              <span>{belongingGroup}</span>
+            </div>
+          )}
           {highestEducation && (
             <div style={resumeRowStyle}>
               <span style={resumeLabelStyle}>最高学历</span>
@@ -247,6 +322,18 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
               <span>{passportNumbers.join('、')}</span>
             </div>
           )}
+          {visaType && (
+            <div style={resumeRowStyle}>
+              <span style={resumeLabelStyle}>签证类型</span>
+              <span>{visaType}</span>
+            </div>
+          )}
+          {visaNumber && (
+            <div style={resumeRowStyle}>
+              <span style={resumeLabelStyle}>签证号码</span>
+              <span>{visaNumber}</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -288,9 +375,19 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
               <div style={{ fontWeight: 500, marginTop: 4 }}>
                 {str(item.school_name)}
               </div>
-              {(str(item.department) || str(item.major)) && (
+              {(str(item.degree) || str(item.major)) && (
                 <div style={{ marginTop: 2, color: '#8c8c8c' }}>
-                  {joinNonEmpty([str(item.department), str(item.major)], ' · ')}
+                  {joinNonEmpty([str(item.degree), str(item.major)], ' · ')}
+                </div>
+              )}
+              {str(item.location) && (
+                <div style={{ marginTop: 2 }}>
+                  地点：{str(item.location)}
+                </div>
+              )}
+              {str(item.description) && (
+                <div style={{ marginTop: 2, whiteSpace: 'pre-wrap' }}>
+                  说明：{str(item.description)}
                 </div>
               )}
             </div>
@@ -317,6 +414,16 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
                   {joinNonEmpty([str(item.department), str(item.job)], ' · ')}
                 </div>
               )}
+              {str(item.location) && (
+                <div style={{ marginTop: 2 }}>
+                  地点：{str(item.location)}
+                </div>
+              )}
+              {str(item.description) && (
+                <div style={{ marginTop: 2, whiteSpace: 'pre-wrap' }}>
+                  说明：{str(item.description)}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -329,6 +436,31 @@ const ArchiveResumeView: FC<ArchiveResumeViewProps> = ({ data, className, render
             <div style={resumeRowStyle}>
               <span style={resumeLabelStyle}>标签</span>
               <span>{personTags.join('、')}</span>
+            </div>
+          )}
+          {hasRelations && (
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ ...resumeRowStyle, marginBottom: 4 }}>
+                <span style={resumeLabelStyle}>关系人</span>
+                <span />
+              </div>
+              {relatedPersons.map((rp, idx) => (
+                <div key={idx} style={{ ...resumeBlockStyle, marginBottom: 6 }}>
+                  <div style={{ fontWeight: 500 }}>
+                    {str(rp.name) || '（未提供姓名）'}
+                  </div>
+                  {str(rp.relation) && (
+                    <div style={{ marginTop: 2, color: '#8c8c8c' }}>
+                      关系：{str(rp.relation)}
+                    </div>
+                  )}
+                  {str(rp.brief) && (
+                    <div style={{ marginTop: 2, whiteSpace: 'pre-wrap' }}>
+                      简介：{str(rp.brief)}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
           {remark && (

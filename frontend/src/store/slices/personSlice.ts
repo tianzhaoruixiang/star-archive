@@ -23,7 +23,7 @@ const initialState: PersonState = {
   tagsLoading: false,
   pagination: {
     page: 0,
-    size: 20,
+    size: 16,
     total: 0,
   },
   loading: false,
@@ -43,7 +43,7 @@ function toPagePayload(response: unknown): PagePayload {
     ? (response as { data?: PagePayload }).data
     : (response as PagePayload);
   if (data && typeof data === 'object') return data;
-  return { content: [], page: 0, size: 20, totalElements: 0 };
+  return { content: [], page: 0, size: 16, totalElements: 0 };
 }
 
 export const fetchPersonList = createAsyncThunk(

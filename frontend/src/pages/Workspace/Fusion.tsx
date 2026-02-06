@@ -9,11 +9,13 @@ import { SIMILAR_MATCH_FIELD_OPTIONS } from '@/types/archiveFusion';
 import { useAppSelector } from '@/store/hooks';
 import { formatDateTime } from '@/utils/date';
 
+/** 任务状态：待导入 → 导入中(提取/匹配) → 已提取 → 已导入(确认导入后) */
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
-  PENDING: { color: 'default', text: '待提取' },
-  EXTRACTING: { color: 'processing', text: '提取中' },
-  MATCHING: { color: 'processing', text: '匹配中' },
-  SUCCESS: { color: 'success', text: '成功' },
+  PENDING: { color: 'default', text: '待导入' },
+  EXTRACTING: { color: 'processing', text: '导入中' },
+  MATCHING: { color: 'processing', text: '导入中' },
+  SUCCESS: { color: 'success', text: '已提取' },
+  IMPORTED: { color: 'blue', text: '已导入' },
   FAILED: { color: 'error', text: '失败' },
 };
 
@@ -33,8 +35,8 @@ const WorkspaceFusion = () => {
   );
   const similarMatchFieldsStr = useMemo(() => similarMatchFields.join(','), [similarMatchFields]);
 
-  const loadTasks = useCallback(async () => {
-    setTaskLoading(true);
+  const loadTasks = useCallback(async (silent = false) => {
+    if (!silent) setTaskLoading(true);
     try {
       const res = (await archiveFusionAPI.listTasks({ page: taskPage, size: taskSize })) as { data?: PageResponse<ArchiveImportTaskDTO> };
       const data = res?.data ?? res;
@@ -43,9 +45,9 @@ const WorkspaceFusion = () => {
         setTaskTotal(data.totalElements ?? 0);
       }
     } catch {
-      message.error('加载任务列表失败');
+      if (!silent) message.error('加载任务列表失败');
     } finally {
-      setTaskLoading(false);
+      if (!silent) setTaskLoading(false);
     }
   }, [taskPage, taskSize]);
 
@@ -56,7 +58,7 @@ const WorkspaceFusion = () => {
   const hasInProgressTasks = taskList.some((t) => ['PENDING', 'EXTRACTING', 'MATCHING'].includes(t.status ?? ''));
   useEffect(() => {
     if (!hasInProgressTasks) return;
-    const timer = setInterval(() => loadTasks(), 2500);
+    const timer = setInterval(() => loadTasks(true), 2500);
     return () => clearInterval(timer);
   }, [hasInProgressTasks, loadTasks]);
 
@@ -154,7 +156,18 @@ const WorkspaceFusion = () => {
   const taskColumns = [
     { title: '文件名', dataIndex: 'fileName', key: 'fileName',  width: 280, ellipsis: true, render: (t: string) => t || '-' },
     { title: '类型', dataIndex: 'fileType', key: 'fileType', width: 80 },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 100, render: (s: string) => <Tag color={STATUS_MAP[s]?.color ?? 'default'}>{STATUS_MAP[s]?.text ?? s}</Tag> },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      render: (s: string, record: ArchiveImportTaskDTO) => {
+        const allImported = s === 'SUCCESS' && (record.unimportedCount ?? 0) === 0;
+        const color = allImported ? 'blue' : (STATUS_MAP[s]?.color ?? 'default');
+        const text = allImported ? '已导入' : (STATUS_MAP[s]?.text ?? s);
+        return <Tag color={color}>{text}</Tag>;
+      },
+    },
     {
       title: '提取进度',
       key: 'extractProgress',

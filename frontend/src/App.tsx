@@ -11,11 +11,13 @@ import NewsDetail from './pages/SituationAwareness/NewsDetail';
 import WorkspaceLayout from './pages/Workspace';
 import WorkspaceFusion from './pages/Workspace/Fusion';
 import WorkspaceTags from './pages/Workspace/Tags';
+import WorkspaceFavorites from './pages/Workspace/Favorites';
 import WorkspaceData from './pages/Workspace/Data';
 import WorkspaceImportDetail from './pages/Workspace/ImportDetail';
 import WorkspacePreview from './pages/Workspace/Preview';
 import ModelManagement from './pages/ModelManagement';
 import SystemConfig from './pages/SystemConfig';
+import SmartQA from './pages/SmartQA';
 import Login from './pages/Login';
 
 function AdminOnlyRoute({ children }: { children: React.ReactNode }) {
@@ -38,11 +40,13 @@ function App() {
         <Route path="persons/:personId" element={<PersonDetail />} />
         <Route path="situation" element={<SituationAwareness />} />
         <Route path="situation/news/:newsId" element={<NewsDetail />} />
+        <Route path="smart-qa" element={<SmartQA />} />
         <Route path="key-person-library" element={<KeyPersonLibrary />} />
         <Route path="workspace" element={<WorkspaceLayout />}>
           <Route index element={<Navigate to="/workspace/fusion" replace />} />
           <Route path="fusion" element={<WorkspaceFusion />} />
           <Route path="tags" element={<WorkspaceTags />} />
+          <Route path="favorites" element={<WorkspaceFavorites />} />
           <Route path="data" element={<WorkspaceData />} />
           <Route path="models" element={<ModelManagement />} />
           <Route path="fusion/:taskId" element={<WorkspaceImportDetail />} />

@@ -3,13 +3,11 @@
 .page-wrapper.dashboard {
   display: flex;
   flex-direction: column;
-  height: var(--content-available-height);
-  min-height: 0;
-  max-height: var(--content-available-height);
+  min-height: var(--content-available-height);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
-  padding-bottom: 0;
+  padding-bottom: var(--page-padding);
   background: var(--page-bg-alt);
 }
 
@@ -144,16 +142,15 @@
   line-height: 1.2;
 }
 
-/* 三栏主区域：占满剩余高度且不超出，置于背景之上 */
+/* 三栏主区域：占满剩余高度，内容超出时整页可滚动 */
 .dashboard-main {
   margin-top: 6px;
   flex: 1;
   min-height: 0;
-  max-height: 100%;
   display: flex;
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .dashboard-main .ant-row {
@@ -698,14 +695,14 @@
 }
 .dashboard-person-list-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
   margin-bottom: 16px;
 }
 
 @media (min-width: 960px) {
   .dashboard-person-list-grid {
-    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    grid-template-columns: repeat(4, minmax(200px, 1fr));
   }
 }
 .dashboard-person-list-pagination {

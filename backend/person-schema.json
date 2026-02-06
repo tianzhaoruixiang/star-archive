@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PersonArchive",
+  "description": "人物档案结构化信息 JSON Schema，对应后端 person 实体。所有字段均为可选，无法确定时可返回空字符串、null 或空数组。",
+  "type": "object",
+  "properties": {
+    "chinese_name": {
+      "type": "string",
+      "description": "中文姓名"
+    },
+    "original_name": {
+      "type": "string",
+      "description": "原始姓名（外文姓名或文中首次出现的姓名）"
+    },
+    "alias_names": {
+      "type": "array",
+      "description": "人物的别名数组，例如其他称呼、化名、包含中文姓名、原始姓名",
+      "items": {
+        "type": "string"
+      }
+    },
+    "organization": {
+      "type": "string",
+      "description": "所在机构/单位名称"
+    },
+    "belonging_group": {
+      "type": "string",
+      "description": "所属群体（如某组织、某群体类别、常见的职业）"
+    },
+    "gender": {
+      "type": "string",
+      "description": "性别，如：男、女、未知"
+    },
+    "marital_status": {
+      "type": "string",
+      "description": "婚姻现状：未婚/已婚/离异/丧偶等"
+    },
+    "id_number": {
+      "type": "string",
+      "description": "证件号码，使用身份证、护照号等，能够唯一标识人物的证件号码"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "出生日期，推荐格式为 yyyy-MM-dd 或 ISO 8601 日期时间字符串"
+    },
+    "nationality": {
+      "type": "string",
+      "description": "国籍（中文全称）"
+    },
+    "nationality_code": {
+      "type": "string",
+      "description": "国籍三字码（例如: CHN PRK）"
+    },
+    "household_address": {
+      "type": "string",
+      "description": "户籍地址或常住地址"
+    },
+    "highest_education": {
+      "type": "string",
+      "description": "最高学历，如：高中、大专、本科、硕士、博士"
+    },
+    "phone_numbers": {
+      "type": "array",
+      "description": "手机号数组",
+      "items": {
+        "type": "string"
+      }
+    },
+    "emails": {
+      "type": "array",
+      "description": "邮箱数组",
+      "items": {
+        "type": "string",
+        "format": "email"
+      }
+    },
+    "passport_numbers": {
+      "type": "array",
+      "description": "护照号数组（历史或多个护照）",
+      "items": {
+        "type": "string"
+      }
+    },
+    "passport_number": {
+      "type": "string",
+      "description": "主护照号"
+    },
+    "passport_type": {
+      "type": "string",
+      "description": "护照类型：普通护照/外交护照/公务护照/旅行护照等"
+    },
+    "id_card_number": {
+      "type": "string",
+      "description": "身份证号"
+    },
+    "visa_type": {
+      "type": "string",
+      "description": "签证类型：公务签证/外交签证/记者签证/旅游签证/等"
+    },
+    "visa_number": {
+      "type": "string",
+      "description": "签证号码"
+    },
+    "twitter_accounts": {
+      "type": "array",
+      "description": "Twitter 账号数组",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linkedin_accounts": {
+      "type": "array",
+      "description": "LinkedIn 账号数组",
+      "items": {
+        "type": "string"
+      }
+    },
+    "facebook_accounts": {
+      "type": "array",
+      "description": "Facebook 账号数组",
+      "items": {
+        "type": "string"
+      }
+    },
+    "person_tags": {
+      "type": "array",
+      "description": "人物标签数组，只能从系统提供的参考标签表中选择多个标签名进行匹配",
+      "items": {
+        "type": "string"
+      }
+    },
+    "work_experience": {
+      "description": "工作经历列表，按时间倒序或正序排列；每项为一条工作记录",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "单条工作经历",
+            "properties": {
+              "company": { "type": "string", "description": "单位/公司名称" },
+              "department": { "type": "string", "description": "部门" },
+              "position": { "type": "string", "description": "职位/职务" },
+              "start_date": { "type": "string", "description": "开始日期，格式 yyyy-MM 或 yyyy-MM-dd" },
+              "end_date": { "type": "string", "description": "结束日期，格式 yyyy-MM 或 yyyy-MM-dd；至今可填 \"至今\" 或 \"present\"" },
+              "description": { "type": "string", "description": "工作内容或职责简述" },
+              "location": { "type": "string", "description": "工作地点" }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "education_experience": {
+      "description": "教育经历列表，按时间倒序或正序排列；每项为一条学历/学校记录",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "单条教育经历",
+            "properties": {
+              "school": { "type": "string", "description": "学校名称" },
+              "degree": { "type": "string", "description": "学历/学位，如：高中、大专、本科、硕士、博士" },
+              "major": { "type": "string", "description": "专业" },
+              "start_date": { "type": "string", "description": "入学日期，格式 yyyy-MM 或 yyyy-MM-dd" },
+              "end_date": { "type": "string", "description": "毕业日期，格式 yyyy-MM 或 yyyy-MM-dd" },
+              "description": { "type": "string", "description": "其他说明（如荣誉、研究方向等）" },
+              "location": { "type": "string", "description": "学校所在地" }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "related_persons": {
+      "description": "关系人列表，每项描述与本人有关联的另一个人及其关系",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "单条关系人",
+            "properties": {
+              "name": { "type": "string", "description": "关系人姓名（中文或外文）" },
+              "relation": { "type": "string", "description": "与本人的关系，如：配偶、父亲、母亲、同事、上司、合作伙伴" },
+              "brief": { "type": "string", "description": "关系人简介（职务、单位等简要信息）" }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "remark": {
+      "type": "string",
+      "description": "备注信息，生成人物总体信息的摘要"
+    }
+  },
+  "required": [
+    "original_name"
+  ],
+  "additionalProperties": false
+}
+

@@ -233,17 +233,10 @@
   margin-bottom: var(--page-gap);
 }
 
-/* 大屏每行 5 张人物卡片 */
-@media (min-width: 1200px) {
+/* 大屏每行 4 张人物卡片 */
+@media (min-width: 992px) {
   .key-person-grid .key-person-grid-col {
-    flex: 0 0 20%;
-    max-width: 20%;
-  }
-}
-
-@media (min-width: 992px) and (max-width: 1199px) {
-  .key-person-grid .key-person-grid-col {
-    flex: 0 0 33.333333%;
-    max-width: 33.333333%;
+    flex: 0 0 25%;
+    max-width: 25%;
   }
 }

@@ -1,5 +1,5 @@
 import { Card, Row, Col, Button, Tag, Spin, Checkbox, Collapse, Empty, message, Table, Modal, Select, Radio, Tooltip, Pagination } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined, LockOutlined, ReloadOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, UserOutlined, CheckCircleOutlined, FileTextOutlined, DownloadOutlined, LockOutlined, ReloadOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '@/store/hooks';
@@ -15,11 +15,13 @@ import PersonCard from '@/components/PersonCard';
 import OnlyOfficeViewer from '@/components/OnlyOfficeViewer';
 import './index.css';
 
+/** 任务状态：待导入 → 导入中(提取/匹配) → 已提取 → 已导入(确认导入后) */
 const STATUS_MAP: Record<string, { color: string; text: string }> = {
-  PENDING: { color: 'default', text: '待提取' },
-  EXTRACTING: { color: 'processing', text: '提取中' },
-  MATCHING: { color: 'processing', text: '匹配中' },
-  SUCCESS: { color: 'success', text: '成功' },
+  PENDING: { color: 'default', text: '待导入' },
+  EXTRACTING: { color: 'processing', text: '导入中' },
+  MATCHING: { color: 'processing', text: '导入中' },
+  SUCCESS: { color: 'success', text: '已提取' },
+  IMPORTED: { color: 'blue', text: '已导入' },
   FAILED: { color: 'error', text: '失败' },
 };
 
@@ -291,28 +293,36 @@ const ImportDetail: React.FC = () => {
       // ignore
     }
     const avatarUrls = getExtractAvatarUrls(r.rawJson);
+    const isSelected = selectedResultIds.includes(r.resultId);
     return (
-      <Card key={r.resultId} size="small" className="import-detail-result-card">
+      <Card
+        key={r.resultId}
+        size="small"
+        className={`import-detail-result-card ${isSelected ? 'import-detail-result-card-selected' : ''}`}
+      >
         <div className="import-detail-result-head">
           {canSelect ? (
             <Checkbox
-              checked={selectedResultIds.includes(r.resultId)}
+              checked={isSelected}
               onChange={(e) => toggleResultSelection(r.resultId, e.target.checked)}
+              className="import-detail-result-checkbox"
             />
           ) : (
             <CheckCircleOutlined className="import-detail-result-checked" />
           )}
           <div className="import-detail-result-main">
-            <strong className="import-detail-result-title">提取人物 #{r.extractIndex + 1}</strong>
-            {r.imported && r.importedPersonId && (
-              <Tag color="green" className="import-detail-result-tag">已导入</Tag>
-            )}
-            <span className="import-detail-result-meta">
-              {r.originalName && <span>姓名：{r.originalName}</span>}
-              {r.birthDate && <span style={{ marginLeft: 12 }}>出生：{r.birthDate}</span>}
-              {r.gender && <span style={{ marginLeft: 12 }}>性别：{r.gender}</span>}
-              {r.nationality && <span style={{ marginLeft: 12 }}>国籍：{r.nationality}</span>}
-            </span>
+            <div className="import-detail-result-header-row">
+              <strong className="import-detail-result-title">提取人物 #{r.extractIndex + 1}</strong>
+              {r.imported && r.importedPersonId && (
+                <Tag color="green" className="import-detail-result-tag">已导入</Tag>
+              )}
+              <span className="import-detail-result-meta">
+                {r.originalName && <span>姓名：{r.originalName}</span>}
+                {r.birthDate && <span>出生：{r.birthDate}</span>}
+                {r.gender && <span>性别：{r.gender}</span>}
+                {r.nationality && <span>国籍：{r.nationality}</span>}
+              </span>
+            </div>
             <Collapse size="small" className="import-detail-result-collapse" defaultActiveKey={['resume']} items={[
               {
                 key: 'resume',
@@ -393,7 +403,7 @@ const ImportDetail: React.FC = () => {
 
   const hasUnimported = unimportedCount > 0;
   const showImportBtn = detail.task?.taskId && hasUnimported;
-  const canCompareAndImport = detail.task?.status === 'SUCCESS';
+  const canCompareAndImport = detail.task?.status === 'SUCCESS' || detail.task?.status === 'IMPORTED';
 
   if (isExtracting) {
     return (
@@ -423,7 +433,12 @@ const ImportDetail: React.FC = () => {
           </Button>
           <div className="import-detail-task-info">
             <span className="import-detail-task-name">{detail.task.fileName}</span>
-            <Tag color={STATUS_MAP[detail.task.status]?.color}>{STATUS_MAP[detail.task.status]?.text ?? detail.task.status}</Tag>
+            {(() => {
+              const allImported = detail.task.status === 'SUCCESS' && (detail.task.unimportedCount ?? 0) === 0;
+              const color = allImported ? 'blue' : (STATUS_MAP[detail.task.status]?.color ?? 'default');
+              const text = allImported ? '已导入' : (STATUS_MAP[detail.task.status]?.text ?? detail.task.status);
+              return <Tag color={color}>{text}</Tag>;
+            })()}
             <span className="import-detail-task-meta">
               {detail.task.totalExtractCount != null && detail.task.totalExtractCount > 0
                 ? `已提取 ${detail.task.extractCount ?? 0} / ${detail.task.totalExtractCount} 人`
@@ -448,40 +463,60 @@ const ImportDetail: React.FC = () => {
         </div>
         {canCompareAndImport && showImportBtn && (
           <div className="import-detail-toolbar-right">
-            <span className="import-detail-batch-tags-label">导入可见性：</span>
-            <Radio.Group
-              value={importAsPublic}
-              onChange={(e) => setImportAsPublic(e.target.value)}
-              optionType="button"
-              buttonStyle="solid"
-              size="small"
-              className="import-detail-visibility-radio"
-            >
-              <Tooltip title={!isAdmin ? '仅系统管理员可导入为公开档案' : undefined}>
-                <Radio.Button value={true} disabled={!isAdmin}>
-                  {!isAdmin && <LockOutlined style={{ marginRight: 4 }} />}
-                  公开
-                </Radio.Button>
-              </Tooltip>
-              <Radio.Button value={false}>私有</Radio.Button>
-            </Radio.Group>
-            <span className="import-detail-batch-tags-label">本批标签：</span>
-            <Select
-              mode="tags"
-              placeholder="输入后回车添加，本批导入的人物将带上这些标签"
-              value={batchTags}
-              onChange={(v) => setBatchTags(v ?? [])}
-              style={{ minWidth: 220 }}
-              maxTagCount={5}
-              className="import-detail-batch-tags"
-            />
-            <Button type="primary" loading={importing} onClick={handleImportAll}>
-              全部导入（{unimportedCount}）
-            </Button>
-            <Button type="default" loading={importing} disabled={selectedResultIds.length === 0} onClick={handleConfirmImport}>
-              确认并导入已勾选（{selectedResultIds.length}）
-            </Button>
-            <Button type="link" size="small" onClick={selectAllUnimported}>全选未导入</Button>
+            <div className="import-detail-actions-group">
+              <div className="import-detail-actions-row">
+                <span className="import-detail-batch-tags-label">导入可见性</span>
+                <Radio.Group
+                  value={importAsPublic}
+                  onChange={(e) => setImportAsPublic(e.target.value)}
+                  optionType="button"
+                  buttonStyle="solid"
+                  size="small"
+                  className="import-detail-visibility-radio"
+                >
+                  <Tooltip title={!isAdmin ? '仅系统管理员可导入为公开档案' : undefined}>
+                    <Radio.Button value={true} disabled={!isAdmin}>
+                      {!isAdmin && <LockOutlined style={{ marginRight: 4 }} />}
+                      公开
+                    </Radio.Button>
+                  </Tooltip>
+                  <Radio.Button value={false}>私有</Radio.Button>
+                </Radio.Group>
+              </div>
+              <div className="import-detail-actions-row">
+                <span className="import-detail-batch-tags-label">本批标签</span>
+                <Select
+                  mode="tags"
+                  placeholder="输入后回车添加"
+                  value={batchTags}
+                  onChange={(v) => setBatchTags(v ?? [])}
+                  style={{ minWidth: 200 }}
+                  maxTagCount={4}
+                  className="import-detail-batch-tags"
+                />
+              </div>
+              <div className="import-detail-actions-btns">
+                <Button
+                  type="primary"
+                  loading={importing}
+                  disabled={importing || unimportedCount <= 0}
+                  onClick={handleImportAll}
+                  size="small"
+                >
+                  全部导入（{unimportedCount}）
+                </Button>
+                <Button
+                  type="default"
+                  loading={importing}
+                  disabled={selectedResultIds.length === 0}
+                  onClick={handleConfirmImport}
+                  size="small"
+                >
+                  确认并导入（{selectedResultIds.length}）
+                </Button>
+                <Button type="link" size="small" onClick={selectAllUnimported}>全选未导入</Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -489,7 +524,7 @@ const ImportDetail: React.FC = () => {
       <div className="import-detail-content">
         <Row gutter={16}>
           <Col xs={24} lg={12}>
-            <Card size="small" title="原始文档（可对比阅读）" className="import-detail-card import-detail-card-original">
+            <Card size="small" className="import-detail-card import-detail-card-original">
               {documentPreviewConfig?.enabled ? (
                 <div className="import-detail-original-onlyoffice">
                   <OnlyOfficeViewer
@@ -539,7 +574,11 @@ const ImportDetail: React.FC = () => {
             </Card>
           </Col>
           <Col xs={24} lg={12}>
-            <Card size="small" title="抽取人物信息（勾选后点击确认并导入）" className="import-detail-card import-detail-card-results">
+            <Card
+              size="small"
+              className="import-detail-card import-detail-card-results"
+              title={"抽取人物信息"}
+            >
               <div className="import-detail-results-body">
                 {extractResultsPage.length > 0 ? (
                   <>

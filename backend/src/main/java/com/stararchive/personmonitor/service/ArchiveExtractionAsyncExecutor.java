@@ -41,10 +41,12 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +54,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.Column;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * 档案融合异步提取执行器：负责异步执行大模型抽取任务。
@@ -68,6 +70,7 @@ public class ArchiveExtractionAsyncExecutor {
     private static final String STATUS_MATCHING = "MATCHING";
     private static final String STATUS_SUCCESS = "SUCCESS";
     private static final String STATUS_FAILED = "FAILED";
+    private static final String STATUS_IMPORTED = "IMPORTED";
 
     private final ArchiveImportTaskRepository taskRepository;
     private final ArchiveExtractResultRepository extractResultRepository;
@@ -80,6 +83,13 @@ public class ArchiveExtractionAsyncExecutor {
     private final SeaweedFSService seaweedFSService;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate = new RestTemplate();
+
+    /**
+     * 人物 JSON Schema 文件路径（可通过挂载外部配置文件灵活调整，支持运行时修改）。
+     * 默认使用 /config/person-schema.json（Docker 镜像已复制该文件，可通过挂载覆盖）。
+     */
+    @Value("${person.schema.path:/config/person-schema.json}")
+    private String personSchemaPath;
 
     @Lazy
     @Autowired
@@ -292,7 +302,19 @@ public class ArchiveExtractionAsyncExecutor {
             
         } catch (Exception e) {
             log.error("【档案融合】任务执行异常: taskId={}", taskId, e);
-            markTaskFailed(task, e.getMessage() != null ? e.getMessage() : "未知错误");
+            String msg = e.getMessage() != null ? e.getMessage() : "未知错误";
+            if ("PDF".equalsIgnoreCase(task.getFileType())) {
+                if (msg.contains("encrypted") || msg.contains("password") || msg.contains("Encrypt")) {
+                    msg = "PDF 解析失败：文件可能已加密，请使用未加密的 PDF";
+                } else if (msg.contains("Invalid") || msg.contains("corrupt") || msg.contains("EOF")) {
+                    msg = "PDF 解析失败：文件可能已损坏或格式不支持，请换用其他 PDF";
+                } else if (msg.length() > 200) {
+                    msg = "PDF 解析失败：" + msg.substring(0, 100) + "...";
+                } else {
+                    msg = "PDF 解析失败：" + msg;
+                }
+            }
+            markTaskFailed(task, msg);
         }
     }
 
@@ -321,6 +343,14 @@ public class ArchiveExtractionAsyncExecutor {
             }
         }
         log.info("【档案融合】异步全部导入完成: taskId={}, 共导入 {} 条", taskId, totalImported);
+        long unimported = extractResultRepository.countByTaskIdAndImportedFalse(taskId);
+        if (unimported == 0) {
+            taskRepository.findById(taskId).ifPresent(t -> {
+                t.setStatus(STATUS_IMPORTED);
+                t.setUpdatedTime(java.time.LocalDateTime.now());
+                taskRepository.save(t);
+            });
+        }
     }
 
     /**
@@ -377,15 +407,19 @@ public class ArchiveExtractionAsyncExecutor {
         userContent.append("本批上传文件名：").append(fileName != null ? fileName : "（未知）").append("\n\n");
         userContent.append("参考标签表（person_tags 只能从以下标签名中选择，可多选，标签名需与下表完全一致）：\n");
         userContent.append(formatTagListForLlm(allTags)).append("\n\n");
-        userContent.append("请结合【文件名】与【下方人物档案文本】抽取一个人物档案，重点根据文件名和档案内容推断 person_tags，按上述 person 表结构返回一个 JSON 对象：\n\n");
+        userContent.append("请结合【文件名】与【下方人物档案文本】抽取一个人物档案，重点根据文件名和档案内容推断 person_tags，并严格按照上方提供的 JSON Schema 返回一个人物档案 JSON 对象，所有生成的数据必须在上下文中有依据，严禁捏造、猜测任何不实的信息：\n\n");
         userContent.append(text.substring(0, Math.min(12000, text.length())));
 
         Map<String, Object> body = new HashMap<>();
         body.put("model", model);
         String basePrompt = resolveExtractPrompt();
-        String structurePart = buildPersonTableStructureDescription();
-        String systemPrompt = basePrompt + "\n\n【当前人物表 person 结构】\n" + structurePart
-                + "\n请严格按上述字段名与类型返回一个 JSON 对象，只返回一个对象不要包在数组里。";
+        String jsonSchema = loadPersonJsonSchema();
+        if (jsonSchema == null || jsonSchema.isBlank()) {
+            log.warn("【档案融合-大模型】未找到人物 JSON Schema，提示词中将不包含字段定义: path={}", personSchemaPath);
+        }
+        String systemPrompt = basePrompt
+                + "\n\n【人物档案 JSON Schema】（请严格按照此 Schema 定义的字段与类型返回结果）\n"
+                + (jsonSchema != null ? jsonSchema : "{}");
         body.put("messages", List.of(
                 Map.of("role", "system", "content", systemPrompt),
                 Map.of("role", "user", "content", userContent.toString())
@@ -499,59 +533,35 @@ public class ArchiveExtractionAsyncExecutor {
         return bailianProperties.getModel() != null ? bailianProperties.getModel() : "qwen-plus";
     }
 
-    /** 人物档案提取提示词：优先使用系统配置，为空则使用内置默认 */
+    /** 人物档案提取提示词：使用系统配置中的默认提示词，未配置则使用代码内置默认 */
     private String resolveExtractPrompt() {
         SystemConfigDTO cfg = systemConfigService.getConfig();
-        if (cfg.getLlmExtractPrompt() != null && !cfg.getLlmExtractPrompt().isBlank()) {
-            return cfg.getLlmExtractPrompt().trim();
+        if (cfg.getLlmExtractPromptDefault() != null && !cfg.getLlmExtractPromptDefault().isBlank()) {
+            return cfg.getLlmExtractPromptDefault().trim();
         }
         return SystemConfigService.getDefaultExtractPrompt();
     }
 
     /**
-     * 实时根据 Person 实体生成人物表结构描述，供大模型提示词使用。
-     * 排除系统字段：person_id、is_public、created_by、created_time、updated_time。
+     * 加载人物 JSON Schema：优先从外部文件读取，支持运行时修改。
+     * personSchemaPath 为空或读取失败时返回 null。
      */
-    private String buildPersonTableStructureDescription() {
-        Set<String> excludeColumns = Set.of("person_id", "is_key_person", "is_public", "created_by", "created_time", "updated_time");
-        List<String> lines = new ArrayList<>();
-        for (Field field : Person.class.getDeclaredFields()) {
-            if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())) {
-                continue;
-            }
-            Column col = field.getAnnotation(Column.class);
-            if (col == null) continue;
-            String columnName = col.name() != null && !col.name().isBlank() ? col.name() : camelToSnake(field.getName());
-            if (excludeColumns.contains(columnName)) continue;
-
-            String typeDesc = typeDescription(field.getType());
-            if (typeDesc == null) continue;
-            lines.add("- " + columnName + "(" + typeDesc + ")");
+    private String loadPersonJsonSchema() {
+        if (personSchemaPath == null || personSchemaPath.isBlank()) {
+            return null;
         }
-        return lines.isEmpty() ? "（无法获取表结构）" : String.join("\n", lines);
-    }
-
-    private static String typeDescription(Class<?> type) {
-        if (type == String.class) return "字符串";
-        if (type == Boolean.class || type == boolean.class) return "布尔";
-        if (type == LocalDateTime.class) return "日期 yyyy-MM-dd";
-        if (List.class.isAssignableFrom(type)) return "JSON数组";
-        return null;
-    }
-
-    private static String camelToSnake(String camel) {
-        if (camel == null || camel.isEmpty()) return camel;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < camel.length(); i++) {
-            char c = camel.charAt(i);
-            if (Character.isUpperCase(c)) {
-                if (sb.length() > 0) sb.append('_');
-                sb.append(Character.toLowerCase(c));
-            } else {
-                sb.append(c);
+        try {
+            Path path = Path.of(personSchemaPath.trim());
+            if (!Files.exists(path)) {
+                log.warn("【档案融合-大模型】JSON Schema 文件不存在: path={}", personSchemaPath);
+                return null;
             }
+            String content = Files.readString(path, StandardCharsets.UTF_8);
+            return content != null && !content.isBlank() ? content.trim() : null;
+        } catch (Exception e) {
+            log.warn("【档案融合-大模型】读取 JSON Schema 失败: path={}, error={}", personSchemaPath, e.getMessage());
+            return null;
         }
-        return sb.toString();
     }
 
     /**
@@ -565,6 +575,7 @@ public class ArchiveExtractionAsyncExecutor {
         String birthDateStr = stringOrNull(personMap.get("birth_date"));
         String gender = stringOrNull(personMap.get("gender"));
         String nationality = stringOrNull(personMap.get("nationality"));
+        String idNumber = stringOrNull(personMap.get("id_number"));
         LocalDate birthDate = parseBirthDate(birthDateStr);
 
         try {
@@ -588,7 +599,7 @@ public class ArchiveExtractionAsyncExecutor {
             log.info("【档案融合】保存提取结果: taskId={}, resultId={}, originalName={}, index={}", taskId, resultId, originalName, extractIndex);
 
             Set<String> matchFields = parseSimilarMatchFields(task.getSimilarMatchFields());
-            List<Person> similar = findSimilarPersons(matchFields, originalName, birthDate, gender, nationality, task.getCreatorUsername());
+            List<Person> similar = findSimilarPersons(matchFields, originalName, birthDate, gender, nationality, idNumber, task.getCreatorUsername());
             for (Person person : similar) {
                 ArchiveSimilarMatch match = ArchiveSimilarMatch.builder()
                         .matchId(matchIdGenerator.incrementAndGet())
@@ -623,10 +634,24 @@ public class ArchiveExtractionAsyncExecutor {
     }
 
     /**
-     * 相似档案查询：按任务配置的属性组合匹配
+     * 相似档案查询：优先按证件号精确匹配；若无结果再按任务配置的属性组合匹配。
      */
     private List<Person> findSimilarPersons(Set<String> matchFields, String originalName, LocalDate birthDate,
-                                            String gender, String nationality, String currentUsername) {
+                                            String gender, String nationality, String idNumber, String currentUsername) {
+        String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
+
+        // 优先按证件号查询：有证件号则先精确匹配，命中则直接返回（经可见性过滤）
+        if (idNumber != null && !idNumber.isBlank()) {
+            List<Person> byIdNumber = personRepository.findByIdNumber(idNumber.trim());
+            List<Person> visible = byIdNumber.stream()
+                    .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
+                    .collect(Collectors.toList());
+            if (!visible.isEmpty()) {
+                return visible;
+            }
+        }
+
+        // 证件号未命中或未提供：按现有属性组合策略继续
         if (matchFields == null || matchFields.isEmpty()) {
             return Collections.emptyList();
         }
@@ -643,13 +668,29 @@ public class ArchiveExtractionAsyncExecutor {
             return Collections.emptyList();
         }
         List<Person> all = personRepository.findSimilarByFields(matchFields, originalName, birthDate, gender, nationality);
-        String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
         return all.stream()
                 .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
                 .collect(Collectors.toList());
     }
 
     // ==================== 文件解析方法 ====================
+
+    /**
+     * 从字节数组解析文件为纯文本（供智能问答文档解析使用）。
+     * 支持：PDF、DOC、DOCX、TXT。TXT 使用 UTF-8 解码。
+     */
+    public String parseFileToTextFromBytes(byte[] fileBytes, String originalFileName) throws Exception {
+        if (fileBytes == null || fileBytes.length == 0) {
+            return "";
+        }
+        String name = originalFileName != null ? originalFileName : "file";
+        String ext = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1).toUpperCase() : "";
+        if ("TXT".equals(ext) || "TEXT".equals(ext)) {
+            return new String(fileBytes, StandardCharsets.UTF_8);
+        }
+        MultipartFile mf = new ByteArrayMultipartFile("file", name, fileBytes);
+        return parseFileToText(mf, ext);
+    }
 
     private String parseFileToText(MultipartFile file, String fileType) throws Exception {
         switch (fileType.toUpperCase()) {
@@ -768,7 +809,19 @@ public class ArchiveExtractionAsyncExecutor {
 
     private static final DataFormatter DATA_FORMATTER = new DataFormatter();
 
-    /** 取单元格显示值，避免公式/数字按公式或整数取导致中文或格式丢失 */
+    /** 数字单元格不用科学计数法，支持18位证件号等长数字完整显示 */
+    private static final DecimalFormat NUMERIC_NO_SCIENTIFIC = createNumericNoScientific();
+
+    private static DecimalFormat createNumericNoScientific() {
+        DecimalFormat df = new DecimalFormat("0.##########", DecimalFormatSymbols.getInstance(Locale.US));
+        df.setGroupingUsed(false);
+        df.setDecimalSeparatorAlwaysShown(false);
+        // 保证不以科学计数法输出（18位证件号等长数字）
+        df.setMaximumIntegerDigits(20);
+        return df;
+    }
+
+    /** 取单元格显示值，避免公式/数字按公式或整数取导致中文或格式丢失；数字以完整数字串输出，支持18位证件号且保证不出现科学计数法。 */
     private String getCellString(Cell cell) {
         if (cell == null) return null;
         CellType type = cell.getCellType();
@@ -780,7 +833,15 @@ public class ArchiveExtractionAsyncExecutor {
                 return cell.getStringCellValue();
             case NUMERIC:
             case FORMULA:
-                return DATA_FORMATTER.formatCellValue(cell);
+                if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
+                    return DATA_FORMATTER.formatCellValue(cell);
+                }
+                try {
+                    double v = cell.getNumericCellValue();
+                    return NUMERIC_NO_SCIENTIFIC.format(v);
+                } catch (Exception e) {
+                    return DATA_FORMATTER.formatCellValue(cell);
+                }
             case BOOLEAN:
                 return String.valueOf(cell.getBooleanCellValue());
             default:
@@ -807,9 +868,27 @@ public class ArchiveExtractionAsyncExecutor {
     }
 
     private String parsePdf(MultipartFile file) throws Exception {
-        try (PDDocument doc = PDDocument.load(file.getInputStream())) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            return stripper.getText(doc);
+        try (java.io.InputStream is = file.getInputStream()) {
+            if (is == null) {
+                throw new IllegalArgumentException("PDF 文件为空");
+            }
+            try (PDDocument doc = PDDocument.load(is)) {
+                if (doc.isEncrypted()) {
+                    throw new IllegalArgumentException("PDF 已加密，请使用未加密的 PDF 或先解除密码");
+                }
+                PDFTextStripper stripper = new PDFTextStripper();
+                String text = stripper.getText(doc);
+                return text != null ? text : "";
+            }
+        } catch (java.io.IOException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.contains("encrypted") || msg.contains("password") || msg.contains("Encrypt") || msg.contains("Password")) {
+                throw new IllegalArgumentException("PDF 已加密，请使用未加密的 PDF 或先解除密码", e);
+            }
+            if (msg.contains("Invalid") || msg.contains("corrupt") || msg.contains("EOF") || msg.contains("Could not read")) {
+                throw new IllegalArgumentException("PDF 文件可能已损坏或格式不支持: " + msg, e);
+            }
+            throw e;
         }
     }
 

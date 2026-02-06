@@ -107,7 +107,7 @@ const PersonCard: FC<PersonCardProps> = ({
         <div className="person-card-id-right">
           <div className="person-card-id-name">{displayName}</div>
           <div className="person-card-id-row">
-            <span className="person-card-id-label">所属机构</span>
+            <span className="person-card-id-label">机构</span>
             <span className="person-card-id-value">{getOrgOrGroup(person)}</span>
           </div>
           <div className="person-card-id-row">
@@ -119,11 +119,11 @@ const PersonCard: FC<PersonCardProps> = ({
             <span className="person-card-id-value">{person.nationality || '—'}</span>
           </div>
           <div className="person-card-id-row">
-            <span className="person-card-id-label">出生日期</span>
+            <span className="person-card-id-label">生日</span>
             <span className="person-card-id-value">{birthStr || '—'}</span>
           </div>
           <div className="person-card-id-row person-card-id-idno">
-            <span className="person-card-id-label">证件号</span>
+            <span className="person-card-id-label">证件</span>
             <span className="person-card-id-value">{getDisplayIdNumber(person)}</span>
           </div>
         </div>

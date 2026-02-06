@@ -14,14 +14,20 @@ RUN mvn package -DskipTests
 # 运行阶段
 FROM eclipse-temurin:21-jre-alpine
 USER root
+
 RUN apk add --no-cache dumb-init
 WORKDIR /app
-RUN mkdir -p /app/logs
+RUN mkdir -p /app/logs /config
+RUN chmod 777 /app/logs
 RUN touch /app/logs/application.log
 RUN touch /app/logs/application-error.log
 
 # 从构建阶段复制 jar（Spring Boot 打出 fat jar）
 COPY --from=builder /build/target/person-monitor-*.jar ./app.jar
+
+# 将配置文件和 JSON Schema 放在 jar 包外部（/config），便于通过挂载目录覆盖
+COPY application.yml /config/application.yml
+COPY person-schema.json /config/person-schema.json
 
 # 默认端口与 context-path 与 application.yml 一致
 ENV SERVER_PORT=8000
@@ -31,4 +37,4 @@ EXPOSE 8000
 ENV LOGGING_FILE_PATH=/app/logs
 
 USER 1000:1000
-ENTRYPOINT ["dumb-init", "--", "java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+ENTRYPOINT ["dumb-init", "--", "java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar", "--spring.config.additional-location=file:/config/"]

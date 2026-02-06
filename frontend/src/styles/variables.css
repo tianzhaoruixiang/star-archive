@@ -85,17 +85,17 @@
   --radius-xl: 16px;
 
   /* 字号层级（rem，随根字号缩放，适配多宽度屏幕） */
-  --font-xs: 1rem;     /* 角标、极小辅助 ~11px */
-  --font-caption: 1.25rem;  /* 说明、标签、表格次要 12px */
-  --font-aux: 1.25rem;     /* 辅助正文、列表次要 ~13px */
-  --font-body: 1.25rem;    /* 正文（设计规范基准） 14px */
-  --font-body-lg: 1.3rem; /* 正文略大、输入框 15px */
-  --font-subtitle: 1.45rem;    /* 小标题、导航、卡片标题 16px */
-  --font-section: 1.45rem;  /* 区块标题 18px */
-  --font-card-title: 1.5rem; /* 卡片主标题、统计数字 20px */
-  --font-title: 1.5rem;     /* 页面主标题 24px */
-  --font-display: 1.5rem;   /* 大标题、人物名等 28px */
-  --font-hero: 3rem;        /* 空状态大数字、营销区 48px */
+  --font-xs: 0.6875rem;        /* 角标、极小辅助 ~11px */
+  --font-caption: 0.75rem;     /* 说明、标签、表格次要 ~12px */
+  --font-aux: 0.8125rem;       /* 辅助正文、列表次要 ~13px */
+  --font-body: 0.875rem;       /* 正文（基准）~14px */
+  --font-body-lg: 0.9375rem;   /* 正文略大、输入框 ~15px */
+  --font-subtitle: 1rem;       /* 小标题、导航、卡片标题 ~16px */
+  --font-section: 1.125rem;    /* 区块标题 ~18px */
+  --font-card-title: 1.25rem;  /* 卡片主标题、统计数字 ~20px */
+  --font-title: 1.375rem;      /* 页面主标题 ~22px */
+  --font-display: 1.5rem;      /* 大标题、人物名等 ~24px */
+  --font-hero: 3rem;           /* 空状态大数字、营销区 ~48px */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-title: 600;
@@ -112,17 +112,11 @@
   --transition-normal: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* 1920 宽屏：内容区加宽、字号略大，更好利用横向空间 */
+/* 1920 宽屏：内容区加宽（字号保持一致，避免过大抢占视觉） */
 @media (min-width: 1920px) {
   :root {
     --content-max-width: 1600px;
     --content-side-padding: 48px;
-    --font-body: 0.9375rem;
-    --font-aux: 0.875rem;
-    --font-caption: 0.8125rem;
-    --font-subtitle: 1.0625rem;
-    --font-section: 1.1875rem;
-    --font-title: 1.5625rem;
   }
 }
 

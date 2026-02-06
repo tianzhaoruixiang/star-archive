@@ -428,7 +428,7 @@ const ProvinceDetail: FC = () => {
         open={personListModalOpen}
         onCancel={() => setPersonListModalOpen(false)}
         footer={null}
-        width="85%"
+        width="75%"
         destroyOnClose
         className="dashboard-person-list-modal"
       >

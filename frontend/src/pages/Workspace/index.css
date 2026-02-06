@@ -1,5 +1,12 @@
 /* 工作区 - 与全站设计变量一致 */
 
+.workspace-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+}
+
 .workspace-page .workspace-card {
   border-radius: var(--card-radius-lg);
   border: 1px solid var(--card-border);
@@ -7,6 +14,9 @@
   box-shadow: var(--card-shadow);
   padding: var(--card-padding);
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .workspace-page .ant-card {
@@ -244,6 +254,13 @@
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  min-height: 320px;
+}
+
+.workspace-fusion-table-wrap .ant-table-wrapper {
+  min-width: 0;
 }
 
 .workspace-fusion-table-header {
@@ -407,15 +424,50 @@
 
 .import-detail-toolbar-right {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
   flex-wrap: wrap;
+}
+
+.import-detail-actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--page-bg-alt);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--card-border);
+}
+
+.import-detail-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: 32px;
+}
+
+.import-detail-actions-row .import-detail-batch-tags-label {
+  margin: 0;
+  flex-shrink: 0;
+  width: 72px;
+  text-align: right;
+}
+
+.import-detail-actions-btns {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  min-height: 32px;
 }
 
 .import-detail-batch-tags-label {
   font-size: var(--font-caption);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   white-space: nowrap;
+  width: 72px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 .import-detail-batch-tags {
@@ -454,6 +506,11 @@
   font-size: var(--font-body);
 }
 
+.import-detail-card-results .ant-card-head {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--card-border);
+}
+
 .import-detail-card .ant-card-body {
   padding: var(--spacing-lg);
 }
@@ -479,6 +536,31 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+}
+
+.import-detail-results-card-title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.import-detail-results-card-title-icon {
+  font-size: var(--font-section);
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.import-detail-results-card-title-text {
+  font-size: var(--font-body-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.import-detail-results-card-title-desc {
+  margin: 4px 0 0 0;
+  font-size: var(--font-caption);
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .import-detail-original-body {
@@ -523,7 +605,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 16px;
+  padding: var(--spacing-lg);
 }
 
 .import-detail-results-pagination {
@@ -539,24 +621,38 @@
 }
 
 .import-detail-result-card {
-  margin-bottom: var(--spacing-md);
-  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--radius-md);
   border: 1px solid var(--card-border);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .import-detail-result-card:last-child {
   margin-bottom: 0;
 }
 
+.import-detail-result-card:hover {
+  border-color: var(--input-hover-border);
+}
+
+.import-detail-result-card-selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary-light);
+}
+
 .import-detail-result-head {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--spacing-md);
+}
+
+.import-detail-result-checkbox {
+  margin-top: 4px;
 }
 
 .import-detail-result-checked {
   color: var(--accent-green);
-  margin-top: var(--spacing-xs);
+  margin-top: 4px;
   font-size: var(--font-subtitle);
 }
 
@@ -565,24 +661,33 @@
   min-width: 0;
 }
 
+.import-detail-result-header-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: 2px;
+}
+
 .import-detail-result-title {
   font-size: var(--font-body);
-  margin-right: 8px;
+  color: var(--text-primary);
 }
 
 .import-detail-result-tag {
-  margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .import-detail-result-meta {
-  display: inline-block;
-  margin-left: var(--spacing-md);
   font-size: var(--font-caption);
   color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--spacing-md);
 }
 
 .import-detail-result-meta span + span {
-  margin-left: 12px;
+  margin-left: 0;
 }
 
 .import-detail-result-collapse {

@@ -13,6 +13,7 @@ const NAV_ITEMS: { key: keyof SystemConfigDTO; label: string }[] = [
   { key: 'navKeyPersonLibrary', label: '重点人员库' },
   { key: 'navWorkspace', label: '工作区' },
   { key: 'navSituation', label: '态势感知' },
+  { key: 'navSmartQA', label: '智能问答' },
   { key: 'navSystemConfig', label: '系统配置' },
 ];
 
@@ -20,6 +21,7 @@ const NAV_ITEMS: { key: keyof SystemConfigDTO; label: string }[] = [
 const WORKSPACE_SECONDARY_NAV_ITEMS: { key: keyof SystemConfigDTO; label: string }[] = [
   { key: 'navWorkspaceFusion', label: '档案融合' },
   { key: 'navWorkspaceTags', label: '标签管理' },
+  { key: 'navWorkspaceFavorites', label: '我的收藏' },
   { key: 'navModelManagement', label: '模型管理' },
 ];
 
@@ -104,9 +106,13 @@ const SystemConfigPage = () => {
             // @ts-ignore
             navWorkspaceTags: data.navWorkspaceTags !== false,
             // @ts-ignore
+            navWorkspaceFavorites: data.navWorkspaceFavorites !== false,
+            // @ts-ignore
             navModelManagement: data.navModelManagement !== false,
             // @ts-ignore
             navSituation: data.navSituation !== false,
+            // @ts-ignore
+            navSmartQA: data.navSmartQA !== false,
             // @ts-ignore
             navSystemConfig: data.navSystemConfig !== false,
             // @ts-ignore
@@ -114,8 +120,8 @@ const SystemConfigPage = () => {
             llmBaseUrl: (data as SystemConfigDTO).llmBaseUrl ?? '',
             llmModel: (data as SystemConfigDTO).llmModel ?? '',
             llmApiKey: (data as SystemConfigDTO).llmApiKey ?? '',
-            llmExtractPrompt: (data as SystemConfigDTO).llmExtractPrompt ?? '',
             llmExtractPromptDefault: (data as SystemConfigDTO).llmExtractPromptDefault ?? '',
+            llmEmbeddingModel: (data as SystemConfigDTO).llmEmbeddingModel ?? '',
             onlyofficeDocumentServerUrl: (data as SystemConfigDTO).onlyofficeDocumentServerUrl ?? '',
             onlyofficeDocumentDownloadBase: (data as SystemConfigDTO).onlyofficeDocumentDownloadBase ?? '',
           });
@@ -204,14 +210,17 @@ const SystemConfigPage = () => {
             navWorkspace: true,
             navWorkspaceFusion: true,
             navWorkspaceTags: true,
+            navWorkspaceFavorites: true,
             navModelManagement: true,
             navSituation: true,
+            navSmartQA: true,
             navSystemConfig: true,
             showPersonDetailEdit: true,
             llmBaseUrl: '',
             llmModel: '',
             llmApiKey: '',
-            llmExtractPrompt: '',
+            llmExtractPromptDefault: '',
+            llmEmbeddingModel: '',
             onlyofficeDocumentServerUrl: '',
             onlyofficeDocumentDownloadBase: '',
           }}
@@ -313,23 +322,24 @@ const SystemConfigPage = () => {
                 <Input.Password placeholder="留空则不修改或使用配置文件中的 Key" maxLength={500} autoComplete="new-password" />
               </Form.Item>
               <Form.Item
-                name="llmExtractPrompt"
-                label="人物档案提取提示词"
-                extra="大模型抽取单人档案时的系统提示词，留空则使用下方内置默认；用于控制抽取字段与格式"
+                name="llmExtractPromptDefault"
+                label="默认提示词"
+                extra="档案融合时大模型抽取单人档案使用的系统提示词，可在本页修改并保存"
               >
                 <Input.TextArea
-                  placeholder="留空则使用内置默认提示词"
-                  rows={6}
+                  rows={8}
                   maxLength={4000}
                   showCount
+                  placeholder="未配置时使用系统内置默认，可在此修改后保存"
+                  className="system-config-default-prompt"
                 />
               </Form.Item>
               <Form.Item
-                name="llmExtractPromptDefault"
-                label="内置默认提示词"
-                extra="留空自定义提示词时，档案融合将使用此默认内容（只读）"
+                name="llmEmbeddingModel"
+                label="智能问答 · 嵌入模型"
+                extra="如 text-embedding-3-small；留空则 RAG 使用关键词检索"
               >
-                <Input.TextArea readOnly rows={8} className="system-config-default-prompt" />
+                <Input placeholder="如 text-embedding-3-small" maxLength={200} />
               </Form.Item>
             </div>
           </Form.Item>

@@ -601,3 +601,110 @@ ALTER TABLE sys_user ADD INDEX idx_username (username) USING INVERTED;
 INSERT INTO sys_user (user_id, username, password_hash, user_role) VALUES
 (1, 'admin', '$2a$10$ruCzNRlzKSVaHcUNgxomsOZrqnHox2DTgIEDHcrBOKmbrMP4F0Wn.', 'admin');
 
+
+-- 用户收藏人物表（工作区-我的收藏）
+-- 执行：mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 person_monitor < 14-user-favorite-person.sql
+CREATE TABLE IF NOT EXISTS user_favorite_person
+(
+    `username`    VARCHAR(200) NOT NULL COMMENT '用户名',
+    `person_id`   VARCHAR(200) NOT NULL COMMENT '人物编号',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间'
+)
+UNIQUE KEY(`username`, `person_id`)
+COMMENT "用户收藏人物表"
+DISTRIBUTED BY HASH(username) BUCKETS 8
+PROPERTIES (
+    "replication_num" = "1",
+    "enable_unique_key_merge_on_write" = "true"
+);
+
+-- 智能问答：知识库、文档、分块、会话、消息
+-- 执行：mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 person_monitor < 15-qa-knowledge-base.sql
+
+-- 知识库表
+CREATE TABLE IF NOT EXISTS knowledge_base
+(
+    `id` VARCHAR(64) NOT NULL COMMENT '知识库ID：UUID',
+    `name` VARCHAR(300) NOT NULL COMMENT '知识库名称',
+    `creator_username` VARCHAR(200) NOT NULL COMMENT '创建人用户名',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+)
+UNIQUE KEY(`id`)
+COMMENT "智能问答-知识库"
+DISTRIBUTED BY HASH(id) BUCKETS 4
+PROPERTIES ("replication_num" = "1", "enable_unique_key_merge_on_write" = "true");
+
+ALTER TABLE knowledge_base ADD INDEX idx_creator (creator_username) USING INVERTED;
+
+-- 知识库文档表（上传的原始文件）
+CREATE TABLE IF NOT EXISTS qa_document
+(
+    `id` VARCHAR(64) NOT NULL COMMENT '文档ID：UUID',
+    `kb_id` VARCHAR(64) NOT NULL COMMENT '知识库ID',
+    `file_name` VARCHAR(500) NOT NULL COMMENT '原始文件名',
+    `file_path_id` VARCHAR(500) COMMENT 'SeaweedFS 存储路径',
+    `status` VARCHAR(50) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING-待处理,PARSING-解析中,EMBEDDING-嵌入中,READY-就绪,FAILED-失败',
+    `error_message` STRING COMMENT '失败时错误信息',
+    `chunk_count` INT DEFAULT 0 COMMENT '分块数量',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`id`)
+COMMENT "智能问答-知识库文档"
+DISTRIBUTED BY HASH(id) BUCKETS 8
+PROPERTIES ("replication_num" = "1", "enable_unique_key_merge_on_write" = "true");
+
+ALTER TABLE qa_document ADD INDEX idx_kb_id (kb_id) USING INVERTED;
+ALTER TABLE qa_document ADD INDEX idx_status (status) USING INVERTED;
+
+-- 文档分块表（RAG 检索用，embedding 存 JSON 数组字符串）
+CREATE TABLE IF NOT EXISTS qa_chunk
+(
+    `id` VARCHAR(64) NOT NULL COMMENT '分块ID：UUID',
+    `doc_id` VARCHAR(64) NOT NULL COMMENT '文档ID',
+    `kb_id` VARCHAR(64) NOT NULL COMMENT '知识库ID',
+    `content` STRING NOT NULL COMMENT '分块文本内容',
+    `embedding` STRING COMMENT '嵌入向量 JSON 数组，如 [0.1,-0.2,...]',
+    `seq` INT DEFAULT 0 COMMENT '文档内顺序',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`id`)
+COMMENT "智能问答-文档分块"
+DISTRIBUTED BY HASH(id) BUCKETS 16
+PROPERTIES ("replication_num" = "1", "enable_unique_key_merge_on_write" = "true");
+
+ALTER TABLE qa_chunk ADD INDEX idx_kb_id (kb_id) USING INVERTED;
+ALTER TABLE qa_chunk ADD INDEX idx_doc_id (doc_id) USING INVERTED;
+
+-- 会话表
+CREATE TABLE IF NOT EXISTS qa_session
+(
+    `id` VARCHAR(64) NOT NULL COMMENT '会话ID：UUID',
+    `kb_id` VARCHAR(64) NOT NULL COMMENT '知识库ID',
+    `title` VARCHAR(200) DEFAULT '新会话' COMMENT '会话标题',
+    `creator_username` VARCHAR(200) NOT NULL COMMENT '创建人用户名',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+)
+UNIQUE KEY(`id`)
+COMMENT "智能问答-会话"
+DISTRIBUTED BY HASH(id) BUCKETS 8
+PROPERTIES ("replication_num" = "1", "enable_unique_key_merge_on_write" = "true");
+
+ALTER TABLE qa_session ADD INDEX idx_kb_creator (kb_id) USING INVERTED;
+
+-- 消息表
+CREATE TABLE IF NOT EXISTS qa_message
+(
+    `id` VARCHAR(64) NOT NULL COMMENT '消息ID：UUID',
+    `session_id` VARCHAR(64) NOT NULL COMMENT '会话ID',
+    `role` VARCHAR(20) NOT NULL COMMENT 'user-用户,assistant-助手',
+    `content` STRING NOT NULL COMMENT '消息内容',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`id`)
+COMMENT "智能问答-消息"
+DISTRIBUTED BY HASH(id) BUCKETS 16
+PROPERTIES ("replication_num" = "1", "enable_unique_key_merge_on_write" = "true");
+
+ALTER TABLE qa_message ADD INDEX idx_session_id (session_id) USING INVERTED;

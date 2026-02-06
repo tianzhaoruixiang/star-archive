@@ -57,6 +57,12 @@ public interface PersonRepository extends JpaRepository<Person, String>, PersonR
     long countByPersonTagsContaining(@Param("tag") String tag);
 
     /**
+     * 按证件号精确查询（用于档案融合优先匹配；排除已软删）
+     */
+    @Query("SELECT p FROM Person p WHERE p.idNumber = :idNumber AND (p.deleted = false OR p.deleted IS NULL)")
+    List<Person> findByIdNumber(@Param("idNumber") String idNumber);
+
+    /**
      * 相似档案匹配：原始姓名+出生日期+性别+国籍
      */
     @Query(value = "SELECT * FROM person WHERE original_name = :originalName AND gender = :gender AND nationality = :nationality AND birth_date = :birthDate", nativeQuery = true)

@@ -421,11 +421,11 @@
   margin-bottom: var(--page-gap);
 }
 
-/* 大屏每行 5 张人物卡片（24 栅格不整除 5，用 20% 宽度） */
+/* 大屏每行 4 张人物卡片（更宽、更易读），使用 25% 宽度 */
 @media (min-width: 992px) {
   .person-list-grid .person-list-col-five {
-    flex: 0 0 20%;
-    max-width: 20%;
+    flex: 0 0 25%;
+    max-width: 25%;
   }
 }
 

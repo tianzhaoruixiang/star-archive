@@ -535,7 +535,7 @@ function Dashboard() {
         open={personListModalOpen}
         onCancel={() => setPersonListModalOpen(false)}
         footer={null}
-        width="85%"
+        width="75%"
         destroyOnClose
         className="dashboard-person-list-modal"
       >
@@ -553,7 +553,7 @@ function Dashboard() {
                   key={person.personId}
                   person={person}
                   minWidth={180}
-                  maxWidth={280}
+                  maxWidth={380}
                 />
               ))}
             </div>

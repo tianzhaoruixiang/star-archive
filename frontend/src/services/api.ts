@@ -7,7 +7,7 @@ export const BASE_PATH = '/littlesmall';
 
 const apiClient = axios.create({
   baseURL: '/littlesmall/api',
-  timeout: 10000,
+  timeout: 120000, // 所有接口统一 2 分钟超时
   headers: {
     'Content-Type': 'application/json',
   },
@@ -242,7 +242,10 @@ export const personAPI = {
   /** 智能画像（大模型根据档案基本信息生成，与档案融合使用同一大模型配置） */
   getPortraitAnalysis: (personId: string) =>
     apiClient
-      .get<{ result?: string; message?: string; data?: string }>(`/persons/${personId}/portrait-analysis`)
+      .get<{ result?: string; message?: string; data?: string }>(
+        `/persons/${personId}/portrait-analysis`,
+        { timeout: 60000 }
+      )
       .then((res) => res.data?.data ?? ''),
   getTags: (params?: { keyTag?: boolean }) =>
     apiClient.get('/persons/tags', { params: params?.keyTag !== undefined ? { keyTag: params.keyTag } : undefined }),
@@ -315,6 +318,16 @@ export const keyPersonLibraryAPI = {
     apiClient.delete(`/key-person-library/directories/${directoryId}/persons/${personId}`),
 };
 
+/** 我的收藏（用户收藏的人物档案） */
+export const favoriteAPI = {
+  add: (personId: string) => apiClient.post(`/user-favorites/${personId}`),
+  remove: (personId: string) => apiClient.delete(`/user-favorites/${personId}`),
+  check: (personId: string) =>
+    apiClient.get<{ data?: boolean }>(`/user-favorites/check/${personId}`).then((r: unknown) => (r && typeof r === 'object' && 'data' in r ? (r as { data?: boolean }).data : false)),
+  list: (page: number, size: number) =>
+    apiClient.get('/user-favorites', { params: { page, size } }),
+};
+
 /** 新闻列表项/详情（与后端 NewsDTO 对应） */
 export interface NewsItem {
   newsId: string;
@@ -357,9 +370,13 @@ export interface SystemConfigDTO {
   navWorkspaceFusion?: boolean;
   /** 二级导航-标签管理 */
   navWorkspaceTags?: boolean;
+  /** 二级导航-我的收藏 */
+  navWorkspaceFavorites?: boolean;
   /** 二级导航-模型管理 */
   navModelManagement?: boolean;
   navSituation?: boolean;
+  /** 导航-智能问答 是否显示 */
+  navSmartQA?: boolean;
   navSystemConfig?: boolean;
   showPersonDetailEdit?: boolean;
   /** 人物档案融合 · 大模型调用基础 URL */
@@ -368,10 +385,10 @@ export interface SystemConfigDTO {
   llmModel?: string;
   /** 人物档案融合 · 大模型 API Key */
   llmApiKey?: string;
-  /** 人物档案融合 · 大模型提取人物档案的系统提示词（为空则使用内置默认） */
-  llmExtractPrompt?: string;
-  /** 人物档案融合 · 内置默认提示词（只读，供前端展示） */
+  /** 人物档案融合 · 默认提示词（可在系统配置中修改，档案融合使用此提示词） */
   llmExtractPromptDefault?: string;
+  /** 智能问答 · 嵌入模型（如 text-embedding-3-small）；为空则 RAG 使用关键词检索 */
+  llmEmbeddingModel?: string;
   /** OnlyOffice · 前端加载脚本的地址（document-server-url） */
   onlyofficeDocumentServerUrl?: string;
   /** OnlyOffice · 服务端拉取文档的基地址（document-download-base） */
@@ -408,6 +425,156 @@ export const sysUserAPI = {
   list: () => apiClient.get<SysUserDTO[]>('/sys/users'),
   create: (dto: SysUserCreateDTO) => apiClient.post<SysUserDTO>('/sys/users', dto),
   delete: (userId: number) => apiClient.delete(`/sys/users/${userId}`),
+};
+
+/** 智能问答 - 知识库 */
+export interface KnowledgeBaseDTO {
+  id: string;
+  name: string;
+  creatorUsername?: string;
+  createdTime?: string;
+  updatedTime?: string;
+}
+
+/** 智能问答 - 文档 */
+export interface QaDocumentDTO {
+  id: string;
+  kbId: string;
+  fileName: string;
+  status: string;
+  errorMessage?: string;
+  chunkCount?: number;
+  createdTime?: string;
+}
+
+/** 智能问答 - 会话 */
+export interface QaSessionDTO {
+  id: string;
+  kbId: string;
+  title: string;
+  creatorUsername?: string;
+  createdTime?: string;
+  updatedTime?: string;
+}
+
+/** 智能问答 - 消息 */
+export interface QaMessageDTO {
+  id: string;
+  sessionId: string;
+  role: string;
+  content: string;
+  createdTime?: string;
+}
+
+/** 智能问答 - 发送消息请求 */
+export interface SmartQaChatRequest {
+  sessionId: string;
+  content: string;
+}
+
+/** 智能问答 - 助手回复（非流式时使用） */
+export interface SmartQaChatResponse {
+  messageId: string;
+  content: string;
+}
+
+/** 流式事件：content 为增量文本；done 为 true 时携带 messageId */
+export interface SmartQaStreamEvent {
+  content?: string;
+  messageId?: string;
+  done?: boolean;
+  error?: string;
+}
+
+/** 解析 SSE 流，按行处理 data: 行并回调 */
+async function readSSEStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onEvent: (data: SmartQaStreamEvent) => void
+): Promise<void> {
+  const decoder = new TextDecoder();
+  let buffer = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const raw = line.slice(6).trim();
+        if (!raw) continue;
+        try {
+          const data = JSON.parse(raw) as SmartQaStreamEvent;
+          onEvent(data);
+        } catch {
+          // ignore non-JSON lines
+        }
+      }
+    }
+  }
+  if (buffer.trim().startsWith('data: ')) {
+    try {
+      const raw = buffer.trim().slice(6).trim();
+      if (raw) onEvent(JSON.parse(raw) as SmartQaStreamEvent);
+    } catch {
+      // ignore
+    }
+  }
+}
+
+export const smartQAAPI = {
+  listKnowledgeBases: () => apiClient.get<KnowledgeBaseDTO[]>('/smart-qa/knowledge-bases'),
+  getKnowledgeBase: (id: string) => apiClient.get<KnowledgeBaseDTO>(`/smart-qa/knowledge-bases/${id}`),
+  createKnowledgeBase: (body: { name: string }) => apiClient.post<KnowledgeBaseDTO>('/smart-qa/knowledge-bases', body),
+  updateKnowledgeBase: (id: string, body: { name: string }) => apiClient.put<KnowledgeBaseDTO>(`/smart-qa/knowledge-bases/${id}`, body),
+  deleteKnowledgeBase: (id: string) => apiClient.delete(`/smart-qa/knowledge-bases/${id}`),
+  listDocuments: (kbId: string) => apiClient.get<QaDocumentDTO[]>(`/smart-qa/knowledge-bases/${kbId}/documents`),
+  uploadDocument: (kbId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post<QaDocumentDTO>(`/smart-qa/knowledge-bases/${kbId}/documents`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
+    });
+  },
+  deleteDocument: (docId: string) => apiClient.delete(`/smart-qa/documents/${docId}`),
+  listSessions: () => apiClient.get<QaSessionDTO[]>('/smart-qa/sessions'),
+  listSessionsByKb: (kbId: string) => apiClient.get<QaSessionDTO[]>(`/smart-qa/knowledge-bases/${kbId}/sessions`),
+  getSession: (id: string) => apiClient.get<QaSessionDTO>(`/smart-qa/sessions/${id}`),
+  createSession: (body: { kbId: string }) => apiClient.post<QaSessionDTO>('/smart-qa/sessions', body),
+  updateSessionTitle: (id: string, body: { title: string }) => apiClient.put<QaSessionDTO>(`/smart-qa/sessions/${id}`, body),
+  deleteSession: (id: string) => apiClient.delete(`/smart-qa/sessions/${id}`),
+  listMessages: (sessionId: string) => apiClient.get<QaMessageDTO[]>(`/smart-qa/sessions/${sessionId}/messages`),
+  /**
+   * 流式问答：POST 后读取 SSE，每收到 content 调用 onChunk，结束时调用 onDone(messageId)。
+   * 返回 Promise，失败时 reject。
+   */
+  chatStream: async (
+    body: SmartQaChatRequest,
+    onChunk: (content: string) => void,
+    onDone: (messageId: string) => void
+  ): Promise<void> => {
+    const username = getStoredAuthUsername();
+    const res = await fetch(`${BASE_PATH}/api/smart-qa/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(username ? { 'X-Username': username } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { message?: string };
+      throw new Error(err?.message ?? `请求失败 ${res.status}`);
+    }
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error('无响应体');
+    await readSSEStream(reader, (data) => {
+      if (data.error) throw new Error(data.error);
+      if (data.content) onChunk(data.content);
+      if (data.done && data.messageId) onDone(data.messageId);
+    });
+  },
 };
 
 /** 个人工作区目录项（文件或文件夹） */

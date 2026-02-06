@@ -1,0 +1,571 @@
+/* 智能问答 - Gemini 式布局（仅布局与结构，沿用项目配色变量） */
+
+.smart-qa-page.smart-qa-gemini {
+  height: var(--content-available-height);
+  display: flex;
+  overflow: hidden;
+  background: var(--page-bg);
+}
+
+/* ========== 左侧边栏 ========== */
+.smart-qa-sidebar {
+  width: 280px;
+  min-width: 280px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg-alt);
+  border-right: 1px solid var(--card-border);
+  transition: width 0.2s ease, min-width 0.2s ease;
+}
+
+.smart-qa-sidebar-collapsed {
+  width: 56px;
+  min-width: 56px;
+}
+
+/* 顶栏：汉堡菜单 + Logo */
+.smart-qa-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  min-height: 48px;
+  border-bottom: 1px solid var(--card-border);
+  flex-shrink: 0;
+}
+
+.smart-qa-sidebar-menu-btn {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.smart-qa-sidebar-logo {
+  font-size: var(--font-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 发起新对话行 */
+.smart-qa-sidebar-new-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) var(--spacing-lg);
+  flex-shrink: 0;
+}
+
+.smart-qa-new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+  flex: 1;
+  height: 40px;
+  padding: 0 var(--spacing-md);
+  text-align: left;
+  font-size: var(--font-body);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+}
+
+.smart-qa-new-chat-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.smart-qa-sidebar-collapsed .smart-qa-new-chat-btn {
+  justify-content: center;
+  padding: 0;
+}
+
+.smart-qa-sidebar-new-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* 我的内容 */
+.smart-qa-sidebar-content-entry {
+  padding: 0 var(--spacing-lg);
+  flex-shrink: 0;
+}
+
+.smart-qa-my-content-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--spacing-md);
+  text-align: left;
+  font-size: var(--font-aux);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.smart-qa-my-content-btn:hover {
+  background: var(--primary-light);
+  color: var(--text-primary);
+}
+
+/* 对话区块 */
+.smart-qa-sidebar-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--spacing-sm) 0;
+}
+
+.smart-qa-sidebar-section-title {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-caption);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.smart-qa-sessions {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 var(--spacing-sm);
+}
+
+.smart-qa-session-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: 0 2px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-aux);
+  color: var(--text-secondary);
+}
+
+.smart-qa-session-item:hover {
+  background: var(--primary-light);
+  color: var(--text-primary);
+}
+
+.smart-qa-session-item:hover .smart-qa-session-delete {
+  opacity: 1;
+}
+
+.smart-qa-session-item-active {
+  background: var(--primary-light);
+  color: var(--text-primary);
+}
+
+.smart-qa-session-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-qa-session-delete {
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+/* 底部：设置和帮助 */
+.smart-qa-sidebar-footer {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--card-border);
+  flex-shrink: 0;
+}
+
+.smart-qa-settings-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--spacing-md);
+  text-align: left;
+  font-size: var(--font-aux);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.smart-qa-settings-btn:hover {
+  background: var(--primary-light);
+  color: var(--text-primary);
+}
+
+.smart-qa-sidebar-collapsed .smart-qa-settings-btn {
+  justify-content: center;
+  padding: 0;
+}
+
+.smart-qa-loading {
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+/* ========== 主区域 ========== */
+.smart-qa-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+/* 主区顶栏 */
+.smart-qa-main-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-xl);
+  min-height: 52px;
+  border-bottom: 1px solid var(--card-border);
+  flex-shrink: 0;
+  background: var(--page-bg);
+}
+
+.smart-qa-main-logo {
+  font-size: var(--font-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.smart-qa-main-title {
+  font-size: var(--font-aux);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.smart-qa-main-header-right {
+  flex-shrink: 0;
+  width: 32px;
+}
+
+/* ========== 欢迎页（空状态）- Gemini 式：问候 + 建议卡片网格 ========== */
+.smart-qa-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  overflow-y: auto;
+}
+
+.smart-qa-welcome-block {
+  display: flex;
+  gap: var(--spacing-lg);
+  max-width: 720px;
+  width: 100%;
+  margin-bottom: var(--spacing-2xl);
+  text-align: left;
+}
+
+.smart-qa-welcome-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.smart-qa-welcome-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.smart-qa-welcome-greeting {
+  font-size: var(--font-body);
+  line-height: var(--line-height-relaxed);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.smart-qa-welcome-sub {
+  font-size: var(--font-aux);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: var(--spacing-md) 0 0;
+}
+
+.smart-qa-welcome-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+  max-width: 720px;
+  width: 100%;
+}
+
+.smart-qa-welcome-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-lg);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-radius);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.smart-qa-welcome-card:hover {
+  border-color: var(--input-focus-border);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.smart-qa-welcome-card-icon {
+  font-size: 20px;
+  color: var(--primary);
+}
+
+.smart-qa-welcome-card-title {
+  font-size: var(--font-aux);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.smart-qa-welcome-card-desc {
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ========== 消息列表 ========== */
+.smart-qa-messages-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xl) var(--spacing-2xl);
+}
+
+.smart-qa-message {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.smart-qa-message-user {
+  flex-direction: row-reverse;
+}
+
+.smart-qa-message-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.smart-qa-message-user .smart-qa-message-avatar {
+  background: var(--primary);
+  color: #fff;
+}
+
+.smart-qa-message-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.smart-qa-message-content {
+  font-size: var(--font-body);
+  line-height: var(--line-height-relaxed);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.smart-qa-message-user .smart-qa-message-content {
+  text-align: right;
+}
+
+.smart-qa-message-time {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+.smart-qa-loading-center {
+  padding: 48px;
+  text-align: center;
+}
+
+/* ========== 底部输入区 - Gemini 式：左侧图标 + 居中输入 + 右侧发送 ========== */
+.smart-qa-input-wrap {
+  flex-shrink: 0;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.smart-qa-input-inner {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) var(--spacing-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 24px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.smart-qa-input-inner:focus-within {
+  border-color: var(--input-focus-border);
+  box-shadow: var(--input-focus-glow);
+}
+
+.smart-qa-input-left-btn {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.smart-qa-input-left-btn:hover {
+  color: var(--text-secondary);
+  background: var(--primary-light);
+}
+
+.smart-qa-input-textarea {
+  flex: 1;
+  resize: none;
+  font-size: var(--font-body);
+  line-height: var(--line-height-body);
+  padding: var(--spacing-sm) 0 !important;
+}
+
+.smart-qa-input-textarea.ant-input {
+  background: transparent !important;
+}
+
+.smart-qa-send-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.smart-qa-input-hint {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  text-align: center;
+  margin: var(--spacing-sm) 0 0;
+}
+
+/* ========== 知识库与文档管理弹框（保留） ========== */
+.smart-qa-manage-modal {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.smart-qa-manage-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.smart-qa-manage-section:last-child {
+  margin-bottom: 0;
+}
+
+.smart-qa-manage-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-body);
+  font-weight: var(--font-weight-subtitle);
+  color: var(--text-primary);
+}
+
+.smart-qa-manage-section-header span {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.smart-qa-manage-loading {
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.smart-qa-manage-modal .ant-list-item {
+  cursor: pointer;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+}
+
+.smart-qa-manage-modal .ant-list-item:hover {
+  background: var(--primary-light);
+}
+
+.smart-qa-manage-kb-active {
+  background: var(--primary-light) !important;
+}
+
+.smart-qa-manage-kb-name {
+  font-size: var(--font-aux);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-qa-manage-upload {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.smart-qa-manage-upload-input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-caption);
+}
+
+.smart-qa-manage-doc-name {
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.smart-qa-manage-doc-err {
+  font-size: var(--font-xs);
+  color: var(--color-error);
+  margin-top: 2px;
+}
+
+.smart-qa-manage-hint {
+  font-size: var(--font-caption);
+  color: var(--text-muted);
+  margin: var(--spacing-md) 0;
+}

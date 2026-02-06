@@ -30,21 +30,24 @@ public class SystemConfigService {
     private static final String KEY_NAV_WORKSPACE = "nav_workspace";
     private static final String KEY_NAV_WORKSPACE_FUSION = "nav_workspace_fusion";
     private static final String KEY_NAV_WORKSPACE_TAGS = "nav_workspace_tags";
+    private static final String KEY_NAV_WORKSPACE_FAVORITES = "nav_workspace_favorites";
     private static final String KEY_NAV_MODEL_MANAGEMENT = "nav_model_management";
     private static final String KEY_NAV_SITUATION = "nav_situation";
+    private static final String KEY_NAV_SMART_QA = "nav_smart_qa";
     private static final String KEY_NAV_SYSTEM_CONFIG = "nav_system_config";
     private static final String KEY_SHOW_PERSON_DETAIL_EDIT = "show_person_detail_edit";
     private static final String KEY_LLM_BASE_URL = "llm_base_url";
     private static final String KEY_LLM_MODEL = "llm_model";
     private static final String KEY_LLM_API_KEY = "llm_api_key";
-    private static final String KEY_LLM_EXTRACT_PROMPT = "llm_extract_prompt";
-    /** 人物档案提取内置默认提示词（与 ArchiveExtractionAsyncExecutor 使用同一默认） */
+    private static final String KEY_LLM_EXTRACT_PROMPT_DEFAULT = "llm_extract_prompt_default";
+    private static final String KEY_LLM_EMBEDDING_MODEL = "llm_embedding_model";
+    /** 人物档案提取默认提示词（未在系统配置中自定义时使用的代码内置默认） */
     private static final String DEFAULT_LLM_EXTRACT_PROMPT =
             "你是一个人物档案抽取助手。从用户提供的文本中抽取**一个人物**的档案信息。"
-                    + "按以下字段提取（与人物表 person 结构一致），无法确定的填空字符串或空数组："
-                    + "chinese_name(中文姓名)、original_name(原始姓名)、alias_names(别名数组)、gender(性别)、id_number(证件号码)、birth_date(出生日期 yyyy-MM-dd)、nationality(国籍)、nationality_code(国籍三字码)、household_address(户籍地址)、highest_education(最高学历)、phone_numbers(手机号数组)、emails(邮箱数组)、passport_numbers(护照号数组)、passport_number(主护照号)、passport_type(护照类型：普通护照/外交护照/公务护照/旅行证等)、id_card_number(身份证号)、person_tags(标签数组)、work_experience(工作经历JSON字符串)、education_experience(教育经历JSON字符串)、remark(备注)。"
+                    + "系统会在提示词中提供一份完整的【人物档案 JSON Schema】，你必须严格按照该 JSON Schema 定义的字段名称、类型和结构返回结果；"
+                    + "无法确定的字段可返回空字符串、null 或空数组，但**禁止随意增删字段名**。"
                     + "**重要：person_tags（人物标签）必须根据【上传文件的文件名】与【人物档案文本内容】综合推断，且只能从用户消息中提供的「参考标签表」里选择（可多选），标签名必须与参考表完全一致；若无法匹配则 person_tags 返回空数组 []。**"
-                    + "请严格以 JSON 格式返回，**只返回一个 JSON 对象**，直接包含上述字段（不要包在 persons 数组里）。字符串用双引号，数组用 []，日期格式 yyyy-MM-dd。";
+                    + "请严格以 JSON 格式返回，**只返回一个 JSON 对象**，直接包含 JSON Schema 中定义的字段（不要包在 persons 数组里）。字符串用双引号，数组用 []。";
     private static final String KEY_ONLYOFFICE_DOCUMENT_SERVER_URL = "onlyoffice_document_server_url";
     private static final String KEY_ONLYOFFICE_DOCUMENT_DOWNLOAD_BASE = "onlyoffice_document_download_base";
 
@@ -80,14 +83,17 @@ public class SystemConfigService {
         map.put(KEY_NAV_WORKSPACE, Boolean.TRUE.equals(dto.getNavWorkspace()) ? "true" : "false");
         map.put(KEY_NAV_WORKSPACE_FUSION, Boolean.TRUE.equals(dto.getNavWorkspaceFusion()) ? "true" : "false");
         map.put(KEY_NAV_WORKSPACE_TAGS, Boolean.TRUE.equals(dto.getNavWorkspaceTags()) ? "true" : "false");
+        map.put(KEY_NAV_WORKSPACE_FAVORITES, Boolean.TRUE.equals(dto.getNavWorkspaceFavorites()) ? "true" : "false");
         map.put(KEY_NAV_MODEL_MANAGEMENT, Boolean.TRUE.equals(dto.getNavModelManagement()) ? "true" : "false");
         map.put(KEY_NAV_SITUATION, Boolean.TRUE.equals(dto.getNavSituation()) ? "true" : "false");
+        map.put(KEY_NAV_SMART_QA, Boolean.TRUE.equals(dto.getNavSmartQA()) ? "true" : "false");
         map.put(KEY_NAV_SYSTEM_CONFIG, Boolean.TRUE.equals(dto.getNavSystemConfig()) ? "true" : "false");
         map.put(KEY_SHOW_PERSON_DETAIL_EDIT, Boolean.TRUE.equals(dto.getShowPersonDetailEdit()) ? "true" : "false");
         map.put(KEY_LLM_BASE_URL, dto.getLlmBaseUrl() != null ? dto.getLlmBaseUrl().trim() : "");
         map.put(KEY_LLM_MODEL, dto.getLlmModel() != null ? dto.getLlmModel().trim() : "");
         map.put(KEY_LLM_API_KEY, dto.getLlmApiKey() != null ? dto.getLlmApiKey() : "");
-        map.put(KEY_LLM_EXTRACT_PROMPT, dto.getLlmExtractPrompt() != null ? dto.getLlmExtractPrompt().trim() : "");
+        map.put(KEY_LLM_EXTRACT_PROMPT_DEFAULT, dto.getLlmExtractPromptDefault() != null ? dto.getLlmExtractPromptDefault().trim() : "");
+        map.put(KEY_LLM_EMBEDDING_MODEL, dto.getLlmEmbeddingModel() != null ? dto.getLlmEmbeddingModel().trim() : "");
         map.put(KEY_ONLYOFFICE_DOCUMENT_SERVER_URL, dto.getOnlyofficeDocumentServerUrl() != null ? dto.getOnlyofficeDocumentServerUrl().trim() : "");
         map.put(KEY_ONLYOFFICE_DOCUMENT_DOWNLOAD_BASE, dto.getOnlyofficeDocumentDownloadBase() != null ? dto.getOnlyofficeDocumentDownloadBase().trim() : "");
 
@@ -114,7 +120,7 @@ public class SystemConfigService {
         return map;
     }
 
-    /** 返回人物档案提取内置默认提示词（供前端展示及档案融合服务留空时使用） */
+    /** 返回人物档案提取代码内置默认提示词（系统配置中未设置默认提示词时使用） */
     public static String getDefaultExtractPrompt() {
         return DEFAULT_LLM_EXTRACT_PROMPT;
     }
@@ -130,15 +136,18 @@ public class SystemConfigService {
         dto.setNavWorkspace("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE, "true")));
         dto.setNavWorkspaceFusion("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE_FUSION, "true")));
         dto.setNavWorkspaceTags("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE_TAGS, "true")));
+        dto.setNavWorkspaceFavorites("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE_FAVORITES, "true")));
         dto.setNavModelManagement("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_MODEL_MANAGEMENT, "true")));
         dto.setNavSituation("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SITUATION, "true")));
+        dto.setNavSmartQA("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SMART_QA, "true")));
         dto.setNavSystemConfig("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SYSTEM_CONFIG, "true")));
         dto.setShowPersonDetailEdit("true".equalsIgnoreCase(map.getOrDefault(KEY_SHOW_PERSON_DETAIL_EDIT, "true")));
         dto.setLlmBaseUrl(map.getOrDefault(KEY_LLM_BASE_URL, ""));
         dto.setLlmModel(map.getOrDefault(KEY_LLM_MODEL, ""));
         dto.setLlmApiKey(map.getOrDefault(KEY_LLM_API_KEY, ""));
-        dto.setLlmExtractPrompt(map.getOrDefault(KEY_LLM_EXTRACT_PROMPT, ""));
-        dto.setLlmExtractPromptDefault(DEFAULT_LLM_EXTRACT_PROMPT);
+        String storedDefault = map.get(KEY_LLM_EXTRACT_PROMPT_DEFAULT);
+        dto.setLlmExtractPromptDefault((storedDefault != null && !storedDefault.isBlank()) ? storedDefault : DEFAULT_LLM_EXTRACT_PROMPT);
+        dto.setLlmEmbeddingModel(map.getOrDefault(KEY_LLM_EMBEDDING_MODEL, ""));
         dto.setOnlyofficeDocumentServerUrl(map.getOrDefault(KEY_ONLYOFFICE_DOCUMENT_SERVER_URL, ""));
         dto.setOnlyofficeDocumentDownloadBase(map.getOrDefault(KEY_ONLYOFFICE_DOCUMENT_DOWNLOAD_BASE, ""));
         return dto;

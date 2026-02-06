@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Card, Row, Col, Tag, Pagination, Empty, Input } from 'antd';
 import { SearchOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -36,7 +36,8 @@ const PersonList = () => {
   const { list, pagination, loading, tags, tagsLoading } = useAppSelector((state) => state.person);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [filterCollapsed, setFilterCollapsed] = useState(false);
+  const [filterCollapsed, setFilterCollapsed] = useState(true);
+  const debounceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     dispatch(fetchTags());
@@ -52,15 +53,34 @@ const PersonList = () => {
     [selectedTags, searchKeyword]
   );
 
+  /** 防抖后的筛选条件：避免用户输入时每个字符都触发请求和重渲染 */
+  const [debouncedFilter, setDebouncedFilter] = useState(listFilter);
+
   useEffect(() => {
-    dispatch(fetchPersonList({ page: 0, size: 20, filter: listFilter }));
-  }, [dispatch, listFilter]);
+    if (debounceTimerRef.current) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      setDebouncedFilter(listFilter);
+      debounceTimerRef.current = null;
+    }, 300);
+    return () => {
+      if (debounceTimerRef.current) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [listFilter]);
+
+  useEffect(() => {
+    dispatch(fetchPersonList({ page: 0, size: 16, filter: debouncedFilter }));
+  }, [dispatch, debouncedFilter]);
 
   const handlePageChange = useCallback(
     (page: number, size: number) => {
-      dispatch(fetchPersonList({ page: page - 1, size, filter: listFilter }));
+      dispatch(fetchPersonList({ page: page - 1, size, filter: debouncedFilter }));
     },
-    [dispatch, listFilter]
+    [dispatch, debouncedFilter]
   );
 
   const handleTagClick = useCallback((tagName: string) => {
@@ -84,7 +104,7 @@ const PersonList = () => {
   const safePagination = useMemo(
     () => ({
       page: typeof pagination?.page === 'number' ? pagination.page : 0,
-      size: typeof pagination?.size === 'number' ? pagination.size : 20,
+      size: typeof pagination?.size === 'number' ? pagination.size : 16,
       total: typeof pagination?.total === 'number' ? pagination.total : 0,
     }),
     [pagination]

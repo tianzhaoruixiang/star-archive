@@ -41,6 +41,8 @@ public class ArchiveFusionService {
 
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_FAILED = "FAILED";
+    /** 全部提取结果已确认导入后 */
+    private static final String STATUS_IMPORTED = "IMPORTED";
 
     private final ArchiveImportTaskRepository taskRepository;
     private final ArchiveExtractResultRepository extractResultRepository;
@@ -222,14 +224,29 @@ public class ArchiveFusionService {
     }
 
     /**
-     * 相似档案查询：按选定的属性组合匹配，仅当选中的属性均有值时才查询。
+     * 相似档案查询：优先按证件号精确匹配；若无结果再按选定的属性组合匹配。
      * 比对范围仅限当前用户可见的档案：公开档案 或 创建人为 currentUsername 的私有档案。
      *
-     * @param matchFields 参与比对的属性集合（originalName, birthDate, gender, nationality）
+     * @param matchFields 参与比对的属性集合（originalName, birthDate, gender, nationality），证件号未命中时使用
+     * @param idNumber 证件号，非空时优先按此查询
      * @param currentUsername 当前用户（任务创建人或查看详情的用户），为空时仅返回公开档案
      */
     private List<Person> findSimilarPersons(Set<String> matchFields, String originalName, LocalDate birthDate,
-                                            String gender, String nationality, String currentUsername) {
+                                            String gender, String nationality, String idNumber, String currentUsername) {
+        String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
+
+        // 优先按证件号查询：有证件号则先精确匹配，命中则直接返回（经可见性过滤）
+        if (idNumber != null && !idNumber.isBlank()) {
+            List<Person> byIdNumber = personRepository.findByIdNumber(idNumber.trim());
+            List<Person> visible = byIdNumber.stream()
+                    .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
+                    .collect(Collectors.toList());
+            if (!visible.isEmpty()) {
+                return visible;
+            }
+        }
+
+        // 证件号未命中或未提供：按现有属性组合策略继续
         if (matchFields == null || matchFields.isEmpty()) {
             return Collections.emptyList();
         }
@@ -246,7 +263,6 @@ public class ArchiveFusionService {
             return Collections.emptyList();
         }
         List<Person> all = personRepository.findSimilarByFields(matchFields, originalName, birthDate, gender, nationality);
-        String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
         return all.stream()
                 .filter(p -> Boolean.TRUE.equals(p.getIsPublic()) || (user != null && user.equals(p.getCreatedBy())))
                 .collect(Collectors.toList());
@@ -256,6 +272,19 @@ public class ArchiveFusionService {
         if (o == null) return null;
         String s = o.toString().trim();
         return s.isEmpty() ? null : s;
+    }
+
+    /** 从提取结果的 rawJson 中解析证件号（id_number），用于相似档案优先匹配 */
+    private String parseIdNumberFromRawJson(String rawJson) {
+        if (rawJson == null || rawJson.isBlank()) return null;
+        try {
+            JsonNode node = objectMapper.readTree(rawJson);
+            if (node != null && node.has("id_number") && !node.get("id_number").isNull()) {
+                String v = node.get("id_number").asText(null);
+                return (v != null && !v.isBlank()) ? v.trim() : null;
+            }
+        } catch (Exception ignored) { /* 解析失败则无证件号 */ }
+        return null;
     }
 
     private static LocalDate parseBirthDate(String s) {
@@ -323,7 +352,8 @@ public class ArchiveFusionService {
         String user = (currentUsername != null && !currentUsername.isBlank()) ? currentUsername.trim() : null;
         Set<String> matchFields = parseSimilarMatchFields(task.getSimilarMatchFields());
         List<ArchiveExtractResultDTO> resultDTOs = resultPage.getContent().stream().map(r -> {
-            List<Person> similar = findSimilarPersons(matchFields, r.getOriginalName(), r.getBirthDate(), r.getGender(), r.getNationality(), user);
+            String idNumber = parseIdNumberFromRawJson(r.getRawJson());
+            List<Person> similar = findSimilarPersons(matchFields, r.getOriginalName(), r.getBirthDate(), r.getGender(), r.getNationality(), idNumber, user);
             List<PersonCardDTO> cards = similar.stream().map(personService::toCardDTO).collect(Collectors.toList());
             return ArchiveExtractResultDTO.builder()
                     .resultId(r.getResultId())
@@ -463,6 +493,14 @@ public class ArchiveFusionService {
                 importedPersonIds.add(person.getPersonId());
             } catch (Exception e) {
                 log.warn("导入提取结果失败: resultId={}", resultId, e);
+            }
+        }
+        if (!importedPersonIds.isEmpty() && task != null) {
+            long unimported = extractResultRepository.countByTaskIdAndImportedFalse(taskId);
+            if (unimported == 0) {
+                task.setStatus(STATUS_IMPORTED);
+                task.setUpdatedTime(LocalDateTime.now());
+                taskRepository.save(task);
             }
         }
         return importedPersonIds;
@@ -617,6 +655,8 @@ public class ArchiveFusionService {
         person.setPersonId(personId);
         person.setOriginalName(originalName);
         person.setChineseName(stringOrNull(map.get("chinese_name")));
+        person.setOrganization(stringOrNull(map.get("organization")));
+        person.setBelongingGroup(stringOrNull(map.get("belonging_group")));
         person.setGender(gender);
         person.setMaritalStatus(stringOrNull(map.get("marital_status")));
         person.setNationality(nationality);
@@ -626,6 +666,8 @@ public class ArchiveFusionService {
         person.setHighestEducation(stringOrNull(map.get("highest_education")));
         person.setIdCardNumber(stringOrNull(map.get("id_card_number")));
         person.setRemark(stringOrNull(map.get("remark")));
+        person.setVisaType(stringOrNull(map.get("visa_type")));
+        person.setVisaNumber(stringOrNull(map.get("visa_number")));
         person.setIsKeyPerson(false);
         person.setIsPublic(true);
         person.setCreatedBy(null);
@@ -641,17 +683,28 @@ public class ArchiveFusionService {
         person.setTwitterAccounts(listFromMap(map, "twitter_accounts"));
         person.setLinkedinAccounts(listFromMap(map, "linkedin_accounts"));
         person.setFacebookAccounts(listFromMap(map, "facebook_accounts"));
-        // 空字符串无法被解析为 jsonb，需转为 null
-        Object we = map.get("work_experience");
-        person.setWorkExperience(jsonStringOrNull(we));
-        Object ee = map.get("education_experience");
-        person.setEducationExperience(jsonStringOrNull(ee));
+        // 工作经历、教育经历、关系人：大模型可能返回数组/对象或字符串，统一序列化为 JSON 字符串存储
+        person.setWorkExperience(toArchiveJsonString(map.get("work_experience")));
+        person.setEducationExperience(toArchiveJsonString(map.get("education_experience")));
+        person.setRelatedPersons(toArchiveJsonString(map.get("related_persons")));
         return person;
     }
 
-    /** 供 JSON 列使用：空字符串 DB 无法解析为 jsonb，返回 null。 */
-    private static String jsonStringOrNull(Object o) {
+    /**
+     * 将大模型返回的 work_experience / education_experience / related_persons 转为存储用 JSON 字符串。
+     * 若为 Map 或 List 则序列化为 JSON；若为 String 则去空后返回；否则返回 null。
+     */
+    private String toArchiveJsonString(Object o) {
         if (o == null) return null;
+        if (o instanceof Map || o instanceof List) {
+            try {
+                String json = objectMapper.writeValueAsString(o);
+                return (json != null && !json.isBlank()) ? json : null;
+            } catch (Exception e) {
+                log.warn("序列化工作经历/教育经历/关系人为 JSON 失败: {}", e.getMessage());
+                return null;
+            }
+        }
         String s = o.toString().trim();
         return s.isEmpty() ? null : s;
     }

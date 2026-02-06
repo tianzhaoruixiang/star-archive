@@ -9,7 +9,7 @@ import {
   RadarChartOutlined,
   FolderOutlined,
   AppstoreOutlined,
-  RobotOutlined,
+  CommentOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -27,6 +27,7 @@ const TOP_MENU_ENTRIES: { key: string; icon: React.ReactNode; label: string; con
   { key: '/persons', icon: <UserOutlined />, label: '人员档案', configKey: 'navPersons' },
   { key: '/key-person-library', icon: <FolderOutlined />, label: '重点人员', configKey: 'navKeyPersonLibrary' },
   { key: '/situation', icon: <RadarChartOutlined />, label: '态势感知', configKey: 'navSituation' },
+  { key: '/smart-qa', icon: <CommentOutlined />, label: '智能问答', configKey: 'navSmartQA' },
   { key: '/system-config', icon: <SettingOutlined />, label: '系统配置', configKey: 'navSystemConfig' },
 ];
 
@@ -34,6 +35,7 @@ const TOP_MENU_ENTRIES: { key: string; icon: React.ReactNode; label: string; con
 const WORKSPACE_CHILDREN: { key: string; label: string; configKey: keyof SystemConfigDTO }[] = [
   { key: '/workspace/fusion', label: '档案融合', configKey: 'navWorkspaceFusion' },
   { key: '/workspace/tags', label: '标签管理', configKey: 'navWorkspaceTags' },
+  { key: '/workspace/favorites', label: '我的收藏', configKey: 'navWorkspaceFavorites' },
   { key: '/workspace/models', label: '模型管理', configKey: 'navModelManagement' },
 ];
 
@@ -90,7 +92,7 @@ const Layout = () => {
     if (systemConfig?.navWorkspace !== false) {
       const children = WORKSPACE_CHILDREN.filter((c) => systemConfig?.[c.configKey] !== false).map((c) => ({ key: c.key, label: c.label }));
       if (children.length > 0) {
-        const insertAt = list.findIndex((m) => (m as { key?: string })?.key === '/key-person-library') + 1;
+        const insertAt = list.findIndex((m) => (m as { key?: string })?.key === '/situation') + 1;
         list.splice(insertAt > 0 ? insertAt : list.length, 0, {
           key: 'workspace',
           icon: <AppstoreOutlined />,
@@ -104,7 +106,7 @@ const Layout = () => {
 
   const selectedKeys = useMemo(() => {
     const path = location.pathname;
-    if (path.startsWith('/workspace')) return [path.startsWith('/workspace/fusion') ? '/workspace/fusion' : path.startsWith('/workspace/tags') ? '/workspace/tags' : path.startsWith('/workspace/data') ? '/workspace/data' : path.startsWith('/workspace/models') ? '/workspace/models' : '/workspace/fusion'];
+    if (path.startsWith('/workspace')) return [path.startsWith('/workspace/fusion') ? '/workspace/fusion' : path.startsWith('/workspace/tags') ? '/workspace/tags' : path.startsWith('/workspace/favorites') ? '/workspace/favorites' : path.startsWith('/workspace/data') ? '/workspace/data' : path.startsWith('/workspace/models') ? '/workspace/models' : '/workspace/fusion'];
     const exact = menuItems?.find((m) => m && 'key' in m && m.key === path);
     if (exact && typeof exact.key === 'string') return [exact.key];
     const parent = menuItems?.find((m) => m && 'key' in m && typeof m.key === 'string' && path === m.key || (path.startsWith((m as { key: string }).key + '/')));

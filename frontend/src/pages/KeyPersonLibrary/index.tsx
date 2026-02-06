@@ -6,7 +6,7 @@ import PersonCard, { type PersonCardData } from '@/components/PersonCard';
 import { PageCardGridSkeleton, InlineSkeleton } from '@/components/SkeletonPresets';
 import './index.css';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 16;
 
 const KeyPersonLibrary: React.FC = () => {
   const [keyTags, setKeyTags] = useState<TagDTO[]>([]);
@@ -66,9 +66,10 @@ const KeyPersonLibrary: React.FC = () => {
     loadPersons();
   }, [loadPersons]);
 
+  /** 重点人员标签：仅支持单选；再次点击已选标签则清除筛选 */
   const handleTagClick = useCallback((tagName: string) => {
     setSelectedTagNames((prev) =>
-      prev.includes(tagName) ? prev.filter((t) => t !== tagName) : [...prev, tagName]
+      prev.includes(tagName) ? [] : [tagName]
     );
     setPagination((p) => ({ ...p, page: 1 }));
   }, []);
@@ -97,10 +98,6 @@ const KeyPersonLibrary: React.FC = () => {
         </div>
         <div className="key-person-body">
         <aside className="key-person-sidebar">
-          <div className="key-person-sidebar-title">
-            <TagOutlined className="key-person-sidebar-title-icon" />
-            <span>重点标签</span>
-          </div>
           {keyTagsLoading ? (
             <div className="key-person-sidebar-loading">
               <InlineSkeleton lines={6} />
@@ -177,8 +174,8 @@ const KeyPersonLibrary: React.FC = () => {
                   <Col
                     xs={24}
                     sm={12}
-                    lg={8}
-                    xl={8}
+                    lg={6}
+                    xl={6}
                     key={person.personId}
                     className="key-person-grid-col"
                   >
@@ -196,6 +193,7 @@ const KeyPersonLibrary: React.FC = () => {
                   total={pagination.total}
                   onChange={handlePageChange}
                   showSizeChanger
+                  pageSizeOptions={[8, 16, 24, 32]}
                   showQuickJumper
                   showTotal={(total) => `共 ${total} 条`}
                 />

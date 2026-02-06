@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Tag, Button, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message, Popconfirm, Upload, Spin, Tabs } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined, ShareAltOutlined, HistoryOutlined, SendOutlined, CarOutlined, CameraOutlined, TeamOutlined, FileTextOutlined, ReloadOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, UserOutlined, ReadOutlined, BankOutlined, HeartOutlined, HeartFilled, AuditOutlined, IdcardOutlined, PlusOutlined, DeleteOutlined, ShareAltOutlined, HistoryOutlined, SendOutlined, CarOutlined, CameraOutlined, TeamOutlined, FileTextOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchPersonDetail } from '@/store/slices/personSlice';
-import { personAPI, systemConfigAPI, BASE_PATH, type PersonUpdatePayload, type PersonEditHistoryItem, type SystemConfigDTO } from '@/services/api';
+import { personAPI, favoriteAPI, systemConfigAPI, BASE_PATH, type PersonUpdatePayload, type PersonEditHistoryItem, type SystemConfigDTO } from '@/services/api';
 import type { PersonTravelItem, SocialDynamicItem, RelatedPersonItem } from '@/types/person';
 import { formatDateOnly, formatDateTime } from '@/utils/date';
 import { PageDetailSkeleton, InlineSkeleton } from '@/components/SkeletonPresets';
@@ -133,9 +133,14 @@ const PersonDetail = () => {
   const [portraitDrawerOpen, setPortraitDrawerOpen] = useState(false);
   const [portraitLoading, setPortraitLoading] = useState(false);
   const [portraitText, setPortraitText] = useState('');
+  const portraitTypingTimerRef = useRef<number | null>(null);
   /** 民航铁路信息默认只展示条数，更多需点开展示 */
   const TRAVEL_DEFAULT_SHOW = 10;
+  const HISTORY_DEFAULT_SHOW = 20;
+  const SOCIAL_DEFAULT_SHOW = 50;
   const [travelExpanded, setTravelExpanded] = useState(false);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [socialExpanded, setSocialExpanded] = useState(false);
   const canDelete =
     detail &&
     user?.username &&
@@ -143,12 +148,45 @@ const PersonDetail = () => {
       (detail.isPublic === false && user.username === detail.createdBy));
   const showDelete = canDelete && detail && !detail.deleted;
 
+  /** 收藏状态（仅登录用户） */
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  useEffect(() => {
+    if (!personId || !user?.username) {
+      setIsFavorited(false);
+      return;
+    }
+    favoriteAPI.check(personId).then(setIsFavorited).catch(() => setIsFavorited(false));
+  }, [personId, user?.username]);
+
+  const toggleFavorite = useCallback(async () => {
+    if (!personId || !user?.username) return;
+    setFavoriteLoading(true);
+    try {
+      if (isFavorited) {
+        await favoriteAPI.remove(personId);
+        setIsFavorited(false);
+        message.success('已取消收藏');
+      } else {
+        await favoriteAPI.add(personId);
+        setIsFavorited(true);
+        message.success('已加入收藏');
+      }
+    } catch (e) {
+      message.error((e as { response?: { data?: { message?: string } } })?.response?.data?.message ?? (isFavorited ? '取消收藏失败' : '收藏失败'));
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }, [personId, user?.username, isFavorited]);
+
   useEffect(() => {
     if (personId) dispatch(fetchPersonDetail(personId));
   }, [dispatch, personId]);
 
   useEffect(() => {
     setTravelExpanded(false);
+    setHistoryExpanded(false);
+    setSocialExpanded(false);
   }, [personId]);
 
   /** 人物切换时清空智能画像结果 */
@@ -248,10 +286,30 @@ const PersonDetail = () => {
   /** 请求智能画像（抽屉内调用或打开抽屉时自动调用） */
   const fetchPortraitAnalysis = useCallback(async () => {
     if (!personId) return;
+    if (portraitTypingTimerRef.current) {
+      window.clearTimeout(portraitTypingTimerRef.current);
+      portraitTypingTimerRef.current = null;
+    }
+    setPortraitText('');
     setPortraitLoading(true);
     try {
       const text = await personAPI.getPortraitAnalysis(personId);
-      setPortraitText(text ?? '');
+      const full = (text ?? '').toString();
+      if (!full) {
+        setPortraitText('');
+      } else {
+        let index = 0;
+        const typeNext = () => {
+          index += 1;
+          setPortraitText(full.slice(0, index));
+          if (index < full.length) {
+            portraitTypingTimerRef.current = window.setTimeout(typeNext, 30);
+          } else {
+            portraitTypingTimerRef.current = null;
+          }
+        };
+        typeNext();
+      }
     } catch (e) {
       const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
       message.error(msg ?? '智能画像请求失败');
@@ -461,6 +519,17 @@ const PersonDetail = () => {
             智能画像
           </Button>
         )}
+        {user?.username && !detail.deleted && (
+          <Button
+            type={isFavorited ? 'primary' : 'default'}
+            icon={isFavorited ? <HeartFilled /> : <HeartOutlined />}
+            onClick={toggleFavorite}
+            loading={favoriteLoading}
+            className="person-detail-header-btn"
+          >
+            {isFavorited ? '已收藏' : '收藏'}
+          </Button>
+        )}
       </div>
 
       {/* 简历式主体：顶带 + 双栏 */}
@@ -476,7 +545,7 @@ const PersonDetail = () => {
           </div>
         </div>
 
-        <Tabs defaultActiveKey="info" className="person-detail-tabs">
+        <Tabs defaultActiveKey="info" destroyInactiveTabPane className="person-detail-tabs">
           <Tabs.TabPane tab={<span><UserOutlined /> 人物信息</span>} key="info">
             <div className="person-detail-resume-body">
           {/* 左栏：多头像（一大图 + 下方小图）、人物备注、技能标签等 */}
@@ -883,7 +952,7 @@ const PersonDetail = () => {
                 </div>
               ) : (
                 <div className="person-detail-history-list">
-                  {editHistory.map((h) => (
+                  {(historyExpanded ? editHistory : editHistory.slice(0, HISTORY_DEFAULT_SHOW)).map((h) => (
                     <div key={h.historyId} className="person-detail-history-item">
                       <div className="person-detail-history-meta">
                         <span className="person-detail-history-time">
@@ -905,6 +974,16 @@ const PersonDetail = () => {
                       </ul>
                     </div>
                   ))}
+                  {editHistory.length > HISTORY_DEFAULT_SHOW && (
+                    <Button
+                      type="link"
+                      size="small"
+                      className="person-detail-history-expand-btn"
+                      onClick={() => setHistoryExpanded((prev) => !prev)}
+                    >
+                      {historyExpanded ? '收起编辑记录' : `展开更多编辑记录（共 ${editHistory.length} 条）`}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -945,7 +1024,10 @@ const PersonDetail = () => {
               {(detail.recentSocialDynamics?.length ?? 0) > 0 ? (
                 <Card className="person-detail-resume-extra-card" title="社交媒体动态" size="small">
                   <ul className="person-detail-social-list">
-                    {detail.recentSocialDynamics!.map((s: SocialDynamicItem) => (
+                    {(socialExpanded
+                      ? detail.recentSocialDynamics!
+                      : detail.recentSocialDynamics!.slice(0, SOCIAL_DEFAULT_SHOW)
+                    ).map((s: SocialDynamicItem) => (
                       <li key={s.dynamicId}>
                         <Tag color="blue">{s.socialAccountType}</Tag> {s.socialAccount}
                         <div className="content">{s.content?.substring(0, 200)}</div>
@@ -953,6 +1035,16 @@ const PersonDetail = () => {
                       </li>
                     ))}
                   </ul>
+                  {detail.recentSocialDynamics!.length > SOCIAL_DEFAULT_SHOW && (
+                    <Button
+                      type="link"
+                      size="small"
+                      className="person-detail-social-expand-btn"
+                      onClick={() => setSocialExpanded((prev) => !prev)}
+                    >
+                      {socialExpanded ? '收起' : `展开更多（共 ${detail.recentSocialDynamics!.length} 条）`}
+                    </Button>
+                  )}
                 </Card>
               ) : (
                 <Empty description="暂无社交动态" image={Empty.PRESENTED_IMAGE_SIMPLE} />

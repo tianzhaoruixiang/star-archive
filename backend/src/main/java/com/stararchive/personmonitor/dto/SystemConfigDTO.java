@@ -30,10 +30,14 @@ public class SystemConfigDTO {
     private Boolean navWorkspaceFusion;
     /** 二级导航-标签管理 是否显示 */
     private Boolean navWorkspaceTags;
+    /** 二级导航-我的收藏 是否显示 */
+    private Boolean navWorkspaceFavorites;
     /** 二级导航-模型管理 是否显示 */
     private Boolean navModelManagement;
     /** 导航-态势感知 是否显示 */
     private Boolean navSituation;
+    /** 导航-智能问答 是否显示 */
+    private Boolean navSmartQA;
     /** 导航-系统配置 是否显示 */
     private Boolean navSystemConfig;
     /** 人物详情页 是否展示编辑功能 */
@@ -45,10 +49,10 @@ public class SystemConfigDTO {
     private String llmModel;
     /** 人物档案融合 · 大模型 API Key */
     private String llmApiKey;
-    /** 人物档案融合 · 大模型提取人物档案的系统提示词（为空则使用内置默认） */
-    private String llmExtractPrompt;
-    /** 人物档案融合 · 内置默认提示词（只读，供前端展示） */
+    /** 人物档案融合 · 默认提示词（可在系统配置中修改，档案融合使用此提示词） */
     private String llmExtractPromptDefault;
+    /** 智能问答 · 嵌入模型（如 text-embedding-3-small）；为空则 RAG 使用关键词检索 */
+    private String llmEmbeddingModel;
 
     /** OnlyOffice · 前端加载脚本的地址（document-server-url） */
     private String onlyofficeDocumentServerUrl;
