@@ -21,7 +21,7 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
   EXTRACTING: { color: 'processing', text: '导入中' },
   MATCHING: { color: 'processing', text: '导入中' },
   SUCCESS: { color: 'success', text: '已提取' },
-  IMPORTED: { color: 'blue', text: '已导入' },
+  IMPORTED: { color: 'success', text: '已导入' },
   FAILED: { color: 'error', text: '失败' },
 };
 
@@ -435,7 +435,7 @@ const ImportDetail: React.FC = () => {
             <span className="import-detail-task-name">{detail.task.fileName}</span>
             {(() => {
               const allImported = detail.task.status === 'SUCCESS' && (detail.task.unimportedCount ?? 0) === 0;
-              const color = allImported ? 'blue' : (STATUS_MAP[detail.task.status]?.color ?? 'default');
+              const color = allImported ? 'success' : (STATUS_MAP[detail.task.status]?.color ?? 'default');
               const text = allImported ? '已导入' : (STATUS_MAP[detail.task.status]?.text ?? detail.task.status);
               return <Tag color={color}>{text}</Tag>;
             })()}

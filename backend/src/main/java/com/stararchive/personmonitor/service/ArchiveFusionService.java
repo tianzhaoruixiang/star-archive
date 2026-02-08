@@ -306,12 +306,12 @@ public class ArchiveFusionService {
      * @param currentUsername 当前登录用户名（X-Username），为空时返回空列表
      */
     public PageResponse<ArchiveImportTaskDTO> listTasks(String currentUsername, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdTime"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedTime"));
         if (currentUsername == null || currentUsername.isBlank()) {
             return PageResponse.of(List.of(), page, size, 0L);
         }
         String username = currentUsername.trim();
-        Page<ArchiveImportTask> taskPage = taskRepository.findByCreatorUsernameOrderByCreatedTimeDesc(username, pageable);
+        Page<ArchiveImportTask> taskPage = taskRepository.findByCreatorUsernameOrderByUpdatedTimeDesc(username, pageable);
         List<ArchiveImportTaskDTO> list = taskPage.getContent().stream().map(this::toTaskDTO).collect(Collectors.toList());
         return PageResponse.of(list, page, size, taskPage.getTotalElements());
     }

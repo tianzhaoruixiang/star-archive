@@ -15,7 +15,7 @@ const STATUS_MAP: Record<string, { color: string; text: string }> = {
   EXTRACTING: { color: 'processing', text: '导入中' },
   MATCHING: { color: 'processing', text: '导入中' },
   SUCCESS: { color: 'success', text: '已提取' },
-  IMPORTED: { color: 'blue', text: '已导入' },
+  IMPORTED: { color: 'success', text: '已导入' },
   FAILED: { color: 'error', text: '失败' },
 };
 
@@ -163,7 +163,7 @@ const WorkspaceFusion = () => {
       width: 120,
       render: (s: string, record: ArchiveImportTaskDTO) => {
         const allImported = s === 'SUCCESS' && (record.unimportedCount ?? 0) === 0;
-        const color = allImported ? 'blue' : (STATUS_MAP[s]?.color ?? 'default');
+        const color = allImported ? 'success' : (STATUS_MAP[s]?.color ?? 'default');
         const text = allImported ? '已导入' : (STATUS_MAP[s]?.text ?? s);
         return <Tag color={color}>{text}</Tag>;
       },
