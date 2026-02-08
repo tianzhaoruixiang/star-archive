@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import {
   Button,
@@ -311,13 +312,15 @@ const SmartQA: React.FC = () => {
       await smartQAAPI.chatStream(
         { sessionId, content },
         (chunk) => {
-          setMessages((prev) => {
-            const next = [...prev];
-            const last = next[next.length - 1];
-            if (last?.role === 'assistant') {
-              next[next.length - 1] = { ...last, content: last.content + chunk };
-            }
-            return next;
+          flushSync(() => {
+            setMessages((prev) => {
+              const next = [...prev];
+              const last = next[next.length - 1];
+              if (last?.role === 'assistant') {
+                next[next.length - 1] = { ...last, content: last.content + chunk };
+              }
+              return next;
+            });
           });
         },
         (messageId) => {
