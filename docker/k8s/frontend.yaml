@@ -1,0 +1,43 @@
+# 前端应用 Nginx（对应 docker-compose frontend）
+# 镜像需先构建：star-archive-frontend:latest
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: star-archive
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: star-archive-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          securityContext:
+            runAsUser: 101  # nginx
+      # 若镜像内未指定 nginx 用户，可去掉 securityContext
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: star-archive
+  labels:
+    app: frontend
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  selector:
+    app: frontend

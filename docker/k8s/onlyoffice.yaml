@@ -1,0 +1,82 @@
+# OnlyOffice Document Server（对应 docker-compose onlyoffice）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onlyoffice
+  namespace: star-archive
+  labels:
+    app: onlyoffice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: onlyoffice
+  template:
+    metadata:
+      labels:
+        app: onlyoffice
+    spec:
+      containers:
+        - name: onlyoffice
+          image: onlyoffice/documentserver:9.2
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          env:
+            - name: JWT_ENABLED
+              value: "false"
+            - name: LETS_ENCRYPT_ENABLED
+              value: "false"
+            - name: ONLYOFFICE_DATA_CONTAINER
+              value: "false"
+            - name: ONLYOFFICE_DATA_CONTAINER_HOST
+              value: "localhost"
+            - name: ONLYOFFICE_DATA_CONTAINER_PORT
+              value: "80"
+            - name: DB_TYPE
+              value: "postgres"
+            - name: DB_HOST
+              value: "localhost"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "onlyoffice"
+            - name: DB_USER
+              value: "onlyoffice"
+            - name: DB_PWD
+              value: "onlyoffice"
+            - name: AMQP_URI
+              value: "amqp://guest:guest@localhost:5672"
+            - name: ALLOW_PRIVATE_IP_ADDRESS
+              value: "true"
+            - name: ALLOW_META_IP_ADDRESS
+              value: "true"
+          volumeMounts:
+            - name: data
+              mountPath: /var/www/onlyoffice/Data
+          resources:
+            limits:
+              memory: "2G"
+              cpu: "1"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: onlyoffice-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: onlyoffice
+  namespace: star-archive
+  labels:
+    app: onlyoffice
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+  selector:
+    app: onlyoffice

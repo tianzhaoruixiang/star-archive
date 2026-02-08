@@ -88,7 +88,7 @@ const SystemConfigPage = () => {
         if (data && typeof data === 'object') {
           form.setFieldsValue({
             // @ts-ignore
-            systemName: data.systemName ?? '重点人员档案监测系统',
+            systemName: data.systemName ?? '人员档案',
             // @ts-ignore
             systemLogoUrl: data.systemLogoUrl ?? '',
             // @ts-ignore
@@ -201,7 +201,7 @@ const SystemConfigPage = () => {
           layout="vertical"
           onFinish={onFinish}
           initialValues={{
-            systemName: '重点人员档案监测系统',
+            systemName: '人员档案',
             systemLogoUrl: '',
             frontendBaseUrl: '/',
             navDashboard: true,
@@ -230,7 +230,7 @@ const SystemConfigPage = () => {
             name="systemName"
             rules={[{ required: true, message: '请输入系统名称' }]}
           >
-            <Input placeholder="如：重点人员档案监测系统" maxLength={100} showCount />
+            <Input placeholder="如：人员档案" maxLength={100} showCount />
           </Form.Item>
           <Form.Item label="系统 Logo" extra="上传图片将存储到 SeaweedFS，或直接填写图片 URL">
             <div className="system-config-logo-row">

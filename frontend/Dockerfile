@@ -1,4 +1,4 @@
-# 重点人员档案监测系统 - 前端镜像
+# 人员档案 - 前端镜像
 # 多阶段：Node 构建 -> nginx 托管静态资源
 FROM node:20-alpine AS builder
 WORKDIR /app

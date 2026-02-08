@@ -127,7 +127,7 @@ public class SystemConfigService {
 
     private SystemConfigDTO toDTO(Map<String, String> map) {
         SystemConfigDTO dto = new SystemConfigDTO();
-        dto.setSystemName(map.getOrDefault(KEY_SYSTEM_NAME, "重点人员档案监测系统"));
+        dto.setSystemName(map.getOrDefault(KEY_SYSTEM_NAME, "人员档案"));
         dto.setSystemLogoUrl(map.getOrDefault(KEY_SYSTEM_LOGO_URL, ""));
         dto.setFrontendBaseUrl(map.getOrDefault(KEY_FRONTEND_BASE_URL, "/"));
         dto.setNavDashboard("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_DASHBOARD, "true")));

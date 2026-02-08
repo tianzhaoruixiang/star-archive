@@ -1,0 +1,50 @@
+# SeaweedFS Volume（对应 docker-compose seaweedfs-volume）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs-volume
+  namespace: star-archive
+  labels:
+    app: seaweedfs-volume
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-volume
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-volume
+    spec:
+      hostname: seaweedfs-volume
+      containers:
+        - name: volume
+          image: chrislusf/seaweedfs:latest
+          command:
+            - /bin/sh
+            - -c
+            - "volume -mserver=seaweedfs-master:9333 -port=8080 -dir=/data -max=0"
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: seaweedfs-volume-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-volume
+  namespace: star-archive
+  labels:
+    app: seaweedfs-volume
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: seaweedfs-volume

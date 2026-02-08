@@ -1,4 +1,4 @@
-# 重点人员档案监测系统 - 后端镜像
+# 人员档案 - 后端镜像
 # 多阶段：Maven 构建 -> OpenJDK 21 运行
 FROM hackyo/maven:3.9-jdk-21 AS builder
 WORKDIR /build
@@ -15,7 +15,7 @@ RUN mvn package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 USER root
 
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init su-exec
 WORKDIR /app
 RUN mkdir -p /app/logs /config
 RUN chmod 777 /app/logs
@@ -29,6 +29,10 @@ COPY --from=builder /build/target/person-monitor-*.jar ./app.jar
 COPY application.yml /config/application.yml
 COPY person-schema.json /config/person-schema.json
 
+# 启动脚本：挂载卷时 /app/logs 可能属 root，先 chown 再以 UID 1000 运行 Java
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # 默认端口与 context-path 与 application.yml 一致
 ENV SERVER_PORT=8000
 EXPOSE 8000
@@ -36,5 +40,6 @@ EXPOSE 8000
 # 日志写入 /app/logs，避免写入 /app 导致 Permission denied（容器以非 root 用户运行）
 ENV LOGGING_FILE_PATH=/app/logs
 
-USER 1000:1000
-ENTRYPOINT ["dumb-init", "--", "java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar", "--spring.config.additional-location=file:/config/"]
+# 以 root 启动 dumb-init + entrypoint，entrypoint 内 chown /app/logs 后 su-exec 1000 运行 Java
+USER root
+ENTRYPOINT ["dumb-init", "--", "/app/docker-entrypoint.sh"]

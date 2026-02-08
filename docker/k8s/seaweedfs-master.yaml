@@ -1,0 +1,54 @@
+# SeaweedFS Master（对应 docker-compose seaweedfs-master）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs-master
+  namespace: star-archive
+  labels:
+    app: seaweedfs-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-master
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-master
+    spec:
+      hostname: seaweedfs-master
+      containers:
+        - name: master
+          image: chrislusf/seaweedfs:latest
+          command:
+            - /bin/sh
+            - -c
+            - "master -ip=seaweedfs-master -port=9333 -mdir=/data -peers=seaweedfs-master:9333"
+          ports:
+            - containerPort: 9333
+            - containerPort: 19333
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: seaweedfs-master-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-master
+  namespace: star-archive
+  labels:
+    app: seaweedfs-master
+spec:
+  ports:
+    - name: http
+      port: 9333
+      targetPort: 9333
+    - name: grpc
+      port: 19333
+      targetPort: 19333
+  selector:
+    app: seaweedfs-master

@@ -26,7 +26,7 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <Card className="login-card" title="重点人员档案监测系统">
+      <Card className="login-card" title="人员档案">
         <Form onFinish={handleLogin} autoComplete="off">
           <Form.Item
             name="username"

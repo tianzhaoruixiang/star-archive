@@ -1,0 +1,77 @@
+# Doris FE（对应 docker-compose doris-fe）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doris-fe
+  namespace: star-archive
+  labels:
+    app: doris-fe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doris-fe
+  template:
+    metadata:
+      labels:
+        app: doris-fe
+    spec:
+      hostname: fe
+      containers:
+        - name: fe
+          image: apache/doris:fe-4.0.2
+          ports:
+            - containerPort: 8030   # HTTP
+            - containerPort: 9030   # MySQL
+            - containerPort: 9010  # Thrift
+          env:
+            - name: FE_SERVERS
+              value: "fe1:doris-fe:9010"
+            - name: FE_ID
+              value: "1"
+          volumeMounts:
+            - name: meta
+              mountPath: /opt/apache-doris/fe/doris-meta
+            - name: log
+              mountPath: /opt/apache-doris/fe/log
+          livenessProbe:
+            httpGet:
+              path: /api/bootstrap
+              port: 8030
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/bootstrap
+              port: 8030
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: meta
+          persistentVolumeClaim:
+            claimName: doris-fe-meta
+        - name: log
+          persistentVolumeClaim:
+            claimName: doris-fe-log
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doris-fe
+  namespace: star-archive
+  labels:
+    app: doris-fe
+spec:
+  ports:
+    - name: http
+      port: 8030
+      targetPort: 8030
+    - name: mysql
+      port: 9030
+      targetPort: 9030
+    - name: thrift
+      port: 9010
+      targetPort: 9010
+  selector:
+    app: doris-fe

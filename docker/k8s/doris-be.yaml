@@ -1,0 +1,76 @@
+# Doris BE（对应 docker-compose doris-be）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doris-be
+  namespace: star-archive
+  labels:
+    app: doris-be
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doris-be
+  template:
+    metadata:
+      labels:
+        app: doris-be
+    spec:
+      hostname: be
+      containers:
+        - name: be
+          image: apache/doris:be-4.0.2
+          ports:
+            - containerPort: 8040
+            - containerPort: 9050
+          env:
+            - name: FE_SERVERS
+              value: "fe1:doris-fe:9010"
+            - name: BE_ADDR
+              value: "doris-be:9050"
+          volumeMounts:
+            - name: storage
+              mountPath: /opt/apache-doris/be/storage
+            - name: log
+              mountPath: /opt/apache-doris/be/log
+          resources:
+            limits:
+              memory: "3G"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8040
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8040
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: doris-be-storage
+        - name: log
+          persistentVolumeClaim:
+            claimName: doris-be-log
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doris-be
+  namespace: star-archive
+  labels:
+    app: doris-be
+spec:
+  ports:
+    - name: http
+      port: 8040
+      targetPort: 8040
+    - name: be
+      port: 9050
+      targetPort: 9050
+  selector:
+    app: doris-be

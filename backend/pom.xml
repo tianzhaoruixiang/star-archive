@@ -16,7 +16,7 @@
     <artifactId>person-monitor</artifactId>
     <version>1.0.0</version>
     <name>Person Monitor System</name>
-    <description>重点人员档案监测系统</description>
+    <description>人员档案</description>
 
     <properties>
         <java.version>21</java.version>

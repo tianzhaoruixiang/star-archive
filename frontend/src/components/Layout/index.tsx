@@ -19,7 +19,7 @@ import './index.css';
 
 const { Header, Content } = AntLayout;
 
-const DEFAULT_APP_NAME = '重点人员档案监测系统';
+const DEFAULT_APP_NAME = '人员档案';
 
 /** 一级菜单项（无子菜单） */
 const TOP_MENU_ENTRIES: { key: string; icon: React.ReactNode; label: string; configKey: keyof SystemConfigDTO }[] = [

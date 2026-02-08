@@ -1,0 +1,42 @@
+# Ingress：对外暴露前端与后端 API（按需修改 host 与 ingressClassName）
+# 访问：https://<host>/littlesmall/  前端；/littlesmall/api -> backend
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: star-archive
+  namespace: star-archive
+  annotations:
+    # 若使用 nginx ingress，可取消注释：
+    # nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+spec:
+  ingressClassName: nginx   # 按集群实际 ingress 类型修改，如 nginx / traefik
+  rules:
+    - host: star-archive.example.com   # 改为你的域名或留空使用 * 
+      http:
+        paths:
+          - path: /littlesmall/api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          - path: /littlesmall
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+  # tls:
+  #   - hosts:
+  #       - star-archive.example.com
+  #     secretName: star-archive-tls

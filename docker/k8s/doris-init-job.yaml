@@ -1,0 +1,56 @@
+# Doris 初始化 Job（对应 docker-compose doris-init，需在 FE/BE 就绪后执行一次）
+# 部署前请先创建 ConfigMap init-db：kubectl create configmap init-db --from-file=./init-db -n star-archive
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: doris-init
+  namespace: star-archive
+  labels:
+    app: doris-init
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 10
+  template:
+    metadata:
+      labels:
+        app: doris-init
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-fe
+          image: apache/doris:fe-4.0.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until mysql -h doris-fe -P 9030 -u root -e 'SELECT 1' 2>/dev/null; do echo "FE not ready, retry in 5s..."; sleep 5; done
+              echo "FE ready. Waiting 20s for BE to register..."
+              sleep 20
+          env:
+            - name: MYSQL_PWD
+              value: ""
+      containers:
+        - name: init
+          image: apache/doris:fe-4.0.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Running 01-init-schema.sql..."
+              mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/01-init-schema.sql
+              echo "Running 02-test-data.sql..."
+              mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/02-test-data.sql || true
+              echo "Running 03-test-person-500.sql..."
+              mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/03-test-person-500.sql || true
+              echo "Running 04-test-person-travel-5000.sql..."
+              mysql -h doris-fe -P 9030 -u root --default-character-set=utf8 < /init-db/04-test-person-travel-5000.sql || true
+              echo "Doris init completed."
+          volumeMounts:
+            - name: init-db
+              mountPath: /init-db
+              readOnly: true
+      volumes:
+        - name: init-db
+          configMap:
+            name: init-db

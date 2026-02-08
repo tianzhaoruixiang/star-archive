@@ -1,0 +1,54 @@
+# SeaweedFS Filer（对应 docker-compose seaweedfs-filer）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs-filer
+  namespace: star-archive
+  labels:
+    app: seaweedfs-filer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-filer
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-filer
+    spec:
+      hostname: seaweedfs-filer
+      containers:
+        - name: filer
+          image: chrislusf/seaweedfs:latest
+          command:
+            - /bin/sh
+            - -c
+            - "filer -master=seaweedfs-master:9333 -port=8888"
+          ports:
+            - containerPort: 8888
+            - containerPort: 18888
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: seaweedfs-filer-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-filer
+  namespace: star-archive
+  labels:
+    app: seaweedfs-filer
+spec:
+  ports:
+    - name: http
+      port: 8888
+      targetPort: 8888
+    - name: grpc
+      port: 18888
+      targetPort: 18888
+  selector:
+    app: seaweedfs-filer

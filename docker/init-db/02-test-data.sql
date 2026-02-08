@@ -509,7 +509,7 @@ INSERT INTO person_directory (directory_id, person_id, created_time) VALUES
 
 -- 系统配置默认值（系统名称、Logo、前端 base URL、各导航显示隐藏）
 INSERT INTO system_config (config_key, config_value, updated_time) VALUES
-('system_name', '重点人员档案监测系统', NOW()),
+('system_name', '人员档案', NOW()),
 ('system_logo_url', '', NOW()),
 ('frontend_base_url', '/', NOW()),
 ('nav_dashboard', 'true', NOW()),
