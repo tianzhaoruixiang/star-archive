@@ -1,5 +1,6 @@
 package com.stararchive.personmonitor.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stararchive.personmonitor.config.BailianProperties;
 import com.stararchive.personmonitor.dto.SystemConfigDTO;
@@ -16,14 +17,22 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +58,13 @@ public class PersonPortraitService {
     private final BailianProperties bailianProperties;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate = new RestTemplate();
+
+    private static final long SSE_TIMEOUT_MS = 120_000L;
+    private static final ExecutorService STREAM_EXECUTOR = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "portrait-stream");
+        t.setDaemon(true);
+        return t;
+    });
 
     /**
      * 根据人物编号生成智能画像。仅当档案对当前用户可见时可调用；未配置大模型时返回提示文案。
@@ -128,6 +144,162 @@ public class PersonPortraitService {
             log.error("【智能画像】调用异常: personId={}, 耗时={}ms", personId, elapsed, e);
             return "智能画像请求失败：" + (e.getMessage() != null ? e.getMessage() : "网络或服务异常");
         }
+    }
+
+    /**
+     * 流式生成智能画像：通过 SSE 向前端推送大模型逐字输出。仅当档案对当前用户可见时可调用。
+     *
+     * @param personId    人物编号
+     * @param currentUser 当前登录用户名（X-Username）
+     * @return SseEmitter，调用方需在合适的线程中返回
+     */
+    public SseEmitter generatePortraitAnalysisStream(String personId, String currentUser) {
+        SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
+
+        Person person;
+        try {
+            person = personRepository.findById(personId)
+                    .orElseThrow(() -> new NoSuchElementException("人员不存在: " + personId));
+        } catch (NoSuchElementException e) {
+            try {
+                emitter.send(SseEmitter.event().data(Map.of("error", e.getMessage())));
+            } catch (Exception sendEx) {
+                // ignore
+            }
+            emitter.completeWithError(e);
+            return emitter;
+        }
+
+        String user = (currentUser != null && !currentUser.isBlank()) ? currentUser.trim() : null;
+        boolean visible = Boolean.TRUE.equals(person.getIsPublic())
+                || (user != null && user.equals(person.getCreatedBy()));
+        if (!visible) {
+            sendStreamError(emitter, "人员不存在: " + personId);
+            return emitter;
+        }
+        if (Boolean.TRUE.equals(person.getDeleted())) {
+            boolean canView = false;
+            if (user != null) {
+                if (Boolean.TRUE.equals(person.getIsPublic())) {
+                    Optional<SysUser> sysUser = sysUserRepository.findByUsername(user);
+                    canView = sysUser.map(u -> "admin".equals(u.getRole())).orElse(false);
+                } else {
+                    canView = user.equals(person.getCreatedBy());
+                }
+            }
+            if (!canView) {
+                sendStreamError(emitter, "人员不存在: " + personId);
+                return emitter;
+            }
+        }
+
+        String basicInfoContext = assembleBasicInfoByPerson(personId, person);
+        String apiKey = resolveLlmApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
+            String fallback = "未配置大模型，无法生成智能画像。请在系统配置中填写大模型 API 信息。";
+            STREAM_EXECUTOR.execute(() -> sendStreamDone(emitter, fallback));
+            return emitter;
+        }
+
+        String baseUrl = resolveLlmBaseUrl();
+        String model = resolveLlmModel();
+        String url = baseUrl.replaceAll("/$", "") + "/chat/completions";
+        Map<String, Object> bodyMap = new HashMap<>();
+        bodyMap.put("model", model);
+        bodyMap.put("messages", List.of(
+                Map.of("role", "system", "content", SYSTEM_PROMPT),
+                Map.of("role", "user", "content", basicInfoContext)
+        ));
+        bodyMap.put("stream", true);
+        String bodyJson;
+        try {
+            bodyJson = objectMapper.writeValueAsString(bodyMap);
+        } catch (Exception e) {
+            log.warn("【智能画像】流式请求体序列化失败: {}", e.getMessage());
+            sendStreamError(emitter, "大模型请求异常，请稍后重试。");
+            return emitter;
+        }
+
+        STREAM_EXECUTOR.execute(() -> {
+            try {
+                HttpClient client = HttpClient.newBuilder().build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer " + apiKey)
+                        .POST(HttpRequest.BodyPublishers.ofString(bodyJson, StandardCharsets.UTF_8))
+                        .build();
+                HttpResponse<java.util.stream.Stream<String>> response = client.send(
+                        request,
+                        HttpResponse.BodyHandlers.ofLines());
+                StringBuilder fullContent = new StringBuilder();
+                try (java.util.stream.Stream<String> lines = response.body()) {
+                    lines.forEach(line -> {
+                        if (line.startsWith("data: ")) {
+                            String payload = line.substring(6).trim();
+                            if ("[DONE]".equals(payload)) return;
+                            String delta = extractDeltaContent(payload);
+                            if (delta != null && !delta.isEmpty()) {
+                                fullContent.append(delta);
+                                try {
+                                    emitter.send(SseEmitter.event().data(Map.of("content", delta)));
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                    });
+                }
+                String content = fullContent.toString();
+                if (content.isEmpty()) {
+                    emitter.send(SseEmitter.event().data(Map.of("content", "大模型未返回有效内容。")));
+                }
+                emitter.send(SseEmitter.event().data(Map.of("done", true)));
+                emitter.complete();
+            } catch (Exception e) {
+                log.warn("【智能画像】流式调用失败: personId={}, error={}", personId, e.getMessage());
+                try {
+                    emitter.send(SseEmitter.event().data(Map.of("error", "大模型调用异常，请稍后重试。")));
+                } catch (Exception sendEx) {
+                    // ignore
+                }
+                emitter.completeWithError(e);
+            }
+        });
+        return emitter;
+    }
+
+    private void sendStreamDone(SseEmitter emitter, String content) {
+        try {
+            emitter.send(SseEmitter.event().data(Map.of("content", content)));
+            emitter.send(SseEmitter.event().data(Map.of("done", true)));
+            emitter.complete();
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+    }
+
+    private void sendStreamError(SseEmitter emitter, String message) {
+        try {
+            emitter.send(SseEmitter.event().data(Map.of("error", message)));
+            emitter.complete();
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+    }
+
+    /** 从 OpenAI 流式响应 data 行中解析 delta.content */
+    private String extractDeltaContent(String dataJson) {
+        try {
+            JsonNode root = objectMapper.readTree(dataJson);
+            JsonNode choices = root.path("choices");
+            if (choices.isArray() && choices.size() > 0) {
+                return choices.get(0).path("delta").path("content").asText(null);
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return null;
     }
 
     /**

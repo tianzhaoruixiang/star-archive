@@ -138,9 +138,9 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
     long countByDestinationProvince(@Param("province") String province);
 
     /**
-     * 指定省份按签证类型统计行程数，返回 [visa_type, count]
+     * 指定省份按签证类型统计人员数（去重），返回 [visa_type, count]
      */
-    @Query(value = "SELECT visa_type, COUNT(*) AS cnt FROM person_travel WHERE destination_province = :province AND visa_type IS NOT NULL AND visa_type != '' GROUP BY visa_type ORDER BY cnt DESC", nativeQuery = true)
+    @Query(value = "SELECT visa_type, COUNT(DISTINCT person_id) AS cnt FROM person_travel WHERE destination_province = :province AND visa_type IS NOT NULL AND visa_type != '' GROUP BY visa_type ORDER BY cnt DESC", nativeQuery = true)
     List<Object[]> findVisaTypeCountsByDestinationProvince(@Param("province") String province);
 
     /**
@@ -156,9 +156,9 @@ public interface PersonTravelRepository extends JpaRepository<PersonTravel, Long
     List<Object[]> findBelongingGroupCountsByDestinationProvince(@Param("province") String province);
 
     /**
-     * 指定省份按到达城市统计行程数，返回 [destination_city, count]，用于省份页城市分布
+     * 指定省份按到达城市统计人员数（去重），返回 [destination_city, count]，用于省份页城市分布
      */
-    @Query(value = "SELECT destination_city, COUNT(*) AS cnt FROM person_travel WHERE destination_province = :province AND destination_city IS NOT NULL AND destination_city != '' GROUP BY destination_city ORDER BY cnt DESC LIMIT 15", nativeQuery = true)
+    @Query(value = "SELECT destination_city, COUNT(DISTINCT person_id) AS cnt FROM person_travel WHERE destination_province = :province AND destination_city IS NOT NULL AND destination_city != '' GROUP BY destination_city ORDER BY cnt DESC LIMIT 15", nativeQuery = true)
     List<Object[]> findDestinationCityCountsByDestinationProvince(@Param("province") String province);
 
     /**

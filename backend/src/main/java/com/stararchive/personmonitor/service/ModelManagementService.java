@@ -178,17 +178,22 @@ public class ModelManagementService {
     public PageResponse<PersonCardDTO> getSemanticHitPersons(String modelId, int page, int size, String currentUser) {
         PredictionModel model = predictionModelRepository.findById(modelId).orElse(null);
         if (model == null) {
+            log.info("[模型管理-语义命中] 模型不存在 modelId={}", modelId);
             return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
         }
         String ruleConfig = model.getRuleConfig();
         if (ruleConfig == null || ruleConfig.isBlank()) {
+            log.info("[模型管理-语义命中] 模型无语义规则 modelId={}, name={}", modelId, model.getName());
             return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
         }
+        log.info("[模型管理-语义命中] 开始 modelId={}, name={}, 语义规则: {}", modelId, model.getName(), ruleConfig);
         String sql = semanticText2SqlService.generateSql(ruleConfig);
         if (sql == null) {
+            log.warn("[模型管理-语义命中] Text2Sql 未生成有效 SQL，跳过 modelId={}", modelId);
             return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
         }
         List<String> ids = personRepository.executeSelectPersonIds(sql, SEMANTIC_HIT_MAX_IDS);
+        log.info("[模型管理-语义命中] SQL 执行完成 modelId={}, 命中 id 数(可见性过滤前)={}", modelId, ids.size());
         if (ids.isEmpty()) {
             return PageResponse.of(new ArrayList<>(), page, size > 0 ? size : 20, 0);
         }
@@ -208,6 +213,7 @@ public class ModelManagementService {
         List<PersonCardDTO> cards = pageList.stream()
                 .map(personService::toCardDTO)
                 .collect(Collectors.toList());
+        log.info("[模型管理-语义命中] 完成 modelId={}, 可见命中数={}, 当前页条数={}", modelId, total, cards.size());
         return PageResponse.of(cards, page, size, total);
     }
 

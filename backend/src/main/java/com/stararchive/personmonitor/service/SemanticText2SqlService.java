@@ -30,17 +30,24 @@ public class SemanticText2SqlService {
 
     private static final String PERSON_SCHEMA_DESC =
             "表名: person。列: person_id(主键), chinese_name, original_name, organization, belonging_group, "
-                    + "gender, birth_date, nationality, person_tags(JSON数组), remark, is_public, created_by, "
-                    + "deleted(软删, 未删为false), marital_status, highest_education, visa_type, passport_number。";
+                    + "gender(性别，取值为'男'或'女'), birth_date, nationality, person_tags(ARRAY类型，存标签名称), "
+                    + "remark, is_public, created_by, deleted(软删, 未删为0或NULL), marital_status, highest_education, visa_type, passport_number。";
+
+    /** 语义「高消费/高消费标签/高消费群体」对应的实际标签名（person_tags 中存储的值） */
+    private static final String HIGH_CONSUMPTION_TAG_HINT =
+            "重要：当规则中出现「高消费」「高消费标签」「高消费群体」时，person_tags 需包含以下任一具体标签名才算满足：曾住高档酒店、铁路一等/商务座。"
+                    + "请用 (array_contains(person_tags, '曾住高档酒店') OR array_contains(person_tags, '铁路一等/商务座')) 表示。";
 
     private static final String TEXT2SQL_SYSTEM_PROMPT =
-            "你是 SQL 生成助手。根据给定的自然语言规则和 person 表结构，生成一条且仅一条 Doris 4.0 兼容的 SELECT 语句。\n"
+            "你是 SQL 生成助手。根据给定的自然语言规则和 person 表结构，生成一条且仅一条 Apache Doris 兼容的 SELECT 语句。\n"
                     + "要求：\n"
                     + "1. 只允许 SELECT 语句，只能查询 person 表。\n"
                     + "2. 必须只返回 person_id 列，格式：SELECT person_id FROM person WHERE <条件>。\n"
                     + "3. 条件中需包含 (deleted = 0 OR deleted IS NULL) 以排除已软删记录。\n"
-                    + "4. person_tags 为 JSON 数组，判断包含某标签可用 JSON_CONTAINS(person_tags, JSON_ARRAY('标签名'))。\n"
-                    + "5. 不要返回任何说明或 markdown 代码块，只返回一条 SQL。";
+                    + "4. person_tags 为 ARRAY 类型，判断包含某标签必须用 Doris 函数：array_contains(person_tags, '标签名')。多个标签满足其一用 OR 连接。\n"
+                    + "5. 性别条件：gender = '男' 或 gender = '女'，不要用其他写法。\n"
+                    + "6. " + HIGH_CONSUMPTION_TAG_HINT + "\n"
+                    + "7. 不要返回任何说明或 markdown 代码块，只返回一条 SQL。";
 
     private static final Pattern FORBIDDEN_SQL = Pattern.compile(
             "(?i)(UPDATE|DELETE|INSERT|DROP|CREATE|ALTER|TRUNCATE|EXEC|;\\s*$)");
@@ -66,6 +73,10 @@ public class SemanticText2SqlService {
         }
         String userContent = "表结构说明：\n" + PERSON_SCHEMA_DESC + "\n\n自然语言规则：\n" + semanticRule.trim();
 
+        log.info("[模型管理-Text2Sql] 语义规则: {}", semanticRule.trim());
+        log.info("[模型管理-Text2Sql] 发给大模型的 system 提示词:\n{}", TEXT2SQL_SYSTEM_PROMPT);
+        log.info("[模型管理-Text2Sql] 发给大模型的 user 提示词:\n{}", userContent);
+
         Map<String, Object> body = new HashMap<>();
         body.put("model", model);
         body.put("messages", List.of(
@@ -82,18 +93,28 @@ public class SemanticText2SqlService {
         try {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("[模型管理-Text2Sql] 大模型 HTTP 响应异常: status={}", response.getStatusCode());
                 return null;
             }
             JsonNode root = objectMapper.readTree(response.getBody());
             JsonNode choices = root.path("choices");
             if (!choices.isArray() || choices.size() == 0) {
+                log.warn("[模型管理-Text2Sql] 大模型返回无 choices，原始 body 前 500 字: {}", response.getBody().length() > 500 ? response.getBody().substring(0, 500) + "..." : response.getBody());
                 return null;
             }
             String content = choices.get(0).path("message").path("content").asText();
+            log.info("[模型管理-Text2Sql] 大模型返回的原始内容:\n{}", content);
+
             String sql = unwrapSql(content.trim());
-            return validateAndNormalizeSql(sql);
+            String finalSql = validateAndNormalizeSql(sql);
+            if (finalSql != null) {
+                log.info("[模型管理-Text2Sql] 校验后的 SQL: {}", finalSql);
+            } else {
+                log.warn("[模型管理-Text2Sql] 校验未通过，unwrap 后的 SQL: {}", sql);
+            }
+            return finalSql;
         } catch (Exception e) {
-            log.warn("Text2Sql 调用失败: {}", e.getMessage());
+            log.warn("[模型管理-Text2Sql] 调用失败: {}", e.getMessage());
             return null;
         }
     }

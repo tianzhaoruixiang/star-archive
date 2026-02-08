@@ -247,6 +247,79 @@ export const personAPI = {
         { timeout: 60000 }
       )
       .then((res) => res.data?.data ?? ''),
+  /**
+   * 智能画像流式接口（SSE）。通过 onChunk 逐块追加内容，onDone/onError 结束。
+   * 用于前端流式展示，避免长时间 loading。
+   */
+  getPortraitAnalysisStream: (
+    personId: string,
+    callbacks: {
+      onChunk: (text: string) => void;
+      onDone: () => void;
+      onError: (message: string) => void;
+    }
+  ) => {
+    const username = apiUsername ?? getStoredAuthUsername() ?? '';
+    const url = `${BASE_PATH}/api/persons/${personId}/portrait-analysis/stream`;
+    fetch(url, {
+      method: 'GET',
+      headers: username ? { 'X-Username': username } : {},
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const err = (await response.json().catch(() => ({}))) as { message?: string };
+          callbacks.onError(err?.message ?? `请求失败 ${response.status}`);
+          return;
+        }
+        const reader = response.body?.getReader();
+        if (!reader) {
+          callbacks.onError('无法读取响应流');
+          callbacks.onDone();
+          return;
+        }
+        const decoder = new TextDecoder();
+        let buffer = '';
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() ?? '';
+            for (const line of lines) {
+              if (!line.startsWith('data:')) continue;
+              const payload = line.replace(/^data:\s*/, '').trim();
+              if (!payload) continue;
+              try {
+                const data = JSON.parse(payload) as { content?: string; done?: boolean; error?: string };
+                if (data.error) {
+                  callbacks.onError(data.error);
+                  callbacks.onDone();
+                  return;
+                }
+                if (data.done) {
+                  callbacks.onDone();
+                  return;
+                }
+                if (typeof data.content === 'string' && data.content) {
+                  callbacks.onChunk(data.content);
+                }
+              } catch {
+                // ignore parse error for single line
+              }
+            }
+          }
+          callbacks.onDone();
+        } catch (e) {
+          callbacks.onError((e as Error)?.message ?? '流式读取异常');
+          callbacks.onDone();
+        }
+      })
+      .catch((e) => {
+        callbacks.onError((e as Error)?.message ?? '网络请求失败');
+        callbacks.onDone();
+      });
+  },
   getTags: (params?: { keyTag?: boolean }) =>
     apiClient.get('/persons/tags', { params: params?.keyTag !== undefined ? { keyTag: params.keyTag } : undefined }),
   createTag: (dto: TagCreateDTO) => apiClient.post<TagDTO>('/persons/tags', dto),
@@ -341,14 +414,36 @@ export interface NewsItem {
   category?: string;
 }
 
-/** 新闻分类（与后端 category 字段一致，用于筛选） */
-export const NEWS_CATEGORIES = ['政治', '经济', '文化', '社会民生'] as const;
+/** 新闻分类（与后端 category 字段一致，直接存中文；用于 Tab 筛选） */
+export const NEWS_CATEGORIES = ['政治', '经济', '文化', '体育', '科技', '社会民生'] as const;
 
 export const newsAPI = {
   getNewsList: (page: number, size: number, keyword?: string, category?: string) =>
     apiClient.get('/news', { params: { page, size, keyword, category } }),
   getNewsDetail: (newsId: string) => apiClient.get<NewsItem>(`/news/${newsId}`),
   getNewsAnalysis: () => apiClient.get('/news/analysis'),
+};
+
+/** 事件列表项（由新闻聚合提取） */
+export interface EventItem {
+  eventId: string;
+  title?: string;
+  summary?: string;
+  eventDate?: string;
+  newsCount?: number;
+  firstPublishTime?: string | number | number[];
+  lastPublishTime?: string | number | number[];
+}
+
+/** 事件详情（含关联新闻） */
+export interface EventDetailItem extends EventItem {
+  relatedNews?: NewsItem[];
+}
+
+export const eventsAPI = {
+  getEventList: (page: number, size: number) =>
+    apiClient.get('/events', { params: { page, size } }),
+  getEventDetail: (eventId: string) => apiClient.get<EventDetailItem>(`/events/${eventId}`),
 };
 
 export const socialAPI = {
@@ -500,21 +595,20 @@ async function readSSEStream(
     const lines = buffer.split('\n');
     buffer = lines.pop() ?? '';
     for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const raw = line.slice(6).trim();
-        if (!raw) continue;
-        try {
-          const data = JSON.parse(raw) as SmartQaStreamEvent;
-          onEvent(data);
-        } catch {
-          // ignore non-JSON lines
-        }
+      if (!line.startsWith('data:')) continue;
+      const raw = line.replace(/^data:\s*/, '').trim();
+      if (!raw) continue;
+      try {
+        const data = JSON.parse(raw) as SmartQaStreamEvent;
+        onEvent(data);
+      } catch {
+        // ignore non-JSON lines
       }
     }
   }
-  if (buffer.trim().startsWith('data: ')) {
+  if (buffer.trim().startsWith('data:')) {
     try {
-      const raw = buffer.trim().slice(6).trim();
+      const raw = buffer.trim().replace(/^data:\s*/, '').trim();
       if (raw) onEvent(JSON.parse(raw) as SmartQaStreamEvent);
     } catch {
       // ignore

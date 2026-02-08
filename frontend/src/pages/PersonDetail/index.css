@@ -44,6 +44,16 @@
   color: var(--primary);
 }
 
+/* 已收藏状态：与其它头栏按钮统一样式，仅用图标/文字颜色区分 */
+.person-detail-header-btn-favorited {
+  color: var(--color-favorite, #eb2f96);
+  border-color: var(--color-favorite-border, rgba(235, 47, 150, 0.35));
+}
+.person-detail-header-btn-favorited:hover {
+  color: var(--color-favorite-hover, #c41d7b);
+  border-color: var(--color-favorite-border, rgba(235, 47, 150, 0.5));
+}
+
 /* 简历式主体 */
 .person-detail-resume {
   border-radius: var(--card-radius);
@@ -614,13 +624,72 @@
   width: 100%;
 }
 
-.person-detail-portrait-text {
-  margin: 0;
-  padding: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: inherit;
+.person-detail-portrait-placeholder {
+  color: var(--text-placeholder);
+  font-size: var(--font-body);
+  line-height: 1.6;
+}
+
+/* 智能画像 Markdown 展示 */
+.person-detail-portrait-markdown {
   font-size: var(--font-body);
   line-height: 1.6;
   color: var(--text-primary);
+  word-break: break-word;
+}
+
+.person-detail-portrait-markdown p {
+  margin: 0 0 0.75em;
+}
+
+.person-detail-portrait-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.person-detail-portrait-markdown h1,
+.person-detail-portrait-markdown h2,
+.person-detail-portrait-markdown h3 {
+  margin: 1em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.person-detail-portrait-markdown h1 { font-size: 1.25em; }
+.person-detail-portrait-markdown h2 { font-size: 1.1em; }
+.person-detail-portrait-markdown h3 { font-size: 1em; }
+
+.person-detail-portrait-markdown ul,
+.person-detail-portrait-markdown ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.person-detail-portrait-markdown li {
+  margin: 0.25em 0;
+}
+
+.person-detail-portrait-markdown strong {
+  font-weight: 600;
+}
+
+.person-detail-portrait-markdown code {
+  padding: 0.15em 0.4em;
+  font-size: 0.9em;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 4px;
+}
+
+.person-detail-portrait-markdown pre {
+  margin: 0.75em 0;
+  padding: 12px;
+  overflow-x: auto;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 6px;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+.person-detail-portrait-markdown pre code {
+  padding: 0;
+  background: none;
 }

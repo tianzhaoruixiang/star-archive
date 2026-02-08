@@ -1,7 +1,8 @@
 /* 智能问答 - Gemini 式布局（仅布局与结构，沿用项目配色变量） */
 
 .smart-qa-page.smart-qa-gemini {
-  height: var(--content-available-height);
+  height: 100%;
+  min-height: 0;
   display: flex;
   overflow: hidden;
   background: var(--page-bg);
@@ -211,6 +212,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   height: 100%;
 }
 
@@ -250,6 +252,7 @@
 /* ========== 欢迎页（空状态）- Gemini 式：问候 + 建议卡片网格 ========== */
 .smart-qa-welcome {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -345,6 +348,7 @@
 /* ========== 消息列表 ========== */
 .smart-qa-messages-wrap {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--spacing-xl) var(--spacing-2xl);
 }
@@ -394,6 +398,70 @@
 
 .smart-qa-message-user .smart-qa-message-content {
   text-align: right;
+}
+
+/* 助手回复 Markdown 展示 */
+.smart-qa-message-content-markdown {
+  font-size: var(--font-body);
+  line-height: var(--line-height-relaxed);
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.smart-qa-message-content-markdown p {
+  margin: 0 0 0.6em;
+}
+
+.smart-qa-message-content-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.smart-qa-message-content-markdown h1,
+.smart-qa-message-content-markdown h2,
+.smart-qa-message-content-markdown h3 {
+  margin: 0.75em 0 0.4em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.smart-qa-message-content-markdown h1 { font-size: 1.2em; }
+.smart-qa-message-content-markdown h2 { font-size: 1.1em; }
+.smart-qa-message-content-markdown h3 { font-size: 1em; }
+
+.smart-qa-message-content-markdown ul,
+.smart-qa-message-content-markdown ol {
+  margin: 0.4em 0;
+  padding-left: 1.4em;
+}
+
+.smart-qa-message-content-markdown li {
+  margin: 0.2em 0;
+}
+
+.smart-qa-message-content-markdown strong {
+  font-weight: 600;
+}
+
+.smart-qa-message-content-markdown code {
+  padding: 0.12em 0.35em;
+  font-size: 0.9em;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 4px;
+}
+
+.smart-qa-message-content-markdown pre {
+  margin: 0.6em 0;
+  padding: 10px;
+  overflow-x: auto;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 6px;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+.smart-qa-message-content-markdown pre code {
+  padding: 0;
+  background: none;
 }
 
 .smart-qa-message-time {

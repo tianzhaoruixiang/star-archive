@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS news
     `authors` ARRAY<VARCHAR(200)> COMMENT '新闻作者数组',
     `tags` ARRAY<VARCHAR(100)> COMMENT '新闻标签列表',
     `original_url` VARCHAR(2000) COMMENT '原始网页URL',
-    `category` VARCHAR(100) COMMENT '新闻类别: POLITICS-政治, ECONOMY-经济, CULTURE-文化, SPORTS-体育, TECHNOLOGY-科技',
+    `category` VARCHAR(100) COMMENT '新闻类别：直接存中文，如 政治、经济、文化、体育、科技、社会民生',
     `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
 )
@@ -210,6 +210,41 @@ ALTER TABLE news ADD INDEX idx_publish_time (publish_time) USING INVERTED;
 ALTER TABLE news ADD INDEX idx_media (media_name) USING INVERTED;
 ALTER TABLE news ADD INDEX idx_authors (authors) USING INVERTED;
 ALTER TABLE news ADD INDEX idx_url (original_url) USING INVERTED;
+
+-- 4.1 事件表（由新闻聚合提取，流式聚类：大模型摘要 + 相似性聚类，一事件对应多新闻）
+CREATE TABLE IF NOT EXISTS event
+(
+    `event_id` VARCHAR(64) NOT NULL COMMENT '事件编号，UUID 或业务生成',
+    `title` VARCHAR(500) NOT NULL COMMENT '事件标题/摘要',
+    `summary` STRING COMMENT '事件描述（可选）',
+    `event_date` DATE NOT NULL COMMENT '事件日期，用于展示与按日聚类',
+    `news_count` INT DEFAULT 0 COMMENT '关联新闻数量（冗余）',
+    `first_publish_time` DATETIME COMMENT '最早关联新闻发布时间',
+    `last_publish_time` DATETIME COMMENT '最晚关联新闻发布时间',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间'
+)
+UNIQUE KEY(`event_id`)
+COMMENT "事件表：新闻聚合提取结果"
+DISTRIBUTED BY HASH(event_id) BUCKETS 8
+PROPERTIES ("replication_num" = "1", "enable_unique_key_merge_on_write" = "true");
+
+-- 4.2 事件-新闻关联表（多对多）
+CREATE TABLE IF NOT EXISTS event_news
+(
+    `event_id` VARCHAR(64) NOT NULL COMMENT '事件编号',
+    `news_id` VARCHAR(64) NOT NULL COMMENT '新闻编号',
+    `publish_time` DATETIME NOT NULL COMMENT '该新闻发布时间',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+)
+UNIQUE KEY(`event_id`, `news_id`)
+COMMENT "事件与新闻关联：一个事件对应多条新闻"
+DISTRIBUTED BY HASH(event_id) BUCKETS 8
+PROPERTIES ("replication_num" = "1", "enable_unique_key_merge_on_write" = "true");
+
+ALTER TABLE event ADD INDEX idx_event_date (event_date) USING INVERTED;
+ALTER TABLE event_news ADD INDEX idx_event_id (event_id) USING INVERTED;
+ALTER TABLE event_news ADD INDEX idx_news_id (news_id) USING INVERTED;
 
 -- 5. 标签表 (Unique Key 模型)
 CREATE TABLE IF NOT EXISTS tag

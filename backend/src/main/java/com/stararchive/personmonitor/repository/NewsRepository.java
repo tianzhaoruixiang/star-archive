@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 新闻数据访问接口
@@ -43,4 +44,7 @@ public interface NewsRepository extends JpaRepository<News, String> {
      */
     @Query("SELECT n FROM News n WHERE n.category = :category AND (n.title LIKE CONCAT('%', :keyword, '%') OR n.content LIKE CONCAT('%', :keyword, '%')) ORDER BY n.publishTime DESC")
     Page<News> findByCategoryAndKeyword(@Param("category") String category, @Param("keyword") String keyword, Pageable pageable);
+
+    /** 指定时间及之后发布的新闻（用于事件提取：未入事件的新闻） */
+    List<News> findByPublishTimeGreaterThanEqualOrderByPublishTimeAsc(LocalDateTime since);
 }

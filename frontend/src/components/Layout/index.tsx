@@ -197,7 +197,13 @@ const Layout = () => {
         </div>
       </Header>
       <Content
-        className={location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/') ? 'content content--dashboard' : 'content'}
+        className={
+          location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/')
+            ? 'content content--dashboard'
+            : location.pathname === '/smart-qa'
+              ? 'content content--smart-qa'
+              : 'content'
+        }
       >
         <Outlet />
       </Content>

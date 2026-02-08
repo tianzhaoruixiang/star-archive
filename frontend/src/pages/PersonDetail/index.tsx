@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import { Card, Tag, Button, Empty, Drawer, Form, Input, Select, DatePicker, Switch, message, Popconfirm, Upload, Spin, Tabs } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -133,7 +134,6 @@ const PersonDetail = () => {
   const [portraitDrawerOpen, setPortraitDrawerOpen] = useState(false);
   const [portraitLoading, setPortraitLoading] = useState(false);
   const [portraitText, setPortraitText] = useState('');
-  const portraitTypingTimerRef = useRef<number | null>(null);
   /** 民航铁路信息默认只展示条数，更多需点开展示 */
   const TRAVEL_DEFAULT_SHOW = 10;
   const HISTORY_DEFAULT_SHOW = 20;
@@ -283,40 +283,23 @@ const PersonDetail = () => {
     form.resetFields();
   }, [form]);
 
-  /** 请求智能画像（抽屉内调用或打开抽屉时自动调用） */
-  const fetchPortraitAnalysis = useCallback(async () => {
+  /** 请求智能画像（流式）：首 chunk 到达后即逐字追加展示，避免长时间 loading */
+  const fetchPortraitAnalysis = useCallback(() => {
     if (!personId) return;
-    if (portraitTypingTimerRef.current) {
-      window.clearTimeout(portraitTypingTimerRef.current);
-      portraitTypingTimerRef.current = null;
-    }
     setPortraitText('');
     setPortraitLoading(true);
-    try {
-      const text = await personAPI.getPortraitAnalysis(personId);
-      const full = (text ?? '').toString();
-      if (!full) {
+    personAPI.getPortraitAnalysisStream(personId, {
+      onChunk: (text) => {
+        setPortraitLoading(false);
+        setPortraitText((prev) => prev + text);
+      },
+      onDone: () => setPortraitLoading(false),
+      onError: (msg) => {
+        message.error(msg ?? '智能画像请求失败');
+        setPortraitLoading(false);
         setPortraitText('');
-      } else {
-        let index = 0;
-        const typeNext = () => {
-          index += 1;
-          setPortraitText(full.slice(0, index));
-          if (index < full.length) {
-            portraitTypingTimerRef.current = window.setTimeout(typeNext, 30);
-          } else {
-            portraitTypingTimerRef.current = null;
-          }
-        };
-        typeNext();
-      }
-    } catch (e) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      message.error(msg ?? '智能画像请求失败');
-      setPortraitText('');
-    } finally {
-      setPortraitLoading(false);
-    }
+      },
+    });
   }, [personId]);
 
   /** 打开智能画像抽屉：若当前无结果则自动请求 */
@@ -521,11 +504,11 @@ const PersonDetail = () => {
         )}
         {user?.username && !detail.deleted && (
           <Button
-            type={isFavorited ? 'primary' : 'default'}
+            type="default"
             icon={isFavorited ? <HeartFilled /> : <HeartOutlined />}
             onClick={toggleFavorite}
             loading={favoriteLoading}
-            className="person-detail-header-btn"
+            className={`person-detail-header-btn${isFavorited ? ' person-detail-header-btn-favorited' : ''}`}
           >
             {isFavorited ? '已收藏' : '收藏'}
           </Button>
@@ -1267,7 +1250,13 @@ const PersonDetail = () => {
           </div>
         ) : (
           <div className="person-detail-portrait-content">
-            <pre className="person-detail-portrait-text">{portraitText || '暂无分析内容，请点击「重新生成」获取智能画像。'}</pre>
+            {portraitText ? (
+              <div className="person-detail-portrait-markdown">
+                <ReactMarkdown>{portraitText}</ReactMarkdown>
+              </div>
+            ) : (
+              <div className="person-detail-portrait-placeholder">暂无分析内容，请点击「重新生成」获取智能画像。</div>
+            )}
           </div>
         )}
       </Drawer>

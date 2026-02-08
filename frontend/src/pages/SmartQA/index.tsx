@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import {
   Button,
   Input,
@@ -476,7 +477,15 @@ const SmartQA: React.FC = () => {
                     {m.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
                   </div>
                   <div className="smart-qa-message-body">
-                    <div className="smart-qa-message-content">{m.content}</div>
+                    <div className="smart-qa-message-content">
+                      {m.role === 'assistant' && m.content ? (
+                        <div className="smart-qa-message-content-markdown">
+                          <ReactMarkdown>{m.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        m.content
+                      )}
+                    </div>
                     {m.createdTime && (
                       <div className="smart-qa-message-time">{formatDateTime(m.createdTime)}</div>
                     )}

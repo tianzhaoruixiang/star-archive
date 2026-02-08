@@ -1,0 +1,12 @@
+# Docker 使用本机代理（VPN/科学上网）拉取镜像
+# 安装步骤：
+#   sudo mkdir -p /etc/systemd/system/docker.service.d
+#   sudo cp docker-service-proxy.conf.sample /etc/systemd/system/docker.service.d/http-proxy.conf
+#   按需修改下面的地址和端口（如 127.0.0.1:7890）
+#   sudo systemctl daemon-reload
+#   sudo systemctl restart docker
+[Service]
+Environment="HTTP_PROXY=http://127.0.0.1:7890"
+Environment="HTTPS_PROXY=http://127.0.0.1:7890"
+# 若代理不代理本地/内网，可加（可选）：
+# Environment="NO_PROXY=localhost,127.0.0.1,172.16.0.0/12,192.168.0.0/16"

@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -176,6 +177,16 @@ public class PersonController {
             @RequestHeader(value = "X-Username", required = false) String currentUser) {
         String analysis = personPortraitService.generatePortraitAnalysis(personId, currentUser);
         return ResponseEntity.ok(ApiResponse.success(analysis));
+    }
+
+    /**
+     * 流式获取智能画像（SSE）。首 chunk 到达后即可逐字展示，避免长时间 loading。
+     */
+    @GetMapping(value = "/{personId}/portrait-analysis/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter getPortraitAnalysisStream(
+            @PathVariable String personId,
+            @RequestHeader(value = "X-Username", required = false) String currentUser) {
+        return personPortraitService.generatePortraitAnalysisStream(personId, currentUser);
     }
     
     /**

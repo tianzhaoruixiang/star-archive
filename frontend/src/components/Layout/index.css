@@ -229,6 +229,17 @@
   padding-right: var(--content-side-padding);
 }
 
+/* 智能问答：占满内容区、无内边距、不出现整页滚动条，仅中间对话区内部滚动 */
+.content.content--smart-qa {
+  padding: 0;
+  overflow: hidden;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .content::-webkit-scrollbar {
   width: 6px;
   height: 6px;
