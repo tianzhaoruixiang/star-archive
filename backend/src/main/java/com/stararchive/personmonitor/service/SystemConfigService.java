@@ -33,6 +33,14 @@ public class SystemConfigService {
     private static final String KEY_NAV_WORKSPACE_FAVORITES = "nav_workspace_favorites";
     private static final String KEY_NAV_MODEL_MANAGEMENT = "nav_model_management";
     private static final String KEY_NAV_SITUATION = "nav_situation";
+    /** 态势感知 · 事件聚合提示语 */
+    private static final String KEY_SITUATION_EVENTS_INTRO = "situation_events_intro";
+    private static final String DEFAULT_SITUATION_EVENTS_INTRO =
+            "事件由系统每日从新闻中自动提取并聚类，一个事件可对应多条相关新闻。";
+    /** 态势感知 · 新闻摘要提取提示词（事件聚合时大模型从单条新闻提取事件摘要用的 system prompt） */
+    private static final String KEY_SITUATION_EVENT_EXTRACT_PROMPT = "situation_event_extract_prompt";
+    private static final String DEFAULT_SITUATION_EVENT_EXTRACT_PROMPT =
+            "你是一个新闻事件摘要助手。根据用户提供的新闻标题和正文，用一句话（不超过50字）概括该新闻所描述的事件，仅输出这一句话，不要其他解释。";
     private static final String KEY_NAV_SMART_QA = "nav_smart_qa";
     private static final String KEY_NAV_SYSTEM_CONFIG = "nav_system_config";
     private static final String KEY_SHOW_PERSON_DETAIL_EDIT = "show_person_detail_edit";
@@ -86,6 +94,8 @@ public class SystemConfigService {
         map.put(KEY_NAV_WORKSPACE_FAVORITES, Boolean.TRUE.equals(dto.getNavWorkspaceFavorites()) ? "true" : "false");
         map.put(KEY_NAV_MODEL_MANAGEMENT, Boolean.TRUE.equals(dto.getNavModelManagement()) ? "true" : "false");
         map.put(KEY_NAV_SITUATION, Boolean.TRUE.equals(dto.getNavSituation()) ? "true" : "false");
+        map.put(KEY_SITUATION_EVENTS_INTRO, dto.getSituationEventsIntro() != null ? dto.getSituationEventsIntro().trim() : "");
+        map.put(KEY_SITUATION_EVENT_EXTRACT_PROMPT, dto.getSituationEventExtractPrompt() != null ? dto.getSituationEventExtractPrompt().trim() : "");
         map.put(KEY_NAV_SMART_QA, Boolean.TRUE.equals(dto.getNavSmartQA()) ? "true" : "false");
         map.put(KEY_NAV_SYSTEM_CONFIG, Boolean.TRUE.equals(dto.getNavSystemConfig()) ? "true" : "false");
         map.put(KEY_SHOW_PERSON_DETAIL_EDIT, Boolean.TRUE.equals(dto.getShowPersonDetailEdit()) ? "true" : "false");
@@ -139,6 +149,10 @@ public class SystemConfigService {
         dto.setNavWorkspaceFavorites("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_WORKSPACE_FAVORITES, "true")));
         dto.setNavModelManagement("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_MODEL_MANAGEMENT, "true")));
         dto.setNavSituation("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SITUATION, "true")));
+        String storedIntro = map.get(KEY_SITUATION_EVENTS_INTRO);
+        dto.setSituationEventsIntro((storedIntro != null && !storedIntro.isBlank()) ? storedIntro : DEFAULT_SITUATION_EVENTS_INTRO);
+        String storedEventPrompt = map.get(KEY_SITUATION_EVENT_EXTRACT_PROMPT);
+        dto.setSituationEventExtractPrompt((storedEventPrompt != null && !storedEventPrompt.isBlank()) ? storedEventPrompt : DEFAULT_SITUATION_EVENT_EXTRACT_PROMPT);
         dto.setNavSmartQA("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SMART_QA, "true")));
         dto.setNavSystemConfig("true".equalsIgnoreCase(map.getOrDefault(KEY_NAV_SYSTEM_CONFIG, "true")));
         dto.setShowPersonDetailEdit("true".equalsIgnoreCase(map.getOrDefault(KEY_SHOW_PERSON_DETAIL_EDIT, "true")));

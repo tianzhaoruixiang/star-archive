@@ -36,6 +36,10 @@ public class SystemConfigDTO {
     private Boolean navModelManagement;
     /** 导航-态势感知 是否显示 */
     private Boolean navSituation;
+    /** 态势感知 · 事件聚合页提示语（展示在事件列表上方，支持在系统配置中修改） */
+    private String situationEventsIntro;
+    /** 态势感知 · 新闻摘要提取提示词（事件聚合时大模型用于从单条新闻提取事件摘要的系统提示词） */
+    private String situationEventExtractPrompt;
     /** 导航-智能问答 是否显示 */
     private Boolean navSmartQA;
     /** 导航-系统配置 是否显示 */

@@ -656,6 +656,8 @@ INSERT INTO system_config (config_key, config_value, updated_time) VALUES
 ('nav_workspace', 'true', NOW()),
 ('nav_model_management', 'true', NOW()),
 ('nav_situation', 'true', NOW()),
+('situation_events_intro', '事件由系统每日从新闻中自动提取并聚类，一个事件可对应多条相关新闻。', NOW()),
+('situation_event_extract_prompt', '你是一个新闻事件摘要助手。根据用户提供的新闻标题和正文，用一句话（不超过50字）概括该新闻所描述的事件，仅输出这一句话，不要其他解释。', NOW()),
 ('nav_system_config', 'true', NOW()),
 ('show_person_detail_edit', 'true', NOW());
 

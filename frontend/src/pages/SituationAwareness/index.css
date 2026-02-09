@@ -197,15 +197,13 @@
   color: var(--primary);
 }
 
-/* ========== 新闻详情页 ========== */
+/* ========== 新闻详情页（整体页面居中，内容左对齐） ========== */
 .news-detail-page {
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
-}
-
-.news-detail-back-bar {
-  margin-bottom: 16px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 .news-detail-back-btn {
@@ -236,10 +234,40 @@
   padding: var(--spacing-2xl) 40px 40px;
 }
 
+.news-detail-back-bar {
+  margin-bottom: 16px;
+}
+
 .news-detail-header {
   margin-bottom: var(--spacing-xl);
   padding-bottom: var(--spacing-lg);
   border-bottom: 1px solid var(--card-border);
+}
+
+.news-detail-tags,
+.news-detail-original {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.events-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.events-toolbar .events-intro {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.events-extract-btn {
+  flex-shrink: 0;
 }
 
 .events-intro {

@@ -111,6 +111,8 @@ const SystemConfigPage = () => {
             navModelManagement: data.navModelManagement !== false,
             // @ts-ignore
             navSituation: data.navSituation !== false,
+            situationEventsIntro: (data as SystemConfigDTO).situationEventsIntro ?? '',
+            situationEventExtractPrompt: (data as SystemConfigDTO).situationEventExtractPrompt ?? '',
             // @ts-ignore
             navSmartQA: data.navSmartQA !== false,
             // @ts-ignore
@@ -213,6 +215,8 @@ const SystemConfigPage = () => {
             navWorkspaceFavorites: true,
             navModelManagement: true,
             navSituation: true,
+            situationEventsIntro: '事件由系统每日从新闻中自动提取并聚类，一个事件可对应多条相关新闻。',
+            situationEventExtractPrompt: '你是一个新闻事件摘要助手。根据用户提供的新闻标题和正文，用一句话（不超过50字）概括该新闻所描述的事件，仅输出这一句话，不要其他解释。',
             navSmartQA: true,
             navSystemConfig: true,
             showPersonDetailEdit: true,
@@ -297,6 +301,32 @@ const SystemConfigPage = () => {
                 </div>
               ))}
             </div>
+          </Form.Item>
+          <Form.Item
+            label="态势感知 · 事件聚合提示语"
+            name="situationEventsIntro"
+            extra="展示在态势感知页「事件聚合」列表上方，留空时使用默认提示"
+          >
+            <Input.TextArea
+              rows={3}
+              maxLength={500}
+              showCount
+              placeholder="事件由系统每日从新闻中自动提取并聚类，一个事件可对应多条相关新闻。"
+              className="system-config-events-intro"
+            />
+          </Form.Item>
+          <Form.Item
+            label="态势感知 · 新闻摘要提取提示词"
+            name="situationEventExtractPrompt"
+            extra="事件聚合时，大模型从单条新闻提取事件摘要使用的系统提示词（system prompt），留空时使用默认提示词"
+          >
+            <Input.TextArea
+              rows={4}
+              maxLength={1000}
+              showCount
+              placeholder="你是一个新闻事件摘要助手。根据用户提供的新闻标题和正文，用一句话（不超过50字）概括该新闻所描述的事件，仅输出这一句话，不要其他解释。"
+              className="system-config-event-extract-prompt"
+            />
           </Form.Item>
           <Form.Item label="人物档案融合 · 大模型配置" extra="用于档案解析抽取与模型语义匹配，留空时使用 application.yml 中的 bailian 配置">
             <div className="system-config-llm-row">

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
 
-    private static final String EVENT_EXTRACT_SYSTEM_PROMPT =
+    private static final String DEFAULT_EVENT_EXTRACT_SYSTEM_PROMPT =
             "你是一个新闻事件摘要助手。根据用户提供的新闻标题和正文，用一句话（不超过50字）概括该新闻所描述的事件，仅输出这一句话，不要其他解释。";
 
     private final EventRepository eventRepository;
@@ -99,23 +99,46 @@ public class EventService {
      */
     @Transactional
     public void runDailyExtraction() {
-        LocalDateTime since = LocalDate.now().minusDays(1).atStartOfDay();
+        runDailyExtraction(1, true);
+    }
+
+    /** 指定天数，使用大模型（若未配置则回退为标题） */
+    @Transactional
+    public void runDailyExtraction(int sinceDays) {
+        runDailyExtraction(sinceDays, true);
+    }
+
+    /**
+     * 执行事件提取，可指定取最近几天的新闻及是否使用大模型。
+     * @param sinceDays 取最近多少天内的新闻，默认 1 表示“昨日至今”
+     * @param useLlm 是否调用大模型生成摘要；false 时仅用标题作为摘要
+     */
+    @Transactional
+    public void runDailyExtraction(int sinceDays, boolean useLlm) {
+        LocalDateTime since = LocalDate.now().minusDays(sinceDays).atStartOfDay();
         Set<String> existingNewsIds = new HashSet<>(eventNewsRepository.findAllNewsIdsInEvents());
         List<News> candidates = newsRepository.findByPublishTimeGreaterThanEqualOrderByPublishTimeAsc(since).stream()
                 .filter(n -> !existingNewsIds.contains(n.getNewsId()))
                 .collect(Collectors.toList());
         if (candidates.isEmpty()) {
-            log.info("【事件提取】近一日无未处理新闻，跳过");
+            log.info("【事件提取】近{}天无未处理新闻，跳过", sinceDays);
             return;
         }
-        String apiKey = resolveLlmApiKey();
-        if (apiKey == null || apiKey.isBlank()) {
-            log.warn("【事件提取】未配置大模型 API Key，跳过");
-            return;
+        if (useLlm) {
+            String apiKey = resolveLlmApiKey();
+            if (apiKey == null || apiKey.isBlank()) {
+                log.info("【事件提取】未配置大模型 API Key，使用标题作为摘要进行聚类");
+                useLlm = false;
+            }
+        } else {
+            log.info("【事件提取】使用标题作为摘要进行聚类（未启用大模型）");
         }
         List<NewsWithSummary> withSummaries = new ArrayList<>();
         for (News n : candidates) {
-            String summary = extractEventSummaryByLlm(n, apiKey);
+            String summary = useLlm ? extractEventSummaryByLlm(n, resolveLlmApiKey()) : null;
+            if (summary == null || summary.isBlank()) {
+                summary = fallbackSummaryFromTitle(n);
+            }
             if (summary != null && !summary.isBlank()) {
                 withSummaries.add(new NewsWithSummary(n, summary.trim()));
             }
@@ -162,8 +185,9 @@ public class EventService {
         String userContent = "标题：" + (news.getTitle() != null ? news.getTitle() : "") + "\n正文：" + (news.getContent() != null ? news.getContent().substring(0, Math.min(2000, news.getContent().length())) : "");
         Map<String, Object> body = new HashMap<>();
         body.put("model", model);
+        String systemPrompt = resolveEventExtractPrompt();
         body.put("messages", List.of(
-                Map.of("role", "system", "content", EVENT_EXTRACT_SYSTEM_PROMPT),
+                Map.of("role", "system", "content", systemPrompt),
                 Map.of("role", "user", "content", userContent)
         ));
         HttpHeaders headers = new HttpHeaders();
@@ -182,6 +206,13 @@ public class EventService {
             log.warn("【事件提取】LLM 调用失败: newsId={}, error={}", news.getNewsId(), e.getMessage());
         }
         return null;
+    }
+
+    /** 无 LLM 或调用失败时，用标题作为摘要（截断至 50 字便于聚类） */
+    private String fallbackSummaryFromTitle(News news) {
+        if (news.getTitle() == null) return "";
+        String t = news.getTitle().trim();
+        return t.length() > 50 ? t.substring(0, 50) : t;
     }
 
     /** 按事件日期分组，同日内按摘要相似度聚类（简单词集合 Jaccard） */
@@ -233,6 +264,15 @@ public class EventService {
         SystemConfigDTO cfg = systemConfigService.getConfig();
         if (cfg.getLlmApiKey() != null && !cfg.getLlmApiKey().isBlank()) return cfg.getLlmApiKey();
         return bailianProperties.getApiKey() != null ? bailianProperties.getApiKey() : "";
+    }
+
+    /** 事件摘要提取使用的 system 提示词（优先从系统配置读取，为空则用默认） */
+    private String resolveEventExtractPrompt() {
+        SystemConfigDTO cfg = systemConfigService.getConfig();
+        if (cfg.getSituationEventExtractPrompt() != null && !cfg.getSituationEventExtractPrompt().isBlank()) {
+            return cfg.getSituationEventExtractPrompt().trim();
+        }
+        return DEFAULT_EVENT_EXTRACT_SYSTEM_PROMPT;
     }
 
     private String resolveLlmBaseUrl() {

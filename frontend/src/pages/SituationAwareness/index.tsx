@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Input, Button, Pagination, Empty, Spin, Tag, Tabs, Drawer } from 'antd';
-import { SearchOutlined, FileTextOutlined, UnorderedListOutlined } from '@ant-design/icons';
-import { newsAPI, eventsAPI, type NewsItem, type EventItem, type EventDetailItem, NEWS_CATEGORIES } from '@/services/api';
+import { Input, Button, Pagination, Empty, Spin, Tag, Tabs, Drawer, message } from 'antd';
+import { SearchOutlined, FileTextOutlined, UnorderedListOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { newsAPI, eventsAPI, systemConfigAPI, type NewsItem, type EventItem, type EventDetailItem, NEWS_CATEGORIES } from '@/services/api';
 import { formatDateTime, parseDate } from '@/utils/date';
 import './index.css';
 
@@ -15,6 +15,8 @@ const CATEGORY_TABS = [CATEGORY_TAB_ALL, ...NEWS_CATEGORIES];
 /** 主 Tab：新闻动态 | 事件聚合 */
 const MAIN_TAB_NEWS = 'news';
 const MAIN_TAB_EVENTS = 'events';
+
+const DEFAULT_EVENTS_INTRO = '事件由系统每日从新闻中自动提取并聚类，一个事件可对应多条相关新闻。';
 
 function getSummary(content: string | undefined, maxLen: number = 120): string {
   if (!content?.trim()) return '';
@@ -102,7 +104,7 @@ const EventListCard: React.FC<{
 
 const SituationAwareness: React.FC = () => {
   const navigate = useNavigate();
-  const [mainTab, setMainTab] = useState<string>(MAIN_TAB_NEWS);
+  const [mainTab, setMainTab] = useState<string>(MAIN_TAB_EVENTS);
 
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -120,6 +122,8 @@ const SituationAwareness: React.FC = () => {
   const [eventDetailOpen, setEventDetailOpen] = useState(false);
   const [eventDetail, setEventDetail] = useState<EventDetailItem | null>(null);
   const [eventDetailLoading, setEventDetailLoading] = useState(false);
+  const [eventsIntroText, setEventsIntroText] = useState<string>(DEFAULT_EVENTS_INTRO);
+  const [extractLoading, setExtractLoading] = useState(false);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -161,6 +165,30 @@ const SituationAwareness: React.FC = () => {
   useEffect(() => {
     if (mainTab === MAIN_TAB_EVENTS) loadEventList();
   }, [mainTab, loadEventList]);
+
+  useEffect(() => {
+    systemConfigAPI.getPublicConfig().then((res: { data?: { situationEventsIntro?: string } }) => {
+      const data = res?.data ?? res;
+      const intro = data && typeof data === 'object' && 'situationEventsIntro' in data
+        ? (data as { situationEventsIntro?: string }).situationEventsIntro
+        : undefined;
+      setEventsIntroText(intro?.trim() || DEFAULT_EVENTS_INTRO);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const onConfigUpdated = () => {
+      systemConfigAPI.getPublicConfig().then((res: { data?: { situationEventsIntro?: string } }) => {
+        const data = res?.data ?? res;
+        const intro = data && typeof data === 'object' && 'situationEventsIntro' in data
+          ? (data as { situationEventsIntro?: string }).situationEventsIntro
+          : undefined;
+        setEventsIntroText(intro?.trim() || DEFAULT_EVENTS_INTRO);
+      }).catch(() => {});
+    };
+    window.addEventListener('system-config-updated', onConfigUpdated);
+    return () => window.removeEventListener('system-config-updated', onConfigUpdated);
+  }, []);
 
   const handleSearch = useCallback(() => {
     setKeyword(searchInput.trim());
@@ -207,6 +235,22 @@ const SituationAwareness: React.FC = () => {
     setEventDetail(null);
   }, []);
 
+  const handleRunExtract = useCallback(() => {
+    setExtractLoading(true);
+    eventsAPI
+      .runExtract({ sinceDays: 7, useLlm: true })
+      .then((res: unknown) => {
+        const body = (res as { data?: { result?: string; message?: string } })?.data ?? (res as { result?: string; message?: string });
+        const msg = body?.message ?? (body?.result === 'SUCCESS' ? '事件聚合已执行完成' : '');
+        message.success(msg || '提取完成');
+        loadEventList();
+      })
+      .catch((err: { response?: { data?: { message?: string } } }) => {
+        message.error(err?.response?.data?.message ?? '提取失败，请稍后重试');
+      })
+      .finally(() => setExtractLoading(false));
+  }, [loadEventList]);
+
   return (
     <div className="page-wrapper situation-awareness">
       <div className="situation-awareness-card">
@@ -221,8 +265,8 @@ const SituationAwareness: React.FC = () => {
           size="small"
           className="news-category-tabs"
           items={[
-            { key: MAIN_TAB_NEWS, label: '新闻动态' },
             { key: MAIN_TAB_EVENTS, label: '事件聚合' },
+            { key: MAIN_TAB_NEWS, label: '新闻动态' },
           ]}
         />
 
@@ -289,7 +333,18 @@ const SituationAwareness: React.FC = () => {
 
         {mainTab === MAIN_TAB_EVENTS && (
           <div className="news-list-wrap">
-            <p className="events-intro">事件由系统每日从新闻中自动提取并聚类，一个事件可对应多条相关新闻。</p>
+            <div className="events-toolbar">
+              {eventsIntroText && <p className="events-intro">{eventsIntroText}</p>}
+              <Button
+                type="primary"
+                icon={<ThunderboltOutlined />}
+                loading={extractLoading}
+                onClick={handleRunExtract}
+                className="events-extract-btn"
+              >
+                立即提取新闻事件
+              </Button>
+            </div>
             {eventLoading ? (
               <div className="news-list-loading">
                 <Spin size="large" tip="加载中..." />

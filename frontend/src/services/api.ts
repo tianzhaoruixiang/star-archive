@@ -444,6 +444,15 @@ export const eventsAPI = {
   getEventList: (page: number, size: number) =>
     apiClient.get('/events', { params: { page, size } }),
   getEventDetail: (eventId: string) => apiClient.get<EventDetailItem>(`/events/${eventId}`),
+  /** 立即提取新闻事件（sinceDays 默认 7，useLlm 默认 true） */
+  runExtract: (params?: { sinceDays?: number; useLlm?: boolean }) =>
+    apiClient.post('/events/extract', null, {
+      params: {
+        sinceDays: params?.sinceDays ?? 7,
+        useLlm: params?.useLlm ?? true,
+      },
+      timeout: 120000,
+    }),
 };
 
 export const socialAPI = {
@@ -470,6 +479,10 @@ export interface SystemConfigDTO {
   /** 二级导航-模型管理 */
   navModelManagement?: boolean;
   navSituation?: boolean;
+  /** 态势感知 · 事件聚合页提示语（在系统配置中可修改） */
+  situationEventsIntro?: string;
+  /** 态势感知 · 新闻摘要提取提示词（事件聚合时大模型从单条新闻提取事件摘要用的 system 提示词） */
+  situationEventExtractPrompt?: string;
   /** 导航-智能问答 是否显示 */
   navSmartQA?: boolean;
   navSystemConfig?: boolean;
