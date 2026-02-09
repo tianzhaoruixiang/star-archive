@@ -25,6 +25,8 @@ description: "Task list template for feature implementation"
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
 
+**本项目 (Star Archive)**：采用 Web app 结构。后端 `backend/src/main/java/com/stararchive/personmonitor/` 下：`controller/`、`service/`、`repository/`、`entity/`、`dto/`、`common/`、`config/`；前端 `frontend/src/` 下：`pages/`、`components/`、`services/api.ts`、`store/slices/`、`types/`、`utils/`。测试：后端 `backend/src/test/`，前端按项目配置。详见 `docs/项目规格基线.md` 与 plan.md。
+
 <!-- 
   ============================================================================
   IMPORTANT: The tasks below are SAMPLE TASKS for illustration purposes only.

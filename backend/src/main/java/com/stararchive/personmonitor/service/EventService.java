@@ -14,7 +14,6 @@ import com.stararchive.personmonitor.entity.News;
 import com.stararchive.personmonitor.repository.EventNewsRepository;
 import com.stararchive.personmonitor.repository.EventRepository;
 import com.stararchive.personmonitor.repository.NewsRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +34,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class EventService {
 
     private static final String EVENT_EXTRACT_SYSTEM_PROMPT =
@@ -47,7 +45,20 @@ public class EventService {
     private final SystemConfigService systemConfigService;
     private final BailianProperties bailianProperties;
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public EventService(EventRepository eventRepository, EventNewsRepository eventNewsRepository,
+                        NewsRepository newsRepository, SystemConfigService systemConfigService,
+                        BailianProperties bailianProperties, ObjectMapper objectMapper,
+                        RestTemplate restTemplate) {
+        this.eventRepository = eventRepository;
+        this.eventNewsRepository = eventNewsRepository;
+        this.newsRepository = newsRepository;
+        this.systemConfigService = systemConfigService;
+        this.bailianProperties = bailianProperties;
+        this.objectMapper = objectMapper;
+        this.restTemplate = restTemplate != null ? restTemplate : new RestTemplate();
+    }
 
     public PageResponse<EventDTO> getEventList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "eventDate").and(Sort.by(Sort.Direction.DESC, "lastPublishTime")));

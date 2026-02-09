@@ -5,6 +5,20 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+---
+
+## 本项目约定 (Star Archive)
+
+*编写本规格时请遵循以下约定，实现时以 `.specify/memory/constitution.md` 与 `.cursor/rules` 为准。*
+
+- **规格只写「做什么」与「验收标准」**：不写技术实现细节（不写 Spring/React、不写具体类名或 API 路径，除非是业务术语）。
+- **后端边界**：接口契约以后端 DTO 与前端类型为准；Controller→Service→Repository 分层；禁止在规格中指定数据库表名或 SQL，除非是业务实体名称。
+- **前端边界**：页面与交互以用户可见能力描述；不指定组件名或状态库实现。
+- **基线**：当前已实现模块与 API 见 `docs/项目规格基线.md`；新特性若依赖或扩展现有模块，在 Key Entities 或 Functional Requirements 中可引用基线中的模块/实体名。
+- **可测试性**：每条 FR 与每个 User Story 须可独立验收；Success Criteria 须可度量且技术无关。
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
