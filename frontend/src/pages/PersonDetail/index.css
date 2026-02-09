@@ -71,7 +71,7 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 28px 32px;
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid var(--card-border);
 }
 
@@ -109,7 +109,7 @@
   display: inline-block;
   padding: 8px 16px;
   background: var(--primary);
-  color: #fff;
+  color: #0b0e14;
   font-size: var(--font-body);
   font-weight: 700;
   letter-spacing: 2px;
@@ -152,7 +152,7 @@
 .person-detail-resume-left {
   padding: 24px 20px;
   border-right: 1px solid var(--card-border);
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 @media (max-width: 992px) {
@@ -416,7 +416,7 @@
 .person-detail-resume-raw {
   margin: 0;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--input-bg);
   border-radius: 8px;
   font-size: var(--font-caption);
   white-space: pre-wrap;

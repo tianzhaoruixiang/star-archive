@@ -145,14 +145,14 @@
 }
 
 .system-config-page .ant-switch-checked .ant-switch-inner {
-  color: #fff;
+  color: #0b0e14;
 }
 
 /* 主按钮 */
 .system-config-page .ant-btn-primary {
   background: var(--accent-btn) !important;
   border: none !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
   border-radius: var(--radius-md);
   box-shadow: var(--card-shadow);
   transition: all var(--transition-fast);
@@ -160,7 +160,7 @@
 
 .system-config-page .ant-btn-primary:hover {
   background: var(--accent-btn-hover) !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
   box-shadow: var(--card-shadow-hover);
 }
 
@@ -183,7 +183,7 @@
 }
 
 .system-config-page .ant-btn-text.ant-btn-dangerous:hover {
-  color: #fff !important;
+  color: #0b0e14 !important;
   background: rgba(239, 68, 68, 0.2) !important;
 }
 
@@ -266,7 +266,7 @@
 
 /* 表格在卡片内使用 common 的 ant-table 覆盖，此处补充分页等 */
 .system-config-users-card .ant-table-thead > tr > th {
-  background: #f8fafc !important;
+  background: var(--page-bg-elevated) !important;
   color: var(--text-muted) !important;
   border-bottom-color: var(--card-border-subtle) !important;
 }

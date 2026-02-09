@@ -78,7 +78,7 @@
   line-height: 18px;
   padding: 0 4px;
   font-size: var(--font-xs);
-  color: #fff;
+  color: #0b0e14;
   background: var(--accent-red);
   border-radius: 9px;
   text-align: center;
@@ -255,7 +255,7 @@
 
 .person-list-filter-tags-third .person-list-tag.person-list-tag-third.person-list-tag-selected {
   background: var(--primary) !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
   border-color: var(--primary) !important;
 }
 
@@ -313,7 +313,7 @@
 
 .person-list-tag-selected {
   background: var(--primary) !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
 }
 
 
@@ -360,7 +360,7 @@
   font-size: var(--font-aux) !important;
   border-radius: 20px !important;
   background: var(--primary) !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
   border: none !important;
 }
 
@@ -447,7 +447,7 @@
 }
 
 .person-list-pagination-inner .ant-pagination-item-active a {
-  color: #fff !important;
+  color: #0b0e14 !important;
 }
 
 .person-list-pagination-inner .ant-select-selector {

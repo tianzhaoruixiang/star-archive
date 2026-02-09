@@ -37,7 +37,7 @@
 
 .model-management-subnav-item-active {
   background: var(--primary) !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
 }
 
 .model-management-subnav-icon {
@@ -183,12 +183,12 @@
 .model-management-card-btn-delete {
   background: var(--accent-red) !important;
   border-color: var(--accent-red) !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
 }
 
 .model-management-card-btn-delete:hover {
   opacity: 0.9;
-  color: #fff !important;
+  color: #0b0e14 !important;
 }
 
 /* 创建新模型按钮 */
@@ -205,13 +205,13 @@
   font-weight: 500;
   background: var(--primary) !important;
   border: none !important;
-  color: #fff !important;
+  color: #0b0e14 !important;
   border-radius: var(--radius-md);
 }
 
 .model-management-create-btn:hover {
   opacity: 0.95;
-  color: #fff !important;
+  color: #0b0e14 !important;
 }
 
 /* 右侧悬浮按钮 */

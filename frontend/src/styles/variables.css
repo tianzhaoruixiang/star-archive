@@ -1,63 +1,63 @@
 /**
- * 简洁白色主题 - 设计变量
- * 白底、浅灰边框、蓝色主色，干净易读
- * 字号按前端设计规范统一，适配 2560×1080 等分辨率
+ * 深色简约主题 - 科技感 · 智能化 · 严肃化
+ * 深色背景、冷色主色、高对比文字，适配专业/政务场景
  */
 :root {
-  /* 字体族：中英文兼顾，优先系统无衬线 */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', 'SF Pro Text',
+  /* 字体：偏科技感的无衬线 */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display',
     'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Helvetica Neue', Arial, sans-serif;
 
-  /* 主背景 - 白色 / 浅灰 */
-  --page-bg: #ffffff;
-  --page-bg-alt: #f8fafc;
-  --page-bg-gradient: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  /* 主背景 - 深色层级 */
+  --page-bg: #0b0e14;
+  --page-bg-alt: #0f1318;
+  --page-bg-elevated: #151a21;
+  --page-bg-gradient: linear-gradient(180deg, #0b0e14 0%, #0f1318 100%);
 
   /* 背景图 */
   --bg-pattern: none;
-  --bg-login: url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80');
+  --bg-login: linear-gradient(135deg, #0b0e14 0%, #151a21 50%, #0f1318 100%);
 
   /* 卡片/区块 */
-  --card-bg: #ffffff;
-  --card-bg-solid: #ffffff;
-  --card-border: rgba(0, 0, 0, 0.06);
-  --card-border-subtle: rgba(0, 0, 0, 0.06);
-  --card-radius: 12px;
-  --card-radius-lg: 16px;
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --card-bg: #151a21;
+  --card-bg-solid: #151a21;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-border-subtle: rgba(255, 255, 255, 0.04);
+  --card-radius: 10px;
+  --card-radius-lg: 12px;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --card-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.45);
 
   /* 输入/表单 */
-  --input-bg: #ffffff;
-  --input-border: #e2e8f0;
-  --input-focus-border: #0ea5e9;
-  --input-hover-border: #94a3b8;
-  --input-focus-glow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+  --input-bg: #1a1f28;
+  --input-border: rgba(255, 255, 255, 0.08);
+  --input-focus-border: #22d3ee;
+  --input-hover-border: rgba(255, 255, 255, 0.12);
+  --input-focus-glow: 0 0 0 2px rgba(34, 211, 238, 0.2);
 
   /* 文字层级 */
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --text-placeholder: #94a3b8;
-  --text-disabled: #cbd5e1;
+  --text-placeholder: #475569;
+  --text-disabled: #334155;
 
-  /* 主色 - 蓝色（简洁） */
-  --primary: #0ea5e9;
-  --primary-hover: rgba(14, 165, 233, 0.08);
-  --primary-light: rgba(14, 165, 233, 0.1);
-  --primary-glow: rgba(14, 165, 233, 0.2);
+  /* 主色 - 青色/科技蓝（冷色、专业） */
+  --primary: #22d3ee;
+  --primary-hover: rgba(34, 211, 238, 0.15);
+  --primary-light: rgba(34, 211, 238, 0.12);
+  --primary-glow: rgba(34, 211, 238, 0.25);
 
   /* 强调色 */
-  --accent-purple: #8b5cf6;
-  --accent-purple-light: rgba(139, 92, 246, 0.1);
-  --accent-btn: #0ea5e9;
-  --accent-btn-hover: #0284c7;
-  --accent-green: #22c55e;
-  --accent-red: #ef4444;
-  --accent-amber: #f59e0b;
-  --color-error: #ef4444;
+  --accent-purple: #a78bfa;
+  --accent-purple-light: rgba(167, 139, 250, 0.12);
+  --accent-btn: #22d3ee;
+  --accent-btn-hover: #06b6d4;
+  --accent-green: #34d399;
+  --accent-red: #f87171;
+  --accent-amber: #fbbf24;
+  --color-error: #f87171;
 
-  /* 间距 */
+  /* 间距（保持原有节奏） */
   --page-padding: 24px;
   --page-gap: 24px;
   --card-padding: 24px;
@@ -68,51 +68,43 @@
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
 
-  /** 顶栏高度（与 Layout 一致，用于计算内容区可用高度） */
   --layout-header-height: 52px;
-  /** 内容区可用高度（视口高度减去顶栏），用于满屏布局 */
   --content-available-height: calc(100vh - var(--layout-header-height));
-
-  /** 非首页内容区最大宽度（宽屏时两侧留白） */
   --content-max-width: 1320px;
-  /** 非首页内容区左右留白 */
   --content-side-padding: 40px;
 
-  /* 圆角 */
-  --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* 圆角 - 略收敛，偏严肃 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
 
-  /* 字号层级（rem，随根字号缩放，适配多宽度屏幕） */
-  --font-xs: 0.6875rem;        /* 角标、极小辅助 ~11px */
-  --font-caption: 0.75rem;     /* 说明、标签、表格次要 ~12px */
-  --font-aux: 0.8125rem;       /* 辅助正文、列表次要 ~13px */
-  --font-body: 0.875rem;       /* 正文（基准）~14px */
-  --font-body-lg: 0.9375rem;   /* 正文略大、输入框 ~15px */
-  --font-subtitle: 1rem;       /* 小标题、导航、卡片标题 ~16px */
-  --font-section: 1.125rem;    /* 区块标题 ~18px */
-  --font-card-title: 1.25rem;  /* 卡片主标题、统计数字 ~20px */
-  --font-title: 1.375rem;      /* 页面主标题 ~22px */
-  --font-display: 1.5rem;      /* 大标题、人物名等 ~24px */
-  --font-hero: 3rem;           /* 空状态大数字、营销区 ~48px */
+  /* 字号层级 */
+  --font-xs: 0.6875rem;
+  --font-caption: 0.75rem;
+  --font-aux: 0.8125rem;
+  --font-body: 0.875rem;
+  --font-body-lg: 0.9375rem;
+  --font-subtitle: 1rem;
+  --font-section: 1.125rem;
+  --font-card-title: 1.25rem;
+  --font-title: 1.375rem;
+  --font-display: 1.5rem;
+  --font-hero: 3rem;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-title: 600;
   --font-weight-subtitle: 600;
   --font-weight-bold: 700;
 
-  /* 行高 */
   --line-height-tight: 1.25;
   --line-height-body: 1.5;
   --line-height-relaxed: 1.6;
 
-  /* 过渡 */
   --transition-fast: 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  --transition-normal: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-normal: 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* 1920 宽屏：内容区加宽（字号保持一致，避免过大抢占视觉） */
 @media (min-width: 1920px) {
   :root {
     --content-max-width: 1600px;
@@ -120,7 +112,6 @@
   }
 }
 
-/* 2560 超宽屏（含 2560×1080）：进一步加宽内容区，适配 21:9 等超宽比例 */
 @media (min-width: 2400px) {
   :root {
     --content-max-width: 2000px;
@@ -128,7 +119,6 @@
   }
 }
 
-/* 矮屏（如 2560×1080 高度 1080）：适当收紧上下间距，保证一屏内内容更多 */
 @media (max-height: 1080px) {
   :root {
     --page-padding: 18px;
@@ -136,4 +126,3 @@
     --spacing-2xl: 28px;
   }
 }
-

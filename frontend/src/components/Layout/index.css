@@ -1,4 +1,4 @@
-/* 简洁白色布局 - 顶栏与菜单 */
+/* 深色简约布局 - 顶栏与菜单 */
 
 .layout {
   width: 100%;
@@ -14,12 +14,12 @@
   display: flex;
   align-items: center;
   padding: 0 var(--page-padding);
-  background: #ffffff;
-  border-bottom: 1px solid var(--card-border-subtle);
+  background: var(--page-bg);
+  border-bottom: 1px solid var(--card-border);
   height: var(--layout-header-height);
   min-height: var(--layout-header-height);
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .logo {
@@ -33,19 +33,20 @@
 }
 
 .logo:hover {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .logo-icon {
   width: 28px;
   height: 28px;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--font-body);
-  color: #fff;
+  color: #0b0e14;
+  font-weight: 600;
 }
 
 .logo-img {
@@ -79,11 +80,10 @@
   color: var(--text-muted) !important;
 }
 
-/* 一级导航：字号 16px、字重 500，与设计变量 --font-subtitle 一致 */
 .menu .ant-menu-item {
   margin: 0 4px;
   padding: 0 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: var(--font-subtitle);
   font-weight: var(--font-weight-medium);
@@ -110,11 +110,10 @@
   letter-spacing: 0.02em;
   margin: 0 4px;
   padding: 0 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 
-/* 一级菜单（含工作区子菜单标题）图标统一大小，与文字 16px 匹配 */
 .menu .ant-menu-item .anticon,
 .menu .ant-menu-submenu-title .anticon {
   font-size: 1.125em;
@@ -138,7 +137,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.2s, border 0.2s;
   color: var(--text-primary);
@@ -147,13 +146,13 @@
 
 .user-trigger:hover {
   background: var(--primary-light);
-  border-color: var(--card-border-subtle);
+  border-color: var(--card-border);
 }
 
 .user-avatar {
   background: var(--primary-light) !important;
   color: var(--primary) !important;
-  border: 1px solid var(--card-border-subtle);
+  border: 1px solid var(--card-border);
 }
 
 .username {
@@ -216,11 +215,9 @@
   height: var(--content-available-height);
   min-height: var(--content-available-height);
   width: 100%;
-  /* 预留滚动条空间，避免刷新/加载后出现滚动条时宽度抖动 */
   scrollbar-gutter: stable;
 }
 
-/* 非首页：限制内容区最大宽度并居中，宽屏两侧留白，美观简洁 */
 .content:not(.content--dashboard) {
   max-width: var(--content-max-width);
   margin-left: auto;
@@ -229,7 +226,6 @@
   padding-right: var(--content-side-padding);
 }
 
-/* 智能问答：占满内容区、无内边距、不出现整页滚动条，仅中间对话区内部滚动 */
 .content.content--smart-qa {
   padding: 0;
   overflow: hidden;
@@ -246,17 +242,17 @@
 }
 
 .content::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--page-bg);
   border-radius: 3px;
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--card-border);
   border-radius: 3px;
 }
 
 .content::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--text-muted);
 }
 
 .content.content--dashboard {

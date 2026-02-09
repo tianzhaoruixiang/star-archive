@@ -7,7 +7,6 @@
   box-sizing: border-box;
 }
 
-/* 根字号随视口缩放：窄屏 14px、宽屏 16px，整站 rem 字体自适应 */
 html {
   height: 100%;
   font-family: var(--font-family);
@@ -26,7 +25,6 @@ body {
   height: 100%;
 }
 
-/* 整站统一：Ant Design 组件继承设计变量中的字体与字号 */
 .ant-btn,
 .ant-input,
 .ant-select-selector,
@@ -54,4 +52,32 @@ body {
   height: 100vh;
   min-height: 100vh;
   overflow: hidden;
+}
+
+/* 深色主题滚动条 */
+.content::-webkit-scrollbar,
+.ant-modal-body::-webkit-scrollbar,
+.page-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.content::-webkit-scrollbar-track,
+.ant-modal-body::-webkit-scrollbar-track,
+.page-wrapper::-webkit-scrollbar-track {
+  background: var(--page-bg);
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb,
+.ant-modal-body::-webkit-scrollbar-thumb,
+.page-wrapper::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb:hover,
+.ant-modal-body::-webkit-scrollbar-thumb:hover,
+.page-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
